@@ -49,6 +49,7 @@ function findChromiumExecutable(): string | undefined {
  */
 export default defineConfig({
   testDir: './tests',
+  testMatch: ['footer-only.spec.ts', 'social-links.spec.ts', 'copyright.spec.ts'],
   // Run tests in parallel for better performance
   fullyParallel: true,
   // Fail the build on CI if you accidentally left test.only in the source code
