@@ -8,6 +8,7 @@ import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 
 const Footer: React.FC = () => {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
   const socialLinks = [
     { icon: FaFacebookF, href: 'https://www.facebook.com/freeforcharity', label: 'Facebook' },
@@ -35,7 +36,10 @@ const Footer: React.FC = () => {
               href="https://www.guidestar.org/profile/46-2471893"
               aria-label="View Free For Charity GuideStar Profile"
             >
-              <img src="/Svgs/footerImage.svg" alt="GuideStar Platinum Seal of Transparency" />
+              <img
+                src={`${basePath}/Svgs/footerImage.svg`}
+                alt="GuideStar Platinum Seal of Transparency"
+              />
             </a>
             <Link
               href="https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742"
