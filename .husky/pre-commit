@@ -1,14 +1,23 @@
 #!/bin/sh
-# Run formatting check first
-npm run format:check || {
-  echo "❌ Code formatting issues detected. Please run 'npm run format' to fix."
-  exit 1
-}
 
-# Run linting
-npm run lint || {
-  echo "❌ Linting errors detected. Please fix the errors and try again."
-  exit 1
-}
+set -e
+
+# Check formatting only for staged files with Prettier-supported extensions.
+STAGED_PRETTIER_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(js|jsx|ts|tsx|json|md|mdx|css|scss|less|yml|yaml|html|graphql|gql|toml)$' || true)
+if [ -n "$STAGED_PRETTIER_FILES" ]; then
+  npx prettier --check $STAGED_PRETTIER_FILES || {
+    echo "❌ Code formatting issues detected in staged files. Please run 'npm run format' (or format the staged files) to fix."
+    exit 1
+  }
+fi
+
+# Run linting only for staged JS/TS files
+STAGED_ESLINT_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(js|jsx|ts|tsx)$' || true)
+if [ -n "$STAGED_ESLINT_FILES" ]; then
+  npx eslint $STAGED_ESLINT_FILES || {
+    echo "❌ Linting errors detected in staged files. Please fix the errors and try again."
+    exit 1
+  }
+fi
 
 echo "✅ Pre-commit checks passed!"
