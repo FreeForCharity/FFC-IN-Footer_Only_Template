@@ -70,14 +70,14 @@ const Footer: React.FC = () => {
 
           <ul className="space-y-2 text-sm" id="lato-font">
             {[
-              { name: 'Home', href: '/#hero' },
-              { name: 'Mission', href: '/#mission' },
-              { name: 'Programs', href: '/#programs' },
-              { name: 'Events', href: '/#events' },
-              { name: 'Donate', href: '/#donate' },
-              { name: 'Volunteer', href: '/#volunteer' },
-              { name: 'FAQ', href: '/#faq' },
-              { name: 'Team', href: '/#team' },
+              { name: 'Home (Placeholder)', href: '/#hero' },
+              { name: 'Mission (Placeholder)', href: '/#mission' },
+              { name: 'Programs (Placeholder)', href: '/#programs' },
+              { name: 'Events (Placeholder)', href: '/#events' },
+              { name: 'Donate (Placeholder)', href: '/#donate' },
+              { name: 'Volunteer (Placeholder)', href: '/#volunteer' },
+              { name: 'FAQ (Placeholder)', href: '/#faq' },
+              { name: 'Team (Placeholder)', href: '/#team' },
               {
                 name: 'Supported Charity Login',
                 href: 'https://freeforcharity.org/hub/',
