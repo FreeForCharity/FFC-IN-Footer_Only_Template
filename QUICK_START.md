@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get up and running with the FFC Single Page Template in 5 minutes.
+Get up and running with the FFC Footer-Only Template in 5 minutes.
 
 > **Using this as a template?** See [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md) for complete setup instructions including GitHub settings configuration.
 
@@ -17,8 +17,8 @@ Get up and running with the FFC Single Page Template in 5 minutes.
 ### 1. Clone the Repository (30 seconds)
 
 ```bash
-git clone https://github.com/FreeForCharity/FFC_Single_Page_Template.git
-cd FFC_Single_Page_Template
+git clone https://github.com/FreeForCharity/FFC-IN-Footer-Only-Template.git
+cd FFC-IN-Footer-Only-Template
 ```
 
 ### 2. Install Dependencies (17 seconds)
@@ -37,7 +37,7 @@ npm run dev
 
 **Open**: [http://localhost:3000](http://localhost:3000)
 
-**Expected**: Site loads with FFC homepage
+**Expected**: Site loads with team section, header, and footer
 
 ### 4. Verify Setup (2 minutes)
 
@@ -54,7 +54,7 @@ npm test
 npm run build
 ```
 
-**Expected**: All checks pass with 0 errors (8 warnings about `<img>` tags and React hooks are expected)
+**Expected**: All checks pass with 0 errors (2 warnings about `<img>` tags are expected for static export)
 
 ---
 
@@ -140,42 +140,52 @@ git push origin feature/your-feature-name
 ## Project Structure (Quick Reference)
 
 ```
-FFC_Single_Page_Template/
+FFC-IN-Footer-Only-Template/
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx          # Root layout with metadata
-│   │   ├── page.tsx            # Homepage
-│   │   └── globals.css         # Global styles
-│   ├── components/             # All UI components
-│   │   ├── Header/             # Navigation header
-│   │   ├── Footer/             # Footer component
-│   │   ├── CookieConsent/      # Cookie consent banner
-│   │   └── ...                 # 80+ other components
+│   │   ├── layout.tsx              # Root layout with metadata
+│   │   ├── page.tsx                # Homepage (team section)
+│   │   ├── globals.css             # Global styles
+│   │   ├── home-page/              # Homepage wrapper
+│   │   ├── cookie-policy/          # Cookie Policy page
+│   │   ├── donation-policy/        # Donation Policy page
+│   │   ├── privacy-policy/         # Privacy Policy page
+│   │   ├── terms-of-service/       # Terms of Service page
+│   │   └── ...                     # Other policy pages
+│   ├── components/
+│   │   ├── header/                 # Navigation header
+│   │   ├── footer/                 # Footer component
+│   │   ├── cookie-consent/         # Cookie consent banner
+│   │   ├── google-tag-manager/     # Analytics integration
+│   │   ├── home-page/              # Team section
+│   │   └── ui/                     # TeamMemberCard
 │   ├── lib/
-│   │   └── assetPath.ts        # GitHub Pages asset helper
-│   └── data/                   # Static content data
-├── public/                     # Static assets (images, icons)
-├── tests/                      # Playwright E2E tests
-├── __tests__/                  # Jest unit tests
-├── .github/workflows/          # CI/CD workflows
-└── [config files]              # Next.js, ESLint, etc.
+│   │   ├── assetPath.ts            # GitHub Pages asset helper
+│   │   ├── fonts.ts                # Font configuration
+│   │   └── siteMetadata.ts         # SEO metadata
+│   └── data/                       # Team member data (JSON)
+├── public/                         # Static assets (images, icons)
+├── tests/                          # Playwright E2E tests
+├── __tests__/                      # Jest unit tests
+├── .github/workflows/              # CI/CD workflows
+└── [config files]                  # Next.js, ESLint, etc.
 ```
 
 ---
 
 ## Key Files to Know
 
-| File                     | Purpose                               |
-| ------------------------ | ------------------------------------- |
-| `src/app/page.tsx`       | Homepage content                      |
-| `src/app/layout.tsx`     | Site-wide layout and metadata         |
-| `src/components/Header/` | Navigation and mobile menu            |
-| `src/components/Footer/` | Footer with links and copyright       |
-| `next.config.ts`         | Next.js configuration (static export) |
-| `tailwind.config.ts`     | Tailwind CSS configuration            |
-| `package.json`           | Dependencies and scripts              |
-| `.prettierrc.json`       | Prettier formatting rules             |
-| `commitlint.config.js`   | Commit message format rules           |
+| File                             | Purpose                                  |
+| -------------------------------- | ---------------------------------------- |
+| `src/app/page.tsx`               | Homepage content (team section)          |
+| `src/app/layout.tsx`             | Site-wide layout and metadata            |
+| `src/components/footer/`         | Footer with contact, social, policies    |
+| `src/components/header/`         | Navigation and mobile menu               |
+| `src/components/cookie-consent/` | GDPR cookie consent system               |
+| `src/lib/siteMetadata.ts`        | SEO metadata (Open Graph, Twitter Cards) |
+| `src/data/team/`                 | Team member JSON data files              |
+| `tests/test.config.ts`           | E2E test configuration (customize here)  |
+| `next.config.ts`                 | Next.js configuration (static export)    |
 
 ---
 
@@ -202,45 +212,22 @@ NEXT_PUBLIC_GTM_ID=
 
 ## Making Your First Change
 
-### 1. Edit Homepage Content
+### 1. Update Team Member Data
 
-Open `src/app/page.tsx` and find the hero section:
+Edit a team member JSON file in `src/data/team/`:
 
-```tsx
-<h1 className="text-4xl font-bold">Free For Charity</h1>
-```
-
-Change the text, save, and see it update instantly in your browser!
-
-### 2. Add a New Component
-
-Create `src/components/MyComponent/index.tsx`:
-
-```tsx
-export default function MyComponent() {
-  return (
-    <div className="p-4 bg-blue-500 text-white rounded-lg">
-      <h2>My New Component</h2>
-      <p>This is my first component!</p>
-    </div>
-  )
+```json
+{
+  "name": "Jane Doe",
+  "role": "Executive Director",
+  "bio": "Leading our mission to help nonprofits.",
+  "image": "/team/jane-doe.jpg"
 }
 ```
 
-Import and use it in `src/app/page.tsx`:
+### 2. Update Footer Content
 
-```tsx
-import MyComponent from '../components/MyComponent'
-
-export default function Home() {
-  return (
-    <>
-      <MyComponent />
-      {/* ... rest of page */}
-    </>
-  )
-}
-```
+Edit `src/components/footer/index.tsx` to update contact information, social media links, or branding.
 
 ### 3. Write a Test
 
@@ -270,97 +257,40 @@ npm test MyComponent
 
 ### Port Already in Use
 
-**Problem**: `Error: listen EADDRINUSE: address already in use :::3000`
-
-**Solution**:
-
 ```bash
-# Kill process on port 3000
 npx kill-port 3000
-
 # Or use a different port
 PORT=3001 npm run dev
 ```
 
 ### Build Fails
 
-**Problem**: `npm run build` fails
-
-**Solution**:
-
 ```bash
-# Clear Next.js cache
 rm -rf .next
-
-# Reinstall dependencies
 rm -rf node_modules package-lock.json
 npm install
-
-# Try building again
 npm run build
 ```
 
-### Tests Fail
-
-**Problem**: Unit tests fail with React warnings
-
-**Solution**: Check if you're using React hooks correctly. Warnings about `act(...)` are common and can usually be ignored if tests pass.
-
-**Problem**: E2E tests fail
-
-**Solution**:
+### E2E Tests Fail
 
 ```bash
-# Reinstall Playwright browsers
 npx playwright install --with-deps chromium
-
-# Run tests again
 npm run test:e2e
-```
-
-### Pre-commit Hooks Not Running
-
-**Problem**: Git commits succeed without running checks
-
-**Solution**:
-
-```bash
-# Reinstall Husky hooks
-npm run prepare
-
-# Try committing again
-git commit -m "test: verify hooks work"
 ```
 
 ### Module Not Found Errors
 
-**Problem**: `Cannot find module '@/components/...'`
-
-**Solution**: The `@` alias points to `src/`. Make sure:
-
-1. File paths are correct
-2. TypeScript can resolve the path (check `tsconfig.json`)
-3. Restart your editor/terminal
+The `@` alias points to `src/`. Make sure file paths are correct and restart your editor/terminal.
 
 ---
 
 ## Next Steps
 
-Now that you're set up, check out:
-
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - How to contribute to the project
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - How to contribute
 - **[TESTING.md](./TESTING.md)** - Detailed testing guide
-- **[CODE_QUALITY.md](./CODE_QUALITY.md)** - Code quality standards
-- **[RESPONSIVE_DESIGN.md](./RESPONSIVE_DESIGN.md)** - Responsive design guide
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Deployment instructions
-
----
-
-## Getting Help
-
-- **Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions)
-- **Documentation**: Check the `*.md` files in the repository root
+- **[TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md)** - Complete template setup guide
 
 ---
 
@@ -384,18 +314,4 @@ npm run test:coverage       # With coverage
 npm run test:e2e            # E2E tests
 npm run test:e2e:headed     # E2E with browser
 npm run check-links         # Check for broken links
-
-# Other
-npm install                 # Install dependencies
-npm run prepare             # Setup git hooks
 ```
-
----
-
-**Welcome to FFC Single Page Template! Happy coding! 🚀**
-
----
-
-**Last Updated**: 2025-12-03  
-**Version**: 0.1.0  
-**Node.js**: 20.x (validated with v20.19.6)

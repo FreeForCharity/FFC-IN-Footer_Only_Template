@@ -1,6 +1,6 @@
-# Copilot Instructions: FFC_Single_Page_Template
+# Copilot Instructions: FFC Footer-Only Template
 
-Free For Charity nonprofit website. Next.js static site on GitHub Pages.
+Free For Charity footer-only template. Provides footer, policy pages, cookie compliance, analytics, and team display for nonprofit websites. Next.js static site on GitHub Pages.
 
 ## Workflow
 

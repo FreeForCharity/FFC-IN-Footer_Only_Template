@@ -1,6 +1,6 @@
 # Using This Repository as a Template
 
-This guide helps you create a new repository from this template and configure all required GitHub settings and features. Follow these steps to ensure your new repository has all the functionality of the original template.
+This guide helps you create a new repository from the FFC Footer-Only Template and configure all required GitHub settings and features. This template provides footer, policy pages, cookie compliance, analytics, and team display for nonprofit websites. Follow these steps to ensure your new repository has all the functionality of the original template.
 
 ## Table of Contents
 
@@ -47,28 +47,17 @@ Use this checklist to track your progress when setting up a new repository from 
 
 ### Content Customization
 
-> **📋 For a comprehensive guide to replacing all content**, see **[CONTENT_REPLACEMENT_GUIDE.md](./CONTENT_REPLACEMENT_GUIDE.md)**
->
-> This detailed guide provides a 4-column table identifying every piece of content to replace, including:
->
-> - All website sections from Navigation to Footer
-> - Current Free For Charity example content
-> - Blank fields for your charity's information
-> - Recommended image sizes and file formats
-> - Step-by-step instructions for non-technical users
+Quick checklist of content areas to update:
 
-Quick checklist of major content areas:
-
-- [ ] Review [CONTENT_REPLACEMENT_GUIDE.md](./CONTENT_REPLACEMENT_GUIDE.md) and gather all required content
 - [ ] Update organization name and EIN in all files
-- [ ] Update social media links in footer
-- [ ] Update contact information
-- [ ] Update team member information
+- [ ] Update social media links in footer (`src/components/footer/index.tsx`)
+- [ ] Update contact information in footer
+- [ ] Update team member data in `src/data/team/`
 - [ ] Replace logo files in `/public` directory
-- [ ] Customize color scheme and branding
-- [ ] Update FAQs with your content
-- [ ] Update testimonials with your content
-- [ ] Update metadata and SEO information
+- [ ] Customize color scheme and branding in `src/app/globals.css`
+- [ ] Update policy page content in `src/app/*/page.tsx`
+- [ ] Update SEO metadata in `src/lib/siteMetadata.ts`
+- [ ] Update E2E test config in `tests/test.config.ts`
 
 ---
 

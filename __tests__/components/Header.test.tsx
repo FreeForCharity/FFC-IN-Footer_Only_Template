@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import Header from '../../src/components/header'
 
@@ -32,26 +32,22 @@ describe('Header component', () => {
 
   it('should display the Free For Charity logo', () => {
     render(<Header />)
-    // Check for logo image with alt text
     expect(screen.getByAltText('Free For Charity')).toBeInTheDocument()
   })
 
   it('should display Home navigation link', () => {
     render(<Header />)
-    // Home link should always be present in navigation
     expect(screen.getByText('Home')).toBeInTheDocument()
   })
 
   it('should have navigation links', () => {
     render(<Header />)
-    // Check that navigation has at least some links
     const links = screen.getAllByRole('link')
     expect(links.length).toBeGreaterThan(0)
   })
 
   it('should have a mobile menu button', () => {
     render(<Header />)
-    // Look for the menu icon button
     const buttons = screen.getAllByRole('button')
     expect(buttons.length).toBeGreaterThan(0)
   })
@@ -59,8 +55,60 @@ describe('Header component', () => {
   it('should have search functionality button', () => {
     render(<Header />)
     const buttons = screen.getAllByRole('button')
-    // Should have at least menu and search buttons
     expect(buttons.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('should display all expected navigation items', () => {
+    render(<Header />)
+    const navItems = ['Home', 'Team']
+    for (const item of navItems) {
+      expect(screen.getAllByText(item).length).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it('should have a search button with correct aria-label', () => {
+    render(<Header />)
+    expect(screen.getByLabelText('Search')).toBeInTheDocument()
+  })
+
+  it('should toggle search input when search button is clicked', () => {
+    render(<Header />)
+    const searchBtn = screen.getByLabelText('Search')
+    fireEvent.click(searchBtn)
+    expect(screen.getByLabelText('Search input')).toBeInTheDocument()
+  })
+
+  it('should have close search button when search is open', () => {
+    render(<Header />)
+    fireEvent.click(screen.getByLabelText('Search'))
+    expect(screen.getByLabelText('Close search')).toBeInTheDocument()
+  })
+
+  it('should close search when close button is clicked', () => {
+    render(<Header />)
+    fireEvent.click(screen.getByLabelText('Search'))
+    expect(screen.getByLabelText('Search input')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Close search'))
+    expect(screen.queryByLabelText('Search input')).not.toBeInTheDocument()
+  })
+
+  it('should have mobile menu button with correct aria-label', () => {
+    render(<Header />)
+    expect(screen.getByLabelText('Open menu')).toBeInTheDocument()
+  })
+
+  it('should toggle mobile menu open on button click', () => {
+    render(<Header />)
+    fireEvent.click(screen.getByLabelText('Open menu'))
+    expect(screen.getByLabelText('Close menu')).toBeInTheDocument()
+  })
+
+  it('should have the logo link to homepage', () => {
+    render(<Header />)
+    const logo = screen.getByAltText('Free For Charity')
+    const logoLink = logo.closest('a')
+    expect(logoLink).toHaveAttribute('href', '/')
   })
 
   it('should not have accessibility violations', async () => {
