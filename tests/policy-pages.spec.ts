@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test'
  * Policy page smoke tests
  *
  * Verifies that all legal/policy pages load correctly, render their headings,
- * and are reachable from the footer Quick Links section.
+ * and are reachable from the footer with correct href attributes.
  */
 
 const policyPages = [
@@ -20,6 +20,19 @@ const policyPages = [
   },
 ]
 
+// Footer policy links use "Free For Charity" prefix and map to specific routes
+const footerPolicyLinks = [
+  { name: 'Free For Charity Donation Policy', href: '/free-for-charity-donation-policy' },
+  { name: 'Free For Charity Privacy Policy', href: '/privacy-policy' },
+  { name: 'Free For Charity Cookie Policy', href: '/cookie-policy' },
+  { name: 'Free For Charity Terms of Service', href: '/terms-of-service' },
+  {
+    name: 'Free For Charity Vulnerability Disclosure Policy',
+    href: '/vulnerability-disclosure-policy',
+  },
+  { name: 'Free For Charity Security Acknowledgement', href: '/security-acknowledgements' },
+]
+
 test.describe('Policy pages', () => {
   for (const { path, heading } of policyPages) {
     test(`${heading} page loads and renders heading`, async ({ page }) => {
@@ -31,16 +44,14 @@ test.describe('Policy pages', () => {
     })
   }
 
-  test('footer contains links to policy pages', async ({ page }) => {
+  test('footer contains policy links with correct hrefs', async ({ page }) => {
     await page.goto('/')
     const footer = page.locator('footer')
 
-    // Check that key policy links exist in the footer
-    const expectedLinks = ['Privacy Policy', 'Cookie Policy', 'Terms of Service', 'Donation Policy']
-
-    for (const linkText of expectedLinks) {
-      const link = footer.getByRole('link', { name: linkText })
+    for (const { name, href } of footerPolicyLinks) {
+      const link = footer.getByRole('link', { name })
       await expect(link).toBeVisible()
+      await expect(link).toHaveAttribute('href', href)
     }
   })
 })

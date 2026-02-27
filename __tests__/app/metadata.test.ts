@@ -1,48 +1,50 @@
-/**
- * Layout metadata tests
- *
- * Tests the metadata export from layout.tsx directly.
- * The layout component itself is excluded from Jest due to font import issues,
- * but we can test the metadata object by importing it.
- */
+import { siteMetadata } from '../../src/lib/siteMetadata'
 
-// We can't import layout.tsx directly due to font imports.
-// Instead, test the metadata values we expect to be present.
-describe('Layout metadata expectations', () => {
-  it('should have the correct site base URL', () => {
-    // The base URL used across metadata, robots, and sitemap
-    const expectedBase = 'https://ffcworkingsite1.org'
-    expect(expectedBase).toMatch(/^https:\/\//)
+describe('Site metadata', () => {
+  it('should have the correct metadataBase URL', () => {
+    expect(siteMetadata.metadataBase?.toString()).toBe('https://ffcworkingsite1.org/')
   })
 
-  it('should have the expected metadata structure', () => {
-    // These are the values we expect layout.tsx to export.
-    // If layout metadata changes, update these expectations.
-    const expectedTitle = 'Free For Charity | Reduce Costs, Increase Impact'
-    const expectedDescription =
-      'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues—putting more resources back into their missions.'
-
-    expect(expectedTitle).toContain('Free For Charity')
-    expect(expectedDescription).toContain('nonprofits')
-    expect(expectedDescription.length).toBeGreaterThan(50)
+  it('should have a title containing Free For Charity', () => {
+    const title = siteMetadata.title as { default: string; template: string }
+    expect(title.default).toContain('Free For Charity')
+    expect(title.template).toContain('Free For Charity')
   })
 
-  it('should define required OpenGraph fields', () => {
-    // Expected OG structure from layout.tsx
-    const expectedOG = {
-      type: 'website',
-      siteName: 'Free For Charity',
-    }
-    expect(expectedOG.type).toBe('website')
-    expect(expectedOG.siteName).toBe('Free For Charity')
+  it('should have a description mentioning nonprofits', () => {
+    expect(siteMetadata.description).toContain('nonprofits')
+    expect(siteMetadata.description!.length).toBeGreaterThan(50)
+  })
+
+  it('should have relevant keywords', () => {
+    const keywords = siteMetadata.keywords as string[]
+    expect(keywords).toContain('nonprofit')
+    expect(keywords).toContain('charity')
+    expect(keywords).toContain('volunteer')
+  })
+
+  it('should define OpenGraph fields', () => {
+    const og = siteMetadata.openGraph as Record<string, unknown>
+    expect(og.type).toBe('website')
+    expect(og.siteName).toBe('Free For Charity')
+    expect(og.url).toBe('https://ffcworkingsite1.org/')
+    expect(og.images).toBeDefined()
   })
 
   it('should define Twitter card fields', () => {
-    const expectedTwitter = {
-      card: 'summary_large_image',
-      site: '@freeforcharity',
-    }
-    expect(expectedTwitter.card).toBe('summary_large_image')
-    expect(expectedTwitter.site).toContain('freeforcharity')
+    const twitter = siteMetadata.twitter as Record<string, unknown>
+    expect(twitter.card).toBe('summary_large_image')
+    expect(twitter.site).toContain('freeforcharity')
+  })
+
+  it('should allow indexing and following', () => {
+    const robots = siteMetadata.robots as Record<string, unknown>
+    expect(robots.index).toBe(true)
+    expect(robots.follow).toBe(true)
+  })
+
+  it('should define icon and manifest paths', () => {
+    expect(siteMetadata.manifest).toBeDefined()
+    expect(siteMetadata.icons).toBeDefined()
   })
 })
