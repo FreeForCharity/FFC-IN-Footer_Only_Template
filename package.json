@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "preview": "npx serve -s out -l 3000",
+    "preview": "npx serve out -l 3000",
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
+    "test:smoke": "playwright test --config=playwright.smoke.config.ts",
     "prepare": "husky"
   },
   "dependencies": {

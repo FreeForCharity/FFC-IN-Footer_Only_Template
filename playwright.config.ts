@@ -49,7 +49,14 @@ function findChromiumExecutable(): string | undefined {
  */
 export default defineConfig({
   testDir: './tests',
-  testMatch: ['footer-only.spec.ts', 'social-links.spec.ts', 'copyright.spec.ts'],
+  testMatch: [
+    'footer-only.spec.ts',
+    'social-links.spec.ts',
+    'copyright.spec.ts',
+    'cookie-consent.spec.ts',
+    'google-tag-manager.spec.ts',
+    'policy-pages.spec.ts',
+  ],
   // Run tests in parallel for better performance
   fullyParallel: true,
   // Fail the build on CI if you accidentally left test.only in the source code
@@ -76,6 +83,16 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         // Use system chromium browser if available to avoid network issues
         // when downloading Playwright browsers in restricted environments
+        launchOptions: {
+          executablePath: findChromiumExecutable(),
+        },
+      },
+    },
+    {
+      name: 'mobile-chrome',
+      testMatch: ['footer-only.spec.ts', 'copyright.spec.ts', 'policy-pages.spec.ts'],
+      use: {
+        ...devices['Pixel 5'],
         launchOptions: {
           executablePath: findChromiumExecutable(),
         },

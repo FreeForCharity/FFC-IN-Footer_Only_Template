@@ -1,8 +1,23 @@
-# AI Agent Instructions: FFC_Single_Page_Template
+# AI Agent Instructions: FFC Footer-Only Template
 
-**Project:** FFC_Single_Page_Template -- a Free For Charity nonprofit website
+**Project:** FFC Footer-Only Template -- a focused Next.js template providing footer, policy pages, cookie compliance, analytics, and team display for nonprofit websites.
 
 **Organization:** [Free For Charity](https://freeforcharity.org) provides free, professionally built websites for 501(c)(3) nonprofit organizations. Every repo in this organization serves that mission.
+
+---
+
+## Template Purpose
+
+This is **not** a full website template. It provides the "backend formality" layer that charities with existing designs need:
+
+- Footer with contact info, social media, policy links, GuideStar badge
+- Header with responsive navigation
+- 7 legal/policy pages
+- GDPR-compliant cookie consent system
+- Google Tag Manager integration (consent-aware)
+- Team section with data-driven member cards
+- SEO infrastructure (sitemap, robots.txt, metadata)
+- Static export for GitHub Pages
 
 ---
 
@@ -58,38 +73,45 @@ All changes follow this process:
 
 ```
 src/
-  app/                  # Next.js App Router -- pages and layouts
-    page.tsx            # Home page
-    layout.tsx          # Root layout
-    [route]/page.tsx     # Additional routes (e.g., privacy-policy/)
-  components/           # Reusable UI components
-  data/                 # Content modules (.ts) and JSON data files
-  lib/                  # Utility functions and helpers
-    assetPath.ts        # GitHub Pages asset path helper
-public/                 # Static assets (Images/, Svgs/, fonts, favicons)
-next.config.ts          # Next.js configuration
-tsconfig.json           # TypeScript configuration
+  app/
+    page.tsx                # Home page (renders team section)
+    layout.tsx              # Root layout with global metadata
+    home-page/              # Homepage wrapper component
+    [policy-route]/page.tsx # 7 policy page routes
+    sitemap.ts              # Dynamic sitemap generation
+    robots.ts               # Robots.txt configuration
+  components/
+    footer/                 # Site footer (contact, social, policies, copyright)
+    header/                 # Site header with responsive navigation
+    cookie-consent/         # GDPR-compliant cookie consent system
+    google-tag-manager/     # GTM integration
+    home-page/
+      TheFreeForCharityTeam/ # Team section component
+    ui/
+      TeamMemberCard.tsx    # Team member card component
+  data/
+    team.ts                 # Team member data loader
+    team/*.json             # Individual team member JSON files
+  lib/
+    assetPath.ts            # GitHub Pages asset path helper
+    fonts.ts                # Font configuration
+    siteMetadata.ts         # Site-wide SEO metadata
+public/                     # Static assets (icons, images, fonts)
 ```
 
 ---
 
 ## Naming Conventions
 
-**ALL route folders MUST use kebab-case.** This is an SEO best practice per Google Search Central. URLs like `/about-us` are preferred over `/aboutUs` or `/about_us`.
+**ALL route folders MUST use kebab-case.** This is an SEO best practice per Google Search Central. URLs like `/privacy-policy` are preferred over `/privacyPolicy`.
 
-Examples:
-
-- `src/app/about-us/page.tsx` (correct)
-- `src/app/aboutUs/page.tsx` (wrong)
-- `src/app/contact-form/page.tsx` (correct)
-
-Component files use PascalCase: `HeroSection.tsx`, `DonateButton.tsx`.
+Component files use PascalCase: `TeamMemberCard.tsx`.
 
 ---
 
 ## GitHub Pages & Asset Paths
 
-These sites deploy to `https://freeforcharity.github.io/FFC_Single_Page_Template/` and optionally to a custom domain if one is configured for this repo.
+These sites deploy to GitHub Pages and optionally to a custom domain.
 
 **Always use the `assetPath()` helper** from `src/lib/assetPath.ts` for image and asset references:
 
@@ -121,11 +143,11 @@ The `NEXT_PUBLIC_BASE_PATH` environment variable controls the `basePath` in `nex
 
 ## Testing Strategy
 
-| Type          | Tool                   | Purpose                                 |
-| ------------- | ---------------------- | --------------------------------------- |
-| Unit          | Jest + Testing Library | Component rendering, utility functions  |
-| Accessibility | jest-axe               | WCAG compliance, ARIA validation        |
-| E2E           | Playwright             | Full page navigation, visual regression |
+| Type          | Tool                   | Purpose                                                  |
+| ------------- | ---------------------- | -------------------------------------------------------- |
+| Unit          | Jest + Testing Library | Component rendering, data integrity, utility functions   |
+| Accessibility | jest-axe               | WCAG compliance, ARIA validation                         |
+| E2E           | Playwright             | Footer links, cookie consent, policy pages, social links |
 
 **Accessibility target:** WCAG AA compliance. The jest-axe integration catches common ARIA issues, color contrast violations, and missing landmarks.
 
@@ -134,7 +156,7 @@ The `NEXT_PUBLIC_BASE_PATH` environment variable controls the `basePath` in `nex
 ## Known Issues
 
 - **ESLint `img` warnings:** Some ESLint rules flag `<img>` tags in favor of `next/image`. For static exports, `<img>` with `assetPath()` is the correct approach. These warnings are expected.
-- **Google Fonts:** Font loading may fail on restricted networks or air-gapped environments. The site should degrade gracefully with system fonts.
+- **Google Fonts:** Font loading may fail on restricted networks. The site should degrade gracefully with system fonts.
 - **Static export limitations:** Dynamic features like API routes, middleware, and ISR are not available. All pages must be statically renderable at build time.
 
 ---
@@ -152,8 +174,6 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format: `<type>
 | `refactor:` | Code restructuring (no behavior change) |
 | `test:`     | Adding or updating tests                |
 | `chore:`    | Build config, dependencies, CI          |
-
-Example: `feat: add volunteer signup form with validation`
 
 ---
 

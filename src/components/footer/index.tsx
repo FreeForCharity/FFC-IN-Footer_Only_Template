@@ -20,7 +20,7 @@ const Footer: React.FC = () => {
     },
     {
       icon: FaGithub,
-      href: 'https://github.com/FreeForCharity/FFC_Single_Page_Template',
+      href: 'https://github.com/FreeForCharity/FFC-IN-Footer-Only-Template',
       label: 'GitHub',
     },
   ]
