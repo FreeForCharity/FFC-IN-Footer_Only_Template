@@ -13,16 +13,23 @@ import { testConfig } from './test.config'
  * cookie consent, and Google Tag Manager.
  */
 
-/** All pages that must return 200 and render a heading */
+/**
+ * All pages that must return 200 and render a heading.
+ *
+ * Paths are RELATIVE (no leading slash) so Playwright appends them to baseURL.
+ * This is critical for GitHub Pages where baseURL includes a basePath prefix
+ * (e.g., https://freeforcharity.github.io/FFC-IN-Footer_Only_Template/).
+ * Absolute paths like '/privacy-policy/' would navigate to the domain root instead.
+ */
 const allPages = [
-  { path: '/', name: 'Home' },
-  { path: '/privacy-policy/', name: 'Privacy Policy' },
-  { path: '/cookie-policy/', name: 'Cookie Policy' },
-  { path: '/terms-of-service/', name: 'Terms of Service' },
-  { path: '/donation-policy/', name: 'Donation Policy' },
-  { path: '/free-for-charity-donation-policy/', name: 'FFC Donation Policy' },
-  { path: '/security-acknowledgements/', name: 'Security Acknowledgements' },
-  { path: '/vulnerability-disclosure-policy/', name: 'Vulnerability Disclosure Policy' },
+  { path: './', name: 'Home' },
+  { path: 'privacy-policy/', name: 'Privacy Policy' },
+  { path: 'cookie-policy/', name: 'Cookie Policy' },
+  { path: 'terms-of-service/', name: 'Terms of Service' },
+  { path: 'donation-policy/', name: 'Donation Policy' },
+  { path: 'free-for-charity-donation-policy/', name: 'FFC Donation Policy' },
+  { path: 'security-acknowledgements/', name: 'Security Acknowledgements' },
+  { path: 'vulnerability-disclosure-policy/', name: 'Vulnerability Disclosure Policy' },
 ]
 
 /** Footer policy links — use pathSuffix for basePath-agnostic assertions */
@@ -53,7 +60,7 @@ test.describe('Post-deploy smoke tests', () => {
   })
 
   test('footer renders with all sections', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
 
     const footer = page.locator('footer')
     await expect(footer).toBeVisible()
@@ -68,7 +75,7 @@ test.describe('Post-deploy smoke tests', () => {
   })
 
   test('footer contains policy links with correct paths', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
     const footer = page.locator('footer')
 
     for (const { name, pathSuffix } of footerPolicyLinks) {
@@ -82,7 +89,7 @@ test.describe('Post-deploy smoke tests', () => {
   })
 
   test('social links and copyright are correct', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
     const footer = page.locator('footer')
 
     // Verify all 4 social links
@@ -107,7 +114,7 @@ test.describe('Post-deploy smoke tests', () => {
 
   test('cookie consent banner appears and can be dismissed', async ({ page, context }) => {
     await context.clearCookies()
-    await page.goto('/')
+    await page.goto('./')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
 
@@ -135,7 +142,7 @@ test.describe('Post-deploy smoke tests', () => {
   })
 
   test('GTM loads and dataLayer is available', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
 
     // Wait for lazy-loaded GTM script (strategy="lazyOnload")
     await page.waitForFunction(() => document.querySelector('script[id="gtm-script"]') !== null, {

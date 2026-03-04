@@ -10,6 +10,11 @@ import { defineConfig, devices } from '@playwright/test'
  *
  * Defaults to http://localhost:3000 for local testing against `npm run preview`.
  */
+// Ensure baseURL ends with trailing slash so relative paths in tests resolve correctly.
+// e.g., baseURL "https://host/prefix/" + goto("privacy-policy/") = "https://host/prefix/privacy-policy/"
+const rawBaseURL = process.env.BASE_URL || 'http://localhost:3000'
+const baseURL = rawBaseURL.endsWith('/') ? rawBaseURL : `${rawBaseURL}/`
+
 export default defineConfig({
   testDir: './tests',
   testMatch: ['smoke.spec.ts'],
@@ -31,7 +36,7 @@ export default defineConfig({
 
   use: {
     // BASE_URL env var targets the deployed site; fallback to localhost for local dev
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    baseURL,
 
     // Collect trace on first retry for debugging flakes against live sites
     trace: 'on-first-retry',
