@@ -21,6 +21,10 @@ test.describe('Cookie Consent Banner', () => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
+    // Wait for client-side hydration so CookieConsent useEffect runs
+    await page.waitForSelector('[role="region"][aria-label="Cookie consent notice"]', {
+      timeout: 15000,
+    })
   })
 
   test('should display cookie consent banner on first visit', async ({ page }) => {
@@ -124,6 +128,10 @@ test.describe('Cookie Preferences Modal', () => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
+    // Wait for client-side hydration so CookieConsent useEffect runs
+    await page.waitForSelector('[role="region"][aria-label="Cookie consent notice"]', {
+      timeout: 15000,
+    })
   })
 
   test('should open preferences modal when clicking Customize', async ({ page }) => {
@@ -300,6 +308,10 @@ test.describe('Cookie Consent Accessibility', () => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
+    // Wait for client-side hydration so CookieConsent useEffect runs
+    await page.waitForSelector('[role="region"][aria-label="Cookie consent notice"]', {
+      timeout: 15000,
+    })
   })
 
   test('modal should have proper ARIA attributes', async ({ page }) => {

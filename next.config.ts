@@ -2,6 +2,9 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   output: 'export',
+  // Ensures static export writes privacy-policy/index.html instead of privacy-policy.html
+  // so the local preview server (`serve -s out`) resolves paths correctly.
+  trailingSlash: true,
   // Images configuration
   images: {
     // This allows all images, local or external, to load without optimization

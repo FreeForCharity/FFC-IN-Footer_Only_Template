@@ -1,5 +1,6 @@
 import './globals.css'
 import Footer from './../components/footer'
+import CookieConsent from './../components/cookie-consent'
 import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/google-tag-manager'
 import {
   openSans,
@@ -64,6 +65,7 @@ export default function RootLayout({
         {/* <PopupProvider> */}
         {children}
         <Footer />
+        <CookieConsent />
         {/* <PopupsRootClient /> */}
         {/* </PopupProvider> */}
       </body>

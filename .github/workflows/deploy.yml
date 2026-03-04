@@ -77,8 +77,68 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  smoke:
+    name: Post-Deploy Smoke Test
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ success() }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for deployment to be available
+        run: |
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ needs.deploy.outputs.page_url }}")
+            if [ "$STATUS" = "200" ]; then
+              echo "Site is available (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS, retrying in 10s..."
+            sleep 10
+          done
+          echo "Site not available after 120 seconds"
+          exit 1
+
+      - name: Run smoke tests against deployed site
+        run: npm run test:smoke
+        env:
+          BASE_URL: ${{ needs.deploy.outputs.page_url }}
+          CI: true
+
+      - name: Upload smoke test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

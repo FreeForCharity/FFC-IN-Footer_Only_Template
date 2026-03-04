@@ -116,4 +116,67 @@ describe('Header component', () => {
     const results = await axe(container)
     expect(results).toHaveNoViolations()
   })
+
+  it('should shrink header on scroll', () => {
+    render(<Header />)
+    const header = screen.getByRole('banner')
+    expect(header.className).toContain('h-[80px]')
+
+    // Simulate scrolling past threshold
+    Object.defineProperty(window, 'scrollY', { value: 100, writable: true })
+    fireEvent.scroll(window)
+
+    expect(header.className).toContain('h-[55px]')
+  })
+
+  it('should close mobile menu when a link is clicked', () => {
+    render(<Header />)
+    // Open mobile menu
+    fireEvent.click(screen.getByLabelText('Open menu'))
+    expect(screen.getByLabelText('Close menu')).toBeInTheDocument()
+
+    // Click a nav link inside the mobile menu area
+    const homeLinks = screen.getAllByText('Home')
+    // Click the last one (mobile menu duplicate)
+    fireEvent.click(homeLinks[homeLinks.length - 1])
+
+    // After clicking a link, menu should close (button reverts to Open menu)
+    expect(screen.getByLabelText('Open menu')).toBeInTheDocument()
+  })
+
+  it('should highlight active section based on scroll spy', () => {
+    // Create a mock team section element
+    const teamSection = document.createElement('div')
+    teamSection.id = 'team'
+    Object.defineProperty(teamSection, 'offsetTop', { value: 200, configurable: true })
+    Object.defineProperty(teamSection, 'offsetHeight', { value: 500, configurable: true })
+    document.body.appendChild(teamSection)
+
+    render(<Header />)
+
+    // Scroll into the team section
+    Object.defineProperty(window, 'scrollY', { value: 250, writable: true })
+    fireEvent.scroll(window)
+
+    // The Team link should be styled as active (text-blue-600)
+    const teamLinks = screen.getAllByText('Team')
+    const activeTeamLink = teamLinks.find((link) => link.className.includes('text-blue-600'))
+    expect(activeTeamLink).toBeDefined()
+
+    // Clean up
+    document.body.removeChild(teamSection)
+  })
+
+  it('should set Home as active when scrolled to top', () => {
+    render(<Header />)
+
+    // Scroll to top
+    Object.defineProperty(window, 'scrollY', { value: 0, writable: true })
+    fireEvent.scroll(window)
+
+    // Home link should be active
+    const homeLinks = screen.getAllByText('Home')
+    const activeHomeLink = homeLinks.find((link) => link.className.includes('text-blue-600'))
+    expect(activeHomeLink).toBeDefined()
+  })
 })

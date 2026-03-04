@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import CookieConsent from '../../src/components/cookie-consent'
 
@@ -258,5 +258,160 @@ describe('CookieConsent component', () => {
       },
       { timeout: 2000 }
     )
+  })
+
+  it('should save custom preferences when Save Preferences is clicked', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Customize')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Customize'))
+    expect(screen.getByText('Cookie Preferences')).toBeInTheDocument()
+
+    // Toggle analytics on
+    fireEvent.click(screen.getByLabelText('Enable analytics cookies'))
+
+    fireEvent.click(screen.getByText('Save Preferences'))
+
+    expect(screen.queryByText('Cookie Preferences')).not.toBeInTheDocument()
+
+    const saved = JSON.parse(localStorageMock.getItem('cookie-consent')!)
+    expect(saved.analytics).toBe(true)
+    expect(saved.marketing).toBe(false)
+  })
+
+  it('should cancel and restore previous preferences', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Customize')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Customize'))
+    fireEvent.click(screen.getByLabelText('Enable analytics cookies'))
+
+    // Cancel instead of saving
+    fireEvent.click(screen.getByText('Cancel'))
+
+    expect(screen.queryByText('Cookie Preferences')).not.toBeInTheDocument()
+    expect(screen.getByText('Accept All')).toBeInTheDocument()
+  })
+
+  it('should toggle marketing cookies in preferences modal', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Customize')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Customize'))
+    fireEvent.click(screen.getByLabelText('Enable marketing cookies'))
+
+    fireEvent.click(screen.getByText('Save Preferences'))
+    const saved = JSON.parse(localStorageMock.getItem('cookie-consent')!)
+    expect(saved.marketing).toBe(true)
+  })
+
+  it('should close preferences modal on Escape key', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Customize')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Customize'))
+    expect(screen.getByText('Cookie Preferences')).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByText('Cookie Preferences')).not.toBeInTheDocument()
+  })
+
+  it('should close preferences modal when clicking the overlay', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Customize')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Customize'))
+    expect(screen.getByText('Cookie Preferences')).toBeInTheDocument()
+
+    const overlay = screen.getByRole('dialog')
+    fireEvent.click(overlay)
+
+    expect(screen.queryByText('Cookie Preferences')).not.toBeInTheDocument()
+  })
+
+  it('should expose openCookiePreferences on window', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Accept All')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Accept All'))
+    expect(screen.queryByText('Accept All')).not.toBeInTheDocument()
+
+    expect(window.openCookiePreferences).toBeDefined()
+    act(() => {
+      window.openCookiePreferences!()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Cookie Preferences')).toBeInTheDocument()
+    })
+  })
+
+  it('should show banner if localStorage contains invalid JSON', () => {
+    localStorageMock.setItem('cookie-consent', 'not-valid-json{')
+    render(<CookieConsent />)
+    expect(screen.queryByText(/cookies/i) || screen.queryByText('Accept All')).toBeTruthy()
+  })
+
+  it('should show banner if localStorage contains invalid structure', () => {
+    localStorageMock.setItem('cookie-consent', JSON.stringify({ foo: 'bar' }))
+    render(<CookieConsent />)
+    expect(screen.queryByText(/cookies/i) || screen.queryByText('Accept All')).toBeTruthy()
+  })
+
+  it('should push denied consent to dataLayer on decline', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Decline All')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Decline All'))
+
+    const consentEvent = window.dataLayer.find(
+      (e: { event: string }) => e.event === 'consent_update'
+    )
+    expect(consentEvent).toBeDefined()
+    expect(consentEvent?.analytics_consent).toBe('denied')
+    expect(consentEvent?.marketing_consent).toBe('denied')
   })
 })

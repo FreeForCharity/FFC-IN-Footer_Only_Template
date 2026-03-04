@@ -20,17 +20,18 @@ const policyPages = [
   },
 ]
 
-// Footer policy links use "Free For Charity" prefix and map to specific routes
+// Footer policy links use "Free For Charity" prefix and map to specific routes.
+// With trailingSlash enabled, Next.js Link renders hrefs with trailing slashes.
 const footerPolicyLinks = [
-  { name: 'Free For Charity Donation Policy', href: '/free-for-charity-donation-policy' },
-  { name: 'Free For Charity Privacy Policy', href: '/privacy-policy' },
-  { name: 'Free For Charity Cookie Policy', href: '/cookie-policy' },
-  { name: 'Free For Charity Terms of Service', href: '/terms-of-service' },
+  { name: 'Free For Charity Donation Policy', href: '/free-for-charity-donation-policy/' },
+  { name: 'Free For Charity Privacy Policy', href: '/privacy-policy/' },
+  { name: 'Free For Charity Cookie Policy', href: '/cookie-policy/' },
+  { name: 'Free For Charity Terms of Service', href: '/terms-of-service/' },
   {
     name: 'Free For Charity Vulnerability Disclosure Policy',
-    href: '/vulnerability-disclosure-policy',
+    href: '/vulnerability-disclosure-policy/',
   },
-  { name: 'Free For Charity Security Acknowledgement', href: '/security-acknowledgements' },
+  { name: 'Free For Charity Security Acknowledgement', href: '/security-acknowledgements/' },
 ]
 
 test.describe('Policy pages', () => {
@@ -39,7 +40,7 @@ test.describe('Policy pages', () => {
       const response = await page.goto(path)
       expect(response?.status()).toBe(200)
 
-      const h = page.getByRole('heading', { name: heading })
+      const h = page.getByRole('heading', { name: heading }).first()
       await expect(h).toBeVisible()
     })
   }
