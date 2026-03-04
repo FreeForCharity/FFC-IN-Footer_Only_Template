@@ -20,44 +20,55 @@ import { testConfig } from './test.config'
  * This is critical for GitHub Pages where baseURL includes a basePath prefix
  * (e.g., https://freeforcharity.github.io/FFC-IN-Footer_Only_Template/).
  * Absolute paths like '/privacy-policy/' would navigate to the domain root instead.
+ *
+ * Paths use NO trailing slash — GitHub Pages deploys flat HTML files
+ * (privacy-policy.html) via actions/configure-pages, so trailing-slash URLs 404.
+ * Locally, serve redirects non-trailing to trailing slash, so both work.
  */
 const allPages = [
   { path: './', name: 'Home' },
-  { path: 'privacy-policy/', name: 'Privacy Policy' },
-  { path: 'cookie-policy/', name: 'Cookie Policy' },
-  { path: 'terms-of-service/', name: 'Terms of Service' },
-  { path: 'donation-policy/', name: 'Donation Policy' },
-  { path: 'free-for-charity-donation-policy/', name: 'FFC Donation Policy' },
-  { path: 'security-acknowledgements/', name: 'Security Acknowledgements' },
-  { path: 'vulnerability-disclosure-policy/', name: 'Vulnerability Disclosure Policy' },
+  { path: 'privacy-policy', name: 'Privacy Policy' },
+  { path: 'cookie-policy', name: 'Cookie Policy' },
+  { path: 'terms-of-service', name: 'Terms of Service' },
+  { path: 'donation-policy', name: 'Donation Policy' },
+  { path: 'free-for-charity-donation-policy', name: 'FFC Donation Policy' },
+  { path: 'security-acknowledgements', name: 'Security Acknowledgements' },
+  { path: 'vulnerability-disclosure-policy', name: 'Vulnerability Disclosure Policy' },
 ]
 
-/** Footer policy links — use pathSuffix for basePath-agnostic assertions */
+/**
+ * Footer policy links — use pathSuffix for basePath-agnostic assertions.
+ * No trailing slash: GitHub Pages hrefs omit it; toContain matches both
+ * "/privacy-policy" and "/privacy-policy/" (local dev with trailingSlash).
+ */
 const footerPolicyLinks = [
-  { name: 'Free For Charity Donation Policy', pathSuffix: '/free-for-charity-donation-policy/' },
-  { name: 'Free For Charity Privacy Policy', pathSuffix: '/privacy-policy/' },
-  { name: 'Free For Charity Cookie Policy', pathSuffix: '/cookie-policy/' },
-  { name: 'Free For Charity Terms of Service', pathSuffix: '/terms-of-service/' },
+  { name: 'Free For Charity Donation Policy', pathSuffix: '/free-for-charity-donation-policy' },
+  { name: 'Free For Charity Privacy Policy', pathSuffix: '/privacy-policy' },
+  { name: 'Free For Charity Cookie Policy', pathSuffix: '/cookie-policy' },
+  { name: 'Free For Charity Terms of Service', pathSuffix: '/terms-of-service' },
   {
     name: 'Free For Charity Vulnerability Disclosure Policy',
-    pathSuffix: '/vulnerability-disclosure-policy/',
+    pathSuffix: '/vulnerability-disclosure-policy',
   },
   {
     name: 'Free For Charity Security Acknowledgement',
-    pathSuffix: '/security-acknowledgements/',
+    pathSuffix: '/security-acknowledgements',
   },
 ]
 
 test.describe('Post-deploy smoke tests', () => {
-  test('all pages return 200 and render a heading', async ({ page }) => {
-    for (const { path, name } of allPages) {
-      const response = await page.goto(path)
+  // Each page gets its own test with a fresh browser context to avoid
+  // Next.js client-side routing interference on GitHub Pages static export.
+  // (Navigating between pages in the same context causes blank renders.)
+  for (const { path, name } of allPages) {
+    test(`${name} page returns 200 and renders a heading`, async ({ page }) => {
+      const response = await page.goto(path, { waitUntil: 'domcontentloaded' })
       expect(response?.status(), `${name} (${path}) should return 200`).toBe(200)
 
       const heading = page.locator('h1, h2, h3').first()
       await expect(heading, `${name} should render a heading`).toBeVisible()
-    }
-  })
+    })
+  }
 
   test('footer renders with all sections', async ({ page }) => {
     await page.goto('./')
