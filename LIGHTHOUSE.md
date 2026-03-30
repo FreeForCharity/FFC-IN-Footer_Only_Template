@@ -141,10 +141,10 @@ The Lighthouse CI configuration is in `lighthouserc.json`:
     "collect": {
       "staticDistDir": "./out",
       "url": [
-        "http://localhost/index.html",
-        "http://localhost/cookie-policy.html",
-        "http://localhost/privacy-policy.html",
-        "http://localhost/terms-of-service.html"
+        "http://localhost/",
+        "http://localhost/cookie-policy/",
+        "http://localhost/privacy-policy/",
+        "http://localhost/terms-of-service/"
       ],
       "numberOfRuns": 3
     }
@@ -152,7 +152,7 @@ The Lighthouse CI configuration is in `lighthouserc.json`:
 }
 ```
 
-**Important**: URLs should point to the actual `.html` files in the `out` directory. Next.js static export generates flat HTML files at the root level. This site has a single homepage with sections (About Us, Donate, Volunteer) rather than separate pages for those features. However, the policy pages are separate routes that generate individual HTML files.
+**Important**: URLs should match the exported route paths that the local preview server resolves. With `trailingSlash: true`, Next.js static export writes pages like `privacy-policy/index.html`, so Lighthouse should audit `/privacy-policy/` rather than `/privacy-policy.html`. This site has a single homepage with sections (About Us, Donate, Volunteer) rather than separate pages for those features. However, the policy pages are separate routes that generate individual exported directories.
 
 You can add more pages to audit by adding URLs to the `url` array. To see which pages are generated, check the `out/` directory after running `npm run build`.
 
