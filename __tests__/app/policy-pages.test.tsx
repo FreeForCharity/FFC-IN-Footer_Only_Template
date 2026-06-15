@@ -41,6 +41,17 @@ describe('Policy page metadata', () => {
 })
 
 describe('Policy page rendering', () => {
+  it.each(pages)(
+    '$name owns exactly one main landmark with the skip target id',
+    ({ Component }) => {
+      render(<Component />)
+      const mains = screen.getAllByRole('main')
+
+      expect(mains).toHaveLength(1)
+      expect(mains[0]).toHaveAttribute('id', 'main-content')
+    }
+  )
+
   it('Donation Policy renders heading and EIN', () => {
     render(<DonationPolicyPage />)
     expect(screen.getByText('Donation Policy')).toBeInTheDocument()

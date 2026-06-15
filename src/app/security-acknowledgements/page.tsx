@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const index = () => {
   return (
-    <div className="pt-[130px] pb-[54px]">
+    <main id="main-content" className="pt-[130px] pb-[54px]">
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
         <div className="border-t-[5px] border-[#0073e6] pt-[25px]" id="lato-font">
           <h2 className="text-[30px] leading-[30px] font-[700] text-[#333] mt-[20px] mb-[25px]">
@@ -43,7 +43,7 @@ const index = () => {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
 

@@ -42,15 +42,20 @@ describe('Footer component', () => {
 
   it('should have GuideStar profile link', () => {
     render(<Footer />)
-    const guidestarLink = screen.getByText(/GuideStar Profile/i)
-    expect(guidestarLink).toBeInTheDocument()
+    expect(screen.getByLabelText('View Free For Charity GuideStar Profile')).toHaveAttribute(
+      'href',
+      'https://www.guidestar.org/profile/46-2471893'
+    )
+    expect(screen.getByText('Direct GuideStar Profile Link').closest('a')).toHaveAttribute(
+      'href',
+      'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742'
+    )
   })
 
   it('should have email contact link', () => {
     render(<Footer />)
-    const links = screen.getAllByRole('link')
-    const emailLink = links.find((link) => link.getAttribute('href')?.includes('mailto:'))
-    expect(emailLink).toBeDefined()
+    const emailLink = screen.getByText('clarkemoyer@freeforcharity.org').closest('a')
+    expect(emailLink).toHaveAttribute('href', 'mailto:clarkemoyer@freeforcharity.org')
   })
 
   it('should display the EIN number', () => {
@@ -60,9 +65,10 @@ describe('Footer component', () => {
 
   it('should have phone contact link', () => {
     render(<Footer />)
-    const links = screen.getAllByRole('link')
-    const phoneLink = links.find((link) => link.getAttribute('href')?.includes('tel:'))
-    expect(phoneLink).toBeDefined()
+    expect(screen.getByText('(520) 222-8104').closest('a')).toHaveAttribute(
+      'href',
+      'tel:5202228104'
+    )
   })
 
   it('should display the Free For Charity Policy section', () => {
@@ -72,10 +78,16 @@ describe('Footer component', () => {
 
   it('should have all social media links with correct aria-labels', () => {
     render(<Footer />)
-    expect(screen.getByLabelText('Facebook')).toBeInTheDocument()
-    expect(screen.getByLabelText('X (Twitter)')).toBeInTheDocument()
-    expect(screen.getByLabelText('LinkedIn')).toBeInTheDocument()
-    expect(screen.getByLabelText('GitHub')).toBeInTheDocument()
+    for (const { href, label } of [
+      { label: 'Facebook', href: 'https://www.facebook.com/freeforcharity' },
+      { label: 'X (Twitter)', href: 'https://x.com/freeforcharity1' },
+      { label: 'LinkedIn', href: 'https://www.linkedin.com/company/freeforcharity/' },
+      { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-Footer-Only-Template' },
+    ]) {
+      const link = screen.getByLabelText(label)
+      expect(link).toBeInTheDocument()
+      expect(link).toHaveAttribute('href', href)
+    }
   })
 
   it('should have social media links open in new tabs', () => {
@@ -107,12 +119,29 @@ describe('Footer component', () => {
 
   it('should have Google Maps links for addresses', () => {
     render(<Footer />)
-    expect(screen.getByLabelText('Open main address in Google Maps')).toBeInTheDocument()
-    expect(screen.getByLabelText('Open PA office address in Google Maps')).toBeInTheDocument()
+    const mainAddress = screen.getByLabelText('Open main address in Google Maps')
+    const paAddress = screen.getByLabelText('Open PA office address in Google Maps')
+
+    expect(mainAddress).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/search/?api=1&query=4030+Wake+Forrest+Road+Suite+349+Raleigh+NC+27609'
+    )
+    expect(paAddress).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/place/Free+For+Charity/@40.7768455,-77.8963305,17z/data=!3m1!4b1!4m6!3m5!1s0x89cea944b44a2e01:0x6fc2d6bf09e00a0f!8m2!3d40.7768415!4d-77.8937556!16s%2Fg%2F11vzvbl2d7?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D'
+    )
+    expect(mainAddress).toHaveTextContent('4030 Wake Forrest Road')
+    expect(paAddress).toHaveTextContent('301 Science Park Road Suite')
   })
 
   it('should display freeforcharity.org link in copyright bar', () => {
     render(<Footer />)
+    const copyright = screen.getByText((_, node) => {
+      return (
+        node?.tagName.toLowerCase() === 'p' && node.textContent?.includes('All Rights Are Reserved')
+      )
+    })
+    expect(copyright).toHaveTextContent('Free For Charity')
     const link = screen.getByText('https://freeforcharity.org')
     expect(link.closest('a')).toHaveAttribute('href', 'https://freeforcharity.org')
   })

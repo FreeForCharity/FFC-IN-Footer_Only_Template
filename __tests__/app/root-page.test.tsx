@@ -1,5 +1,5 @@
 import React from 'react'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 
 // Mock the home-page module since it renders the team section
 jest.mock('../../src/app/home-page', () => {
@@ -19,5 +19,12 @@ describe('Root page (app/page.tsx)', () => {
   it('should render the HomePage component', () => {
     const { getByTestId } = render(<RootPage />)
     expect(getByTestId('home-page')).toBeInTheDocument()
+  })
+
+  it('should own the main landmark targeted by the skip link', () => {
+    render(<RootPage />)
+    const main = screen.getByRole('main')
+
+    expect(main).toHaveAttribute('id', 'main-content')
   })
 })

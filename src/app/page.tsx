@@ -4,10 +4,10 @@ import HomePage from '@/app/home-page'
 
 const page = () => {
   return (
-    <div>
+    <main id="main-content">
       {/* <HomePage /> */}
       <HomePage />
-    </div>
+    </main>
   )
 }
 
