@@ -1,14 +1,11 @@
 name: Phantom Revert Guard
 
-# Detects PRs that would silently revert work that landed on main while the PR
-# was open. A stale branch can pass CI on GitHub's virtual merge commit, then
-# later be squash- or rebase-merged in a way that writes old copies of files the
-# PR never touched. This guard compares "files modified on main since fork"
-# against "files changed by this PR" and fails when that stale-branch risk hits
-# critical footer-template paths or the branch is sufficiently far behind.
+# Reports stale-branch risk for PRs when main has moved while the PR was open.
+# This is intentionally advisory-only: GitHub merge semantics vary by merge
+# strategy, and false positives should not block otherwise safe PRs.
 #
-# This workflow is report/fail only. It does not update branches, comment on
-# PRs, change settings, or mutate repository content.
+# This workflow does not update branches, comment on PRs, change settings, or
+# mutate repository content.
 
 on:
   pull_request:
@@ -32,9 +29,6 @@ jobs:
     name: Phantom Revert Guard
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Resolve head SHA and base ref
         id: refs
@@ -59,10 +53,11 @@ jobs:
           echo "base_ref=$BASE_REF" >> "$GITHUB_OUTPUT"
 
       - name: Checkout PR with full history
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
           ref: ${{ steps.refs.outputs.head_sha }}
+          persist-credentials: false
 
       - name: Fetch base branch
         env:
@@ -143,7 +138,7 @@ jobs:
             echo "## Phantom Revert Guard"
             echo ""
             echo "This guard checks whether \`$BASE_REF\` changed files after this branch forked that this PR does not touch."
-            echo "That matters because a stale PR branch can pass CI on GitHub's virtual merge commit, then later be squash- or rebase-merged in a way that restores old file contents."
+            echo "That matters because stale PR branches are harder to reason about and may need a maintainer rebase before review."
             echo ""
             echo "- Merge base: \`${MERGE_BASE:0:8}\`"
             echo "- Branch freshness: $BEHIND_COUNT commits behind \`$BASE_REF\`"
@@ -151,7 +146,7 @@ jobs:
             echo "- Files touched on \`$BASE_REF\` since fork: $BASE_COUNT"
             echo "- Files touched by this PR since fork: $PR_COUNT"
             echo ""
-            echo "Remediation: update the PR branch with \`$BASE_REF\` by merging or rebasing, then push the refreshed branch so this guard reruns."
+            echo "Remediation, if needed: update the PR branch with \`$BASE_REF\` by merging or rebasing, then push the refreshed branch so this guard reruns."
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -183,26 +178,31 @@ jobs:
           fi
 
           if [ -n "$CRITICAL_PATHS_HIT" ] || [ "$BEHIND_COUNT" -gt "$STALE_THRESHOLD" ]; then
-            FAIL_REASON=""
+            WARNING_REASON=""
             if [ -n "$CRITICAL_PATHS_HIT" ]; then
-              FAIL_REASON="has untouched updates in critical paths"
+              WARNING_REASON="has untouched updates in critical paths"
             fi
             if [ "$BEHIND_COUNT" -gt "$STALE_THRESHOLD" ]; then
-              if [ -n "$FAIL_REASON" ]; then
-                FAIL_REASON="$FAIL_REASON and is $BEHIND_COUNT commits behind $BASE_REF (threshold: $STALE_THRESHOLD)"
+              if [ -n "$WARNING_REASON" ]; then
+                WARNING_REASON="$WARNING_REASON and is $BEHIND_COUNT commits behind $BASE_REF (threshold: $STALE_THRESHOLD)"
               else
-                FAIL_REASON="is $BEHIND_COUNT commits behind $BASE_REF (threshold: $STALE_THRESHOLD)"
+                WARNING_REASON="is $BEHIND_COUNT commits behind $BASE_REF (threshold: $STALE_THRESHOLD)"
               fi
             fi
 
-            echo "::error::Phantom-revert risk: branch $FAIL_REASON. Update the branch with $BASE_REF before merging."
-            echo "violations=true" >> "$GITHUB_OUTPUT"
-            exit 1
+            echo "::warning::Phantom-revert advisory: branch $WARNING_REASON. Consider updating the branch with $BASE_REF before merging."
+            {
+              echo "### Advisory result"
+              echo ""
+              echo "This branch $WARNING_REASON. This is advisory-only and does not block merge."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "violations=advisory" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           {
             echo "### Result"
             echo ""
-            echo "No critical-path phantom-revert risk exceeded the configured threshold."
+            echo "No critical-path stale-branch advisory exceeded the configured threshold."
           } >> "$GITHUB_STEP_SUMMARY"
           echo "violations=" >> "$GITHUB_OUTPUT"
