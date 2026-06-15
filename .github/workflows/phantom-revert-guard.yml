@@ -1,0 +1,208 @@
+name: Phantom Revert Guard
+
+# Reports stale-branch risk for PRs when main has moved while the PR was open.
+# This is intentionally advisory-only: GitHub merge semantics vary by merge
+# strategy, and false positives should not block otherwise safe PRs.
+#
+# This workflow does not update branches, comment on PRs, change settings, or
+# mutate repository content.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      head_sha:
+        description: 'Head SHA or branch to analyze (defaults to GITHUB_SHA, the commit that triggered this run)'
+        required: false
+        default: ''
+      base_ref:
+        description: 'Base branch to compare against (defaults to repo default branch)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  phantom-revert-guard:
+    name: Phantom Revert Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Resolve head SHA and base ref
+        id: refs
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          INPUT_HEAD_SHA: ${{ inputs.head_sha }}
+          INPUT_BASE_REF: ${{ inputs.base_ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            HEAD_SHA="${INPUT_HEAD_SHA:-${GITHUB_SHA}}"
+            BASE_REF="${INPUT_BASE_REF:-${DEFAULT_BRANCH:-main}}"
+            BASE_REF="${BASE_REF#refs/heads/}"
+          else
+            HEAD_SHA="$PR_HEAD_SHA"
+            BASE_REF="$PR_BASE_REF"
+          fi
+
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "base_ref=$BASE_REF" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout PR with full history
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.refs.outputs.head_sha }}
+          persist-credentials: false
+
+      - name: Fetch base branch
+        env:
+          BASE_REF: ${{ steps.refs.outputs.base_ref }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$BASE_REF" == -* ]]; then
+            echo "::error::Invalid base_ref: '$BASE_REF' must not start with '-'"
+            exit 1
+          fi
+
+          if [[ "$BASE_REF" == *..* ]]; then
+            echo "::error::Invalid base_ref: '$BASE_REF' must not contain '..'"
+            exit 1
+          fi
+
+          if ! git check-ref-format --branch "$BASE_REF" >/dev/null 2>&1; then
+            echo "::error::Invalid base_ref: '$BASE_REF' is not a valid git branch name"
+            exit 1
+          fi
+
+          git fetch origin "$BASE_REF:refs/remotes/origin/$BASE_REF"
+
+      - name: Detect phantom reverts
+        id: detect
+        env:
+          BASE_REF: ${{ steps.refs.outputs.base_ref }}
+          STALE_THRESHOLD: '5'
+        run: |
+          set -euo pipefail
+
+          BASE="origin/${BASE_REF}"
+          CRITICAL_PATH_RE='^(src/|tests/|__tests__/|scripts/|\.github/workflows/|package\.json$|package-lock\.json$|public/)'
+
+          MERGE_BASE=$(git merge-base "$BASE" HEAD)
+          PR_HEAD=$(git rev-parse HEAD)
+          BASE_HEAD=$(git rev-parse "$BASE")
+
+          echo "merge-base: $MERGE_BASE"
+          echo "PR head:    $PR_HEAD"
+          echo "$BASE_REF head: $BASE_HEAD"
+
+          if [ "$MERGE_BASE" = "$BASE_HEAD" ]; then
+            echo "Branch is up to date with $BASE_REF; no phantom revert possible."
+            {
+              echo "## Phantom Revert Guard: clean"
+              echo ""
+              echo "Branch is up to date with \`$BASE_REF\`, so there are no base updates for this PR to accidentally revert."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "violations=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BEHIND_COUNT=$(git rev-list --count "$MERGE_BASE..$BASE")
+          echo "Branch is $BEHIND_COUNT commits behind $BASE_REF."
+
+          BASE_TOUCHED=$(git diff --name-only "$MERGE_BASE" "$BASE" | sort -u)
+          PR_TOUCHED=$(git diff --name-only "$MERGE_BASE" HEAD | sort -u)
+
+          strip_blank() { printf '%s\n' "$1" | sed '/^$/d'; }
+
+          BASE_COUNT=$(strip_blank "$BASE_TOUCHED" | wc -l | tr -d ' ')
+          PR_COUNT=$(strip_blank "$PR_TOUCHED" | wc -l | tr -d ' ')
+          echo "base touched: $BASE_COUNT files"
+          echo "PR touched:   $PR_COUNT files"
+
+          PHANTOM_CANDIDATES=$(comm -23 \
+            <(strip_blank "$BASE_TOUCHED") \
+            <(strip_blank "$PR_TOUCHED"))
+
+          CRITICAL_PATHS_HIT=""
+          if [ -n "$PHANTOM_CANDIDATES" ]; then
+            CRITICAL_PATHS_HIT=$(echo "$PHANTOM_CANDIDATES" | grep -E "$CRITICAL_PATH_RE" || true)
+          fi
+
+          {
+            echo "## Phantom Revert Guard"
+            echo ""
+            echo "This guard checks whether \`$BASE_REF\` changed files after this branch forked that this PR does not touch."
+            echo "That matters because stale PR branches are harder to reason about and may need a maintainer rebase before review."
+            echo ""
+            echo "- Merge base: \`${MERGE_BASE:0:8}\`"
+            echo "- Branch freshness: $BEHIND_COUNT commits behind \`$BASE_REF\`"
+            echo "- Stale threshold: $STALE_THRESHOLD commits"
+            echo "- Files touched on \`$BASE_REF\` since fork: $BASE_COUNT"
+            echo "- Files touched by this PR since fork: $PR_COUNT"
+            echo ""
+            echo "Remediation, if needed: update the PR branch with \`$BASE_REF\` by merging or rebasing, then push the refreshed branch so this guard reruns."
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -n "$PHANTOM_CANDIDATES" ]; then
+            {
+              echo "<details><summary>Updated files on $BASE_REF that this PR does not touch</summary>"
+              echo ""
+              echo '```'
+              echo "$PHANTOM_CANDIDATES"
+              echo '```'
+              echo "</details>"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No untouched base updates were found." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -n "$CRITICAL_PATHS_HIT" ]; then
+            {
+              echo "### Critical-path risk"
+              echo ""
+              echo "Untouched base updates hit footer-template critical paths:"
+              echo ""
+              echo '```'
+              echo "$CRITICAL_PATHS_HIT"
+              echo '```'
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -n "$CRITICAL_PATHS_HIT" ] || [ "$BEHIND_COUNT" -gt "$STALE_THRESHOLD" ]; then
+            WARNING_REASON=""
+            if [ -n "$CRITICAL_PATHS_HIT" ]; then
+              WARNING_REASON="has untouched updates in critical paths"
+            fi
+            if [ "$BEHIND_COUNT" -gt "$STALE_THRESHOLD" ]; then
+              if [ -n "$WARNING_REASON" ]; then
+                WARNING_REASON="$WARNING_REASON and is $BEHIND_COUNT commits behind $BASE_REF (threshold: $STALE_THRESHOLD)"
+              else
+                WARNING_REASON="is $BEHIND_COUNT commits behind $BASE_REF (threshold: $STALE_THRESHOLD)"
+              fi
+            fi
+
+            echo "::warning::Phantom-revert advisory: branch $WARNING_REASON. Consider updating the branch with $BASE_REF before merging."
+            {
+              echo "### Advisory result"
+              echo ""
+              echo "This branch $WARNING_REASON. This is advisory-only and does not block merge."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "violations=advisory" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          {
+            echo "### Result"
+            echo ""
+            echo "No critical-path stale-branch advisory exceeded the configured threshold."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "violations=" >> "$GITHUB_OUTPUT"
