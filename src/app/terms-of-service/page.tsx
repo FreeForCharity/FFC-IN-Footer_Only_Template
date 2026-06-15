@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function TermsOfService() {
   return (
-    <div className="pt-[130px] pb-[54px]">
+    <main id="main-content" className="pt-[130px] pb-[54px]">
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
         <div id="aria-font">
           {/* Effective Date */}
@@ -248,6 +248,6 @@ export default function TermsOfService() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

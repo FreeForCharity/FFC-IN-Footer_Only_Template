@@ -1,5 +1,15 @@
 import sitemap from '../../src/app/sitemap'
 
+const originalBasePath = process.env.NEXT_PUBLIC_BASE_PATH
+
+afterEach(() => {
+  if (originalBasePath === undefined) {
+    delete process.env.NEXT_PUBLIC_BASE_PATH
+  } else {
+    process.env.NEXT_PUBLIC_BASE_PATH = originalBasePath
+  }
+})
+
 describe('sitemap.xml generation', () => {
   it('should return a non-empty array', () => {
     const result = sitemap()
@@ -14,10 +24,24 @@ describe('sitemap.xml generation', () => {
   })
 
   it('should use the correct base URL', () => {
+    delete process.env.NEXT_PUBLIC_BASE_PATH
     const result = sitemap()
     for (const entry of result) {
       expect(entry.url).toContain('ffcworkingsite1.org')
     }
+  })
+
+  it('should include GitHub Pages base path in route URLs when configured', () => {
+    process.env.NEXT_PUBLIC_BASE_PATH = '/FFC-IN-Footer_Only_Template'
+
+    const result = sitemap()
+
+    expect(
+      result.find((entry) => entry.url.endsWith('/FFC-IN-Footer_Only_Template/'))
+    ).toBeDefined()
+    expect(
+      result.find((entry) => entry.url.includes('/FFC-IN-Footer_Only_Template/privacy-policy'))
+    ).toBeDefined()
   })
 
   it('should have lastModified dates', () => {

@@ -2,6 +2,7 @@ import './globals.css'
 import Footer from './../components/footer'
 import CookieConsent from './../components/cookie-consent'
 import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/google-tag-manager'
+import { siteConfig } from '@/lib/site.config'
 import {
   openSans,
   lato,
@@ -25,6 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+        <meta name="color-scheme" content="light" />
+        <meta name="theme-color" content={siteConfig.themeColor} />
+
         {/* Preconnect to external domains for faster resource loading */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://ffcsites.org" />
@@ -60,6 +65,9 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <GoogleTagManagerNoScript />
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
         {/* <PopupProvider> */}
         {children}
         <Footer />
