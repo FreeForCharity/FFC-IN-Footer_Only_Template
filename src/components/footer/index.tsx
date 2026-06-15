@@ -6,9 +6,9 @@ import { Mail, Phone, MapPin, ArrowRight } from 'lucide-react'
 
 import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
+import { assetPath } from '@/lib/assetPath'
 
 const Footer: React.FC = () => {
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
   const socialLinks = [
     { icon: FaFacebookF, href: 'https://www.facebook.com/freeforcharity', label: 'Facebook' },
@@ -37,7 +37,7 @@ const Footer: React.FC = () => {
               aria-label="View Free For Charity GuideStar Profile"
             >
               <img
-                src={`${basePath}/Svgs/footerImage.svg`}
+                src={assetPath('/Svgs/footerImage.svg')}
                 alt="GuideStar Platinum Seal of Transparency"
               />
             </a>

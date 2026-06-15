@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 interface TeamMemberCardProps {
   imageUrl: string
@@ -16,19 +17,13 @@ export default function TeamMemberCard({
   title,
   linkedinUrl,
 }: TeamMemberCardProps) {
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
-  const resolveAssetUrl = React.useCallback(
-    (url: string) => (url.startsWith('/') ? `${basePath}${url}` : url),
-    [basePath]
-  )
-
   return (
     <>
       <div className="flex flex-col items-center max-w-[388px] w-full mx-auto">
         {/* Circular Image Container */}
         <div className="relative w-[300px] h-[300px] mb-6 rounded-full overflow-hidden ring-4 ring-white shadow-xl">
           <Image
-            src={resolveAssetUrl(imageUrl)}
+            src={imageUrl}
             alt={name}
             fill
             className="object-cover"
@@ -50,7 +45,7 @@ export default function TeamMemberCard({
         {/* LinkedIn Button */}
         <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="mt-6">
           <Image
-            src={resolveAssetUrl('/Svgs/linkedin-icon.svg')}
+            src={assetPath('/Svgs/linkedin-icon.svg')}
             width={63}
             height={63}
             alt="linkedin icon"

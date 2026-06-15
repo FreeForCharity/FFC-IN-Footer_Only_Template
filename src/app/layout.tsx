@@ -13,11 +13,9 @@ import {
   cinzel,
 } from '@/lib/fonts'
 import { siteMetadata } from '@/lib/siteMetadata'
+import { assetPath } from '@/lib/assetPath'
 
 export const metadata = siteMetadata
-
-// Get basePath for GitHub Pages deployment
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
 
 export default function RootLayout({
   children,
@@ -41,7 +39,7 @@ export default function RootLayout({
         <link
           rel="preload"
           as="image"
-          href={`${basePath}/Images/figma-hero-img.webp`}
+          href={assetPath('/Images/figma-hero-img.webp')}
           fetchPriority="high"
         />
 
