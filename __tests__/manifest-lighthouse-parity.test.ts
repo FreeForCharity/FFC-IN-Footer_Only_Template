@@ -75,6 +75,8 @@ describe('manifest and Lighthouse parity', () => {
     expect(workflow).toContain('value=/${GITHUB_REPOSITORY#*/}')
     expect(workflow).toContain('NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}')
     expect(workflow).toContain('Prepare Lighthouse URLs')
+    expect(workflow).toContain('rm -rf .lighthouseci-dist')
+    expect(workflow).toContain('.ci.collect.staticDistDir = "./.lighthouseci-dist"')
     expect(workflow).toContain('jq --arg base_path')
     expect(workflow).toContain('http://localhost" + $base_path')
     expect(workflow).not.toContain('NEXT_PUBLIC_BASE_PATH: /FFC-IN-Footer_Only_Template')
