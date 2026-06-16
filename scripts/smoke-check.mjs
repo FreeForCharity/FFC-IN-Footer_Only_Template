@@ -14,8 +14,8 @@
  *   - /sitemap.xml is 200 and contains <urlset>
  *   - /.well-known/security.txt or /security.txt is 200 with a Contact: line
  *     and a future RFC 3339 Expires: date
- *   - /site.webmanifest (or /manifest.webmanifest if a child site adds one)
- *     returns 200 JSON with name + icons
+ *   - the manifest URL linked from the home page returns 200 JSON with
+ *     name + icons
  *   - 404 page is branded when the deployment serves a branded 404
  *   - favicon.ico and icon.png are reachable
  *
@@ -121,28 +121,32 @@ async function smoke() {
 
   // 1. Home page.
   const homeRes = await expect200('/', 'home page returns 200')
+  let homeHtml = ''
   if (homeRes) {
-    const html = await homeRes.text()
+    homeHtml = await homeRes.text()
     record(
       'home has Content-Security-Policy <meta>',
-      /<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]+content=/i.test(html)
+      /<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]+content=/i.test(homeHtml)
     )
-    record('home has <meta name="theme-color">', /<meta[^>]+name=["']theme-color["']/i.test(html))
-    record('home has Open Graph title', /<meta[^>]+property=["']og:title["']/i.test(html))
-    record('home has Twitter card meta', /<meta[^>]+name=["']twitter:card["']/i.test(html))
-    record('home has <link rel="manifest">', /<link[^>]+rel=["']manifest["']/i.test(html))
+    record(
+      'home has <meta name="theme-color">',
+      /<meta[^>]+name=["']theme-color["']/i.test(homeHtml)
+    )
+    record('home has Open Graph title', /<meta[^>]+property=["']og:title["']/i.test(homeHtml))
+    record('home has Twitter card meta', /<meta[^>]+name=["']twitter:card["']/i.test(homeHtml))
+    record('home has <link rel="manifest">', /<link[^>]+rel=["']manifest["']/i.test(homeHtml))
     record(
       'home renders footer',
-      /<footer[\s>]/i.test(html) || /Free For Charity Policy/i.test(html)
+      /<footer[\s>]/i.test(homeHtml) || /Free For Charity Policy/i.test(homeHtml)
     )
     record(
       'home renders footer policy links',
-      /privacy-policy/i.test(html) && /terms-of-service/i.test(html)
+      /privacy-policy/i.test(homeHtml) && /terms-of-service/i.test(homeHtml)
     )
     record(
       'home advertises strict referrer policy',
       /<meta[^>]+name=["']referrer["'][^>]+content=["']strict-origin-when-cross-origin["']/i.test(
-        html
+        homeHtml
       )
     )
   }
@@ -225,18 +229,20 @@ async function smoke() {
     }
   }
 
-  // 5. Manifest. Footer-only currently ships /site.webmanifest; keep
-  // /manifest.webmanifest as a forward-compatible fallback for child sites.
-  let manifestPath = '/site.webmanifest'
-  let manifestRes = await fetchWithRetry(manifestPath, { retry404: false }).catch(() => null)
-  if (!manifestRes || manifestRes.status === 404) {
-    manifestPath = '/manifest.webmanifest'
-    manifestRes = await fetchWithRetry(manifestPath, { retry404: false }).catch(() => null)
-  }
+  // 5. Manifest. Verify the exact manifest linked by the home page instead
+  // of probing a legacy endpoint first; otherwise stale fallback manifests can
+  // hide regressions in the install metadata browsers actually consume.
+  const manifestMatch = /<link[^>]+rel=["']manifest["'][^>]*href=["']([^"']+)["']/i.exec(homeHtml)
+  const manifestPath = manifestMatch?.[1]?.replace(BASE, '') || '/manifest.webmanifest'
+  const manifestRes = await fetchWithRetry(manifestPath, { retry404: false }).catch(() => null)
   if (!manifestRes || manifestRes.status !== 200) {
-    record('manifest served at /site.webmanifest or /manifest.webmanifest', false)
+    record(
+      `linked manifest served at ${manifestPath}`,
+      false,
+      manifestRes ? `HTTP ${manifestRes.status}` : 'fetch failed'
+    )
   } else {
-    record(`manifest served at ${manifestPath}`, true, `HTTP ${manifestRes.status}`)
+    record(`linked manifest served at ${manifestPath}`, true, `HTTP ${manifestRes.status}`)
     const ct = manifestRes.headers.get('content-type') || ''
     let manifest = null
     try {

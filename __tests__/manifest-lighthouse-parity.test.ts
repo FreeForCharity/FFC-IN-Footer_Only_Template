@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { afterEach, describe, expect, jest, test } from '@jest/globals'
@@ -47,6 +47,7 @@ describe('manifest and Lighthouse parity', () => {
 
     const { siteMetadata } = require('@/lib/siteMetadata')
     expect(siteMetadata.manifest).toBe('/manifest.webmanifest')
+    expect(existsSync(join(process.cwd(), 'public/site.webmanifest'))).toBe(false)
   })
 
   test('prefixes manifest paths with NEXT_PUBLIC_BASE_PATH for GitHub Pages deploys', () => {
@@ -73,6 +74,9 @@ describe('manifest and Lighthouse parity', () => {
     expect(workflow).toContain('public/CNAME')
     expect(workflow).toContain('value=/${GITHUB_REPOSITORY#*/}')
     expect(workflow).toContain('NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}')
+    expect(workflow).toContain('Prepare Lighthouse URLs')
+    expect(workflow).toContain('jq --arg base_path')
+    expect(workflow).toContain('http://localhost" + $base_path')
     expect(workflow).not.toContain('NEXT_PUBLIC_BASE_PATH: /FFC-IN-Footer_Only_Template')
   })
 

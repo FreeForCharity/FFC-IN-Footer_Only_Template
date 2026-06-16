@@ -57,6 +57,19 @@ jobs:
         env:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 
+      - name: Prepare Lighthouse URLs
+        run: |
+          BASE_PATH="${{ steps.basepath.outputs.value }}"
+          if [ -n "$BASE_PATH" ]; then
+            repo_dir="out/${BASE_PATH#/}"
+            mkdir -p "$repo_dir"
+            find out -mindepth 1 -maxdepth 1 ! -name "${BASE_PATH#/}" -exec cp -R {} "$repo_dir" \;
+            jq --arg base_path "$BASE_PATH" \
+              '.ci.collect.url |= map(sub("http://localhost"; "http://localhost" + $base_path))' \
+              lighthouserc.json > lighthouserc.runtime.json
+            mv lighthouserc.runtime.json lighthouserc.json
+          fi
+
       - name: Run Lighthouse CI
         run: |
           npm install -g @lhci/cli
