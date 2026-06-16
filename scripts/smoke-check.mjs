@@ -34,6 +34,17 @@ if (!baseArg) {
   process.exit(2)
 }
 const BASE = baseArg.replace(/\/$/, '')
+const BASE_URL = new URL(BASE)
+const BASE_PATH = BASE_URL.pathname.replace(/\/$/, '')
+
+function pathFromHref(href) {
+  const url = new URL(href, BASE)
+  let path = `${url.pathname}${url.search}`
+  if (BASE_PATH && (path === BASE_PATH || path.startsWith(`${BASE_PATH}/`))) {
+    path = path.slice(BASE_PATH.length) || '/'
+  }
+  return path.startsWith('/') ? path : `/${path}`
+}
 
 const TOTAL_DEADLINE_MS = 180 * 1000
 const REQUEST_TIMEOUT_MS = 15 * 1000
@@ -233,7 +244,7 @@ async function smoke() {
   // of probing a legacy endpoint first; otherwise stale fallback manifests can
   // hide regressions in the install metadata browsers actually consume.
   const manifestMatch = /<link[^>]+rel=["']manifest["'][^>]*href=["']([^"']+)["']/i.exec(homeHtml)
-  const manifestPath = manifestMatch?.[1]?.replace(BASE, '') || '/manifest.webmanifest'
+  const manifestPath = manifestMatch?.[1] ? pathFromHref(manifestMatch[1]) : '/manifest.webmanifest'
   const manifestRes = await fetchWithRetry(manifestPath, { retry404: false }).catch(() => null)
   if (!manifestRes || manifestRes.status !== 200) {
     record(
@@ -269,13 +280,8 @@ async function smoke() {
       if (Array.isArray(manifest.icons)) {
         for (const icon of manifest.icons) {
           if (!icon?.src) continue
-          const iconUrl = icon.src.startsWith('http')
-            ? icon.src
-            : icon.src.startsWith('/')
-              ? icon.src
-              : `/${icon.src}`
-          const iconPath = iconUrl.startsWith('http') ? iconUrl.replace(BASE, '') : iconUrl
-          const r = await fetchWithRetry(iconPath).catch(() => null)
+          const iconPath = icon.src ? pathFromHref(icon.src) : ''
+          const r = iconPath ? await fetchWithRetry(iconPath).catch(() => null) : null
           const ok = r && r.status === 200
           record(`manifest icon ${icon.src} resolves`, ok, r ? `HTTP ${r.status}` : 'fetch failed')
         }
