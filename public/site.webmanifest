@@ -1,6 +1,12 @@
 {
   "name": "Free For Charity",
-  "short_name": "FreeForCharity",
+  "short_name": "Free For Charity",
+  "description": "Connecting students, professionals, and businesses with nonprofits to reduce costs and increase revenues.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -12,8 +18,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  ]
 }
