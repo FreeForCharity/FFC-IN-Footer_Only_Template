@@ -81,9 +81,9 @@ describe('manifest and Lighthouse parity', () => {
 
     expect(lighthouserc.ci.collect.url).toEqual([
       'http://localhost/index.html',
-      'http://localhost/cookie-policy.html',
-      'http://localhost/privacy-policy.html',
-      'http://localhost/terms-of-service.html',
+      'http://localhost/cookie-policy/',
+      'http://localhost/privacy-policy/',
+      'http://localhost/terms-of-service/',
     ])
   })
 })
