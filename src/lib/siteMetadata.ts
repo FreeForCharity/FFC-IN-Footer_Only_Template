@@ -55,5 +55,5 @@ export const siteMetadata: Metadata = {
     ],
     apple: [{ url: assetPath('/apple-icon.png'), sizes: '180x180', type: 'image/png' }],
   },
-  manifest: assetPath('/site.webmanifest'),
+  manifest: assetPath('/manifest.webmanifest'),
 }
