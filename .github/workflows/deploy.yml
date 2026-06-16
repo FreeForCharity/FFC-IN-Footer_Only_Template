@@ -8,6 +8,9 @@ on:
       - completed
     branches: ['main']
 
+  # Allows manual deployment from Actions tab
+  workflow_dispatch:
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -24,8 +27,8 @@ jobs:
   build:
     name: Build for GitHub Pages
     runs-on: ubuntu-latest
-    # Only run if CI workflow succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Only run if CI workflow succeeded or if manually triggered
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
       - name: Checkout repository
@@ -58,12 +61,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Determine base path
+        id: basepath
+        # Custom-domain deploys serve from the origin root (no subpath), so
+        # NEXT_PUBLIC_BASE_PATH must be empty. Subpath-only deploys (no
+        # CNAME) need /<repo-name>. Empirically the live site at
+        # ffcworkingsite1.org/site.webmanifest referenced
+        # /FFC-IN-Footer_Only_Template/android-chrome-*.png because the build
+        # always set the subpath, but those paths 404 on the custom domain.
+        # This step picks the right value based on whether public/CNAME
+        # exists.
+        run: |
+          if [ -s "public/CNAME" ]; then
+            echo "Using empty basePath (public/CNAME present: $(cat public/CNAME))"
+            echo "value=" >> "$GITHUB_OUTPUT"
+          else
+            REPO_NAME="${GITHUB_REPOSITORY#*/}"
+            echo "Using /$REPO_NAME basePath (no CNAME — github.io subpath deploy)"
+            echo "value=/$REPO_NAME" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build with Next.js
         run: npm run build
         env:
-          # Set basePath for GitHub Pages deployment
-          # This ensures images and assets work correctly at the subpath
-          NEXT_PUBLIC_BASE_PATH: /FFC-IN-Footer_Only_Template
+          # See "Determine base path" above. Set automatically based on
+          # whether public/CNAME exists.
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 
       - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v4
@@ -77,68 +100,181 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
-    outputs:
-      page_url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
-  smoke:
-    name: Post-Deploy Smoke Test
-    runs-on: ubuntu-latest
-    needs: deploy
-    if: ${{ success() }}
-
-    steps:
-      - name: Checkout repository
+      - name: Checkout (for smoke-check script)
         uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Wait for deployment to be available
-        run: |
-          for i in $(seq 1 12); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ needs.deploy.outputs.page_url }}")
-            if [ "$STATUS" = "200" ]; then
-              echo "Site is available (HTTP $STATUS)"
-              exit 0
-            fi
-            echo "Attempt $i: HTTP $STATUS, retrying in 10s..."
-            sleep 10
-          done
-          echo "Site not available after 120 seconds"
-          exit 1
-
-      - name: Run smoke tests against deployed site
-        run: npm run test:smoke
+      - name: Post-deploy smoke check
         env:
-          BASE_URL: ${{ needs.deploy.outputs.page_url }}
-          CI: true
+          DEPLOY_URL: ${{ steps.deployment.outputs.page_url }}
+        timeout-minutes: 5
+        # Runs scripts/smoke-check.mjs against the freshly deployed URL.
+        # Verifies the home page, security.txt (with /.well-known fallback to
+        # /), robots.txt, sitemap.xml, manifest, branded 404, and favicons.
+        # The script lives in the repo so it's runnable locally too:
+        #   node scripts/smoke-check.mjs https://your-site.example
+        run: node scripts/smoke-check.mjs "$DEPLOY_URL"
 
-      - name: Upload smoke test report
-        if: failure()
-        uses: actions/upload-artifact@v4
+  notify-failure:
+    name: Notify on production deploy failure
+    needs: [deploy]
+    if: ${{ always() && needs.deploy.result == 'failure' && (github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main') && (github.event_name == 'workflow_run' || github.ref == 'refs/heads/main') }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create incident issue
+        uses: actions/github-script@v8
         with:
-          name: smoke-test-report
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 7
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const workflowRun = context.payload && context.payload.workflow_run;
+            const isWorkflowRun = Boolean(workflowRun);
+            const deployRunUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const upstreamRunUrl = isWorkflowRun ? workflowRun.html_url : null;
+            const sha = isWorkflowRun ? workflowRun.head_sha : context.sha;
+            const branch = isWorkflowRun
+              ? workflowRun.head_branch
+              : (context.ref && context.ref.startsWith("refs/heads/") ? context.ref.substring("refs/heads/".length) : context.ref);
+
+            const incidentLabelSpecs = [
+              { name: "incident", color: "B60205" },
+              { name: "deployment", color: "B60205" },
+            ];
+            const incidentLabels = incidentLabelSpecs.map((l) => l.name);
+            const marker = "<!-- ffc-incident:prod-deploy-failure -->";
+
+            // Best-effort: ensure labels exist without spamming 422s every run.
+            try {
+              const existing = await github.paginate(github.rest.issues.listLabelsForRepo, {
+                owner,
+                repo,
+                per_page: 100,
+              });
+              const existingNames = new Set((existing || []).map((l) => l && l.name).filter(Boolean));
+              for (const spec of incidentLabelSpecs) {
+                if (existingNames.has(spec.name)) continue;
+                try {
+                  await github.rest.issues.createLabel({ owner, repo, name: spec.name, color: spec.color });
+                } catch (e) {
+                  core.warning(`Could not create label "${spec.name}": ${e && e.message ? e.message : e}`);
+                }
+              }
+            } catch (e) {
+              core.warning(`Could not list/create labels: ${e && e.message ? e.message : e}`);
+            }
+
+            const title = `Production deployment failed (${branch})`;
+            const bodyLines = [
+              `Deploy run: ${deployRunUrl}`,
+            ];
+            if (upstreamRunUrl) {
+              bodyLines.push(`Upstream run: ${upstreamRunUrl}`);
+            }
+            bodyLines.push(
+              "",
+              `Ref: ${branch}`,
+              `SHA: ${sha}`,
+              "",
+              marker,
+              "_This issue was automatically created by the deploy workflow._"
+            );
+            const body = bodyLines.join("\n");
+
+            async function findDuplicateIssueNumber() {
+              const escapedTitle = title.replace(/"/g, "\\\"");
+              const q = `repo:${owner}/${repo} is:issue is:open in:title "${escapedTitle}"`;
+              try {
+                const res = await github.rest.search.issuesAndPullRequests({ q, per_page: 10 });
+                const items = (res && res.data && res.data.items) ? res.data.items : [];
+                const matches = items.filter((item) => !item.pull_request && (item.title || "") === title);
+                for (const m of matches) {
+                  try {
+                    const full = await github.rest.issues.get({ owner, repo, issue_number: m.number });
+                    const fullBody = (full && full.data && full.data.body) ? full.data.body : "";
+                    if (fullBody.includes(marker)) return m.number;
+                  } catch (e) {
+                    core.warning(`Could not validate possible duplicate issue body: ${e && e.message ? e.message : e}`);
+                  }
+                }
+              } catch (e) {
+                core.warning(`Search API failed for dedupe: ${e && e.message ? e.message : e}`);
+              }
+
+              // Fallback: page through open issues (bounded) and match by title + marker.
+              try {
+                const perPage = 100;
+                const maxPages = 10;
+                for (let page = 1; page <= maxPages; page++) {
+                  const list = await github.rest.issues.listForRepo({
+                    owner,
+                    repo,
+                    state: "open",
+                    per_page: perPage,
+                    page,
+                  });
+                  const data = (list && list.data) ? list.data : [];
+                  const openIssues = data.filter((item) => !item.pull_request);
+                  const dup = openIssues.find((issue) => (issue.title || "") === title && (issue.body || "").includes(marker));
+                  if (dup) return dup.number;
+                  if (data.length < perPage) break;
+                }
+                return null;
+              } catch (e) {
+                core.warning(`Could not list existing issues for dedupe: ${e && e.message ? e.message : e}`);
+                return null;
+              }
+            }
+
+            const duplicateNumber = await findDuplicateIssueNumber();
+            if (duplicateNumber) {
+              core.info(`Incident issue #${duplicateNumber} already exists; adding a comment.`);
+              try {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: duplicateNumber,
+                  body: [
+                    "Another deployment failure was detected:",
+                    "",
+                    body,
+                  ].join("\n"),
+                });
+              } catch (e) {
+                core.warning(`Could not comment on incident issue: ${e && e.message ? e.message : e}`);
+              }
+              return;
+            }
+
+            let created;
+            try {
+              created = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+                labels: incidentLabels,
+              });
+            } catch (e) {
+              core.warning(`Could not create labeled incident issue: ${e && e.message ? e.message : e}`);
+              try {
+                created = await github.rest.issues.create({ owner, repo, title, body });
+              } catch (e2) {
+                core.warning(`Could not create incident issue: ${e2 && e2.message ? e2.message : e2}`);
+                return;
+              }
+            }
+
+            core.info(`Created incident issue #${created.data.number}`);
