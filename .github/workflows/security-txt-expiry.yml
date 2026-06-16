@@ -1,0 +1,168 @@
+name: security.txt expiry check
+
+# RFC 9116 requires Expires to be in the future. This workflow opens an issue
+# when the date is within 30 days so maintainers can refresh it before clients
+# start treating the file as stale.
+#
+# Missing file, missing Expires, invalid Expires, and approaching expiry each
+# use their own marker so one open alert does not suppress another condition.
+
+on:
+  schedule:
+    - cron: '0 12 * * 1' # weekly, Monday 12:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Inspect Expires header
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'public/.well-known/security.txt';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const MARKERS = {
+              missing: '<!-- ffc-security-txt:missing -->',
+              noExpires: '<!-- ffc-security-txt:no-expires -->',
+              invalidExpires: '<!-- ffc-security-txt:invalid-expires -->',
+              expiringSoon: '<!-- ffc-security-txt:expiring-soon -->',
+            };
+
+            const rfc3339 =
+              /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+
+            function isSemanticallyValidRfc3339(raw) {
+              const match = raw.match(rfc3339);
+              if (!match) return false;
+
+              const [, yearRaw, monthRaw, dayRaw, hourRaw, minuteRaw, secondRaw, zoneRaw] = match;
+              const year = Number(yearRaw);
+              const month = Number(monthRaw);
+              const day = Number(dayRaw);
+              const hour = Number(hourRaw);
+              const minute = Number(minuteRaw);
+              const second = Number(secondRaw);
+
+              if (month < 1 || month > 12) return false;
+              if (hour > 23 || minute > 59 || second > 59) return false;
+
+              const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+              if (day < 1 || day > daysInMonth) return false;
+
+              if (zoneRaw !== 'Z') {
+                const [offsetHourRaw, offsetMinuteRaw] = zoneRaw.slice(1).split(':');
+                const offsetHour = Number(offsetHourRaw);
+                const offsetMinute = Number(offsetMinuteRaw);
+                if (offsetHour > 23 || offsetMinute > 59) return false;
+              }
+
+              return !Number.isNaN(new Date(raw).getTime());
+            }
+
+            async function findExistingIssue(marker, title) {
+              const issues = await github.paginate(github.rest.issues.listForRepo, {
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100,
+              });
+              return issues.find((issue) => {
+                if (issue.pull_request) return false;
+                const body = issue.body || '';
+                return body.includes(marker) || issue.title === title || body.includes(title);
+              });
+            }
+
+            async function ensureIssue(marker, title, body) {
+              const existing = await findExistingIssue(marker, title);
+              if (existing) {
+                core.info(`Existing issue #${existing.number} for ${marker} - skipping.`);
+                return;
+              }
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body: `${body}\n\n${marker}`,
+              });
+              core.info(`Created issue #${created.data.number}.`);
+            }
+
+            if (!fs.existsSync(path)) {
+              core.setFailed(`${path} not found.`);
+              await ensureIssue(
+                MARKERS.missing,
+                'security.txt is missing',
+                [
+                  `\`${path}\` was not found in the repository.`,
+                  '',
+                  'Restore the file with a valid future `Expires:` line.',
+                ].join('\n')
+              );
+              return;
+            }
+
+            const body = fs.readFileSync(path, 'utf8');
+            const match = body.match(/^Expires:\s*(.+)$/mi);
+            if (!match) {
+              core.setFailed(`No Expires line in ${path}.`);
+              await ensureIssue(
+                MARKERS.noExpires,
+                'security.txt is missing the Expires line',
+                [
+                  `\`${path}\` has no \`Expires:\` line.`,
+                  '',
+                  'RFC 9116 requires exactly one `Expires:` line with an RFC 3339 datetime.',
+                ].join('\n')
+              );
+              return;
+            }
+
+            const raw = match[1].trim();
+            const expires = new Date(raw);
+            if (!isSemanticallyValidRfc3339(raw)) {
+              core.setFailed(`Could not parse Expires: ${raw}`);
+              await ensureIssue(
+                MARKERS.invalidExpires,
+                'security.txt Expires line is not RFC 9116 compliant',
+                [
+                  `\`${path}\` Expires value \`${raw}\` is not a valid RFC 3339 datetime.`,
+                  '',
+                  'Use `YYYY-MM-DDTHH:MM:SSZ` or include a numeric offset such as `+00:00`.',
+                ].join('\n')
+              );
+              return;
+            }
+
+            const now = new Date();
+            const daysLeft = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+            core.info(`security.txt expires in ${daysLeft} day(s) (${expires.toISOString()}).`);
+
+            if (daysLeft > 30) return;
+
+            if (daysLeft <= 0) {
+              core.setFailed(
+                `security.txt expired ${Math.abs(daysLeft)} day(s) ago (${expires.toISOString()}).`
+              );
+            }
+
+            await ensureIssue(
+              MARKERS.expiringSoon,
+              `security.txt Expires within ${Math.max(daysLeft, 0)} days`,
+              [
+                `\`${path}\` will expire on **${expires.toISOString()}** (${daysLeft} day(s) from now).`,
+                '',
+                'Update the `Expires:` line, commit, and merge to refresh.',
+              ].join('\n')
+            );
