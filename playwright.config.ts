@@ -55,6 +55,7 @@ export default defineConfig({
     'copyright.spec.ts',
     'cookie-consent.spec.ts',
     'google-tag-manager.spec.ts',
+    'security-metadata.spec.ts',
     'policy-pages.spec.ts',
   ],
   // Run tests in parallel for better performance

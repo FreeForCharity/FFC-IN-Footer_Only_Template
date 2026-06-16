@@ -60,6 +60,7 @@ jobs:
           path: |
             .next/
             out/
+          include-hidden-files: true
           retention-days: 7
 
   e2e:

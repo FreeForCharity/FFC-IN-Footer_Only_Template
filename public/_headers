@@ -1,0 +1,50 @@
+# Security and caching headers for Cloudflare Pages / Netlify-compatible hosts.
+# GitHub Pages does not read this file; the CSP meta tag in src/app/layout.tsx
+# covers that host class.
+#
+# CSP rationale:
+# - 'unsafe-inline' is required for Next.js static export inline runtime chunks
+#   and the consent-gated analytics snippets injected by cookie-consent.
+# - GTM is loaded by the root layout. GA4, Clarity, and Meta Pixel are loaded
+#   only after the visitor grants the matching cookie consent category.
+# - Image sources allow HTTPS because this footer template still renders a
+#   remote Free For Charity header logo and privacy-preserving tracking pixels
+#   after consent.
+#
+# Header notes:
+# - HSTS does not set `preload`; child sites should opt in only after they can
+#   honor the hstspreload.org requirements for their own domain.
+# - COOP is `same-origin-allow-popups` so outbound nonprofit service flows can
+#   open safely without breaking popup-based redirects.
+# - CORP is `cross-origin` so deployed static images remain embeddable by
+#   social previews, partner sites, and accessibility/performance scanners.
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), interest-cohort=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Cross-Origin-Resource-Policy: cross-origin
+  X-DNS-Prefetch-Control: on
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://*.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://connect.facebook.net https://www.facebook.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests
+
+# Long-cache fingerprinted Next.js assets.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Static assets are versioned by deploy; cache for a day.
+/Images/*
+  Cache-Control: public, max-age=86400, must-revalidate
+/Svgs/*
+  Cache-Control: public, max-age=86400, must-revalidate
+/videos/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+# security.txt should not be cached for long.
+/.well-known/security.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8
+/security.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8

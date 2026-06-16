@@ -1,0 +1,22 @@
+# RFC 9116 security.txt for Free For Charity footer-only template sites.
+# Keep Contact, Policy, Acknowledgments, and Canonical URLs aligned with
+# src/lib/site.config.ts before deploying a child site.
+#
+# Expires must be a future RFC 3339 datetime. The included GitHub Action opens
+# an issue when the date gets close.
+#
+# Project-site Canonical lines include the GitHub Pages base path used when the
+# template is served without a custom domain. Root Canonical lines cover custom
+# domains. The drift checker enforces matching payloads.
+
+Contact: mailto:clarkemoyer@freeforcharity.org
+Expires: 2027-12-31T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://ffcworkingsite1.org/.well-known/security.txt
+Canonical: https://ffcworkingsite1.org/security.txt
+Canonical: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/.well-known/security.txt
+Canonical: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/security.txt
+Policy: https://ffcworkingsite1.org/vulnerability-disclosure-policy
+Policy: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/vulnerability-disclosure-policy
+Acknowledgments: https://ffcworkingsite1.org/security-acknowledgements
+Acknowledgments: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/security-acknowledgements
