@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@axe-core/react": "^4.11.0",
-    "@commitlint/cli": "^20.2.0",
+    "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/eslintrc": "^3",
     "@lhci/cli": "^0.15.1",
