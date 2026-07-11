@@ -14,6 +14,17 @@ Many nonprofits already have a website design but lack the legal, compliance, an
 - **SEO infrastructure** -- Sitemap, robots.txt, Open Graph, Twitter Cards, structured metadata
 - **Static export** -- Deploys to GitHub Pages with zero server costs
 
+## Where This Template Fits in the FFC Journey
+
+This template is for charities that **already have a designed website** and need the validation and formality of the FFC standard added to it. In the gated [FFC charity onboarding journey](https://freeforcharity.org/charity-onboarding-journey/), every site -- whether built from scratch or already designed -- must be validated live on its **free GitHub Pages address** (no custom domain) before FFC purchases the charity's free .org domain, which in turn unlocks email setup.
+
+Adopting this footer and compliance layer (footer, 7 policy pages, GDPR cookie consent, GTM analytics, team section, SEO) is what makes an already-designed site pass that FFC validation gate.
+
+- **Already have a designed website?** Start here -- this template layers the FFC standard onto your existing design.
+- **No website yet?** Use the sibling [FFC Single Page Template](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template) instead, where an FFC volunteer builds a complete single-page site from your content.
+
+Both paths converge on the same validation gate that unlocks the domain purchase.
+
 ## Quick Start
 
 ```bash
