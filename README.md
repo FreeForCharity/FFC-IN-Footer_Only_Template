@@ -16,20 +16,20 @@ Many nonprofits already have a website design but lack the legal, compliance, an
 
 ## Where This Template Fits in the FFC Journey
 
-This template is for charities that **already have a designed website** and need the validation and formality of the FFC standard added to it. In the gated [FFC charity onboarding journey](https://freeforcharity.org/charity-onboarding-journey/), every site -- whether built from scratch or already designed -- must be validated live on its **free GitHub Pages address** (no custom domain) before FFC purchases the charity's free .org domain, which in turn unlocks email setup.
+This template is for charities that **already have a designed website** and need the validation and formality of the FFC standard added to it. In the gated [FFC charity onboarding journey](https://freeforcharity.org/charity-onboarding-journey/), every site -- whether built from scratch or already designed -- must be validated live on its **free GitHub Pages address** (no custom domain); after validation, FFC registers a new free .org domain -- or transfers the domain the charity already owns -- into Cloudflare and points it at the validated site, which in turn unlocks email setup.
 
 Adopting this footer and compliance layer (footer, 7 policy pages, GDPR cookie consent, GTM analytics, team section, SEO) is what makes an already-designed site pass that FFC validation gate.
 
 - **Already have a designed website?** Start here -- this template layers the FFC standard onto your existing design.
 - **No website yet?** Use the sibling [FFC Single Page Template](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template) instead, where an FFC volunteer builds a complete single-page site from your content.
 
-Both paths converge on the same validation gate that unlocks the domain purchase.
+Both paths converge on the same validation gate that unlocks the domain step.
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/FreeForCharity/FFC-IN-Footer-Only-Template.git
-cd FFC-IN-Footer-Only-Template
+git clone https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template.git
+cd FFC-IN-Footer_Only_Template
 npm install
 npm run dev
 ```
