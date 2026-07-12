@@ -14,9 +14,9 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
    - Production URL (custom domain) — if none yet, default to the GitHub Pages URL.
    - Twitter/X handle (optional), primary contact email, security disclosure email, primary social links (Facebook, X, LinkedIn, GitHub, others).
    - EIN, mailing address(es), phone number(s) — collected for `siteConfig` (`ein`, `phone`, `addresses`); these are no longer footer-hardcoded.
-   - GuideStar/Candid profile links, parent-organization details, and any third-party integration URLs (Zeffy, Idealist, SociableKit events, Microsoft Forms) — also collected for `siteConfig`.
+   - GuideStar/Candid profile links and endorsement/"supported by" details — collected for `siteConfig`.
 
-2. **Update `src/lib/site.config.ts`** with the values above. This is the canonical source — never duplicate. It now drives the full per-charity value set: identity/SEO (`name`, `tagline`, `description`, `shortDescription`, `url`, `twitterHandle`, `keywords`, `themeColor`), `contactEmail`, `social`, AND `ein`, `phone`, `addresses`, `guidestar`, `parentOrg`, and `integrations`. Helpers (`siteUrl`, `twitterSite`, `cardDescription`) drive layout/robots/sitemap/manifest/footer; do NOT change their signatures. Analytics IDs (GTM / GA / Clarity / Meta Pixel) are set separately in `src/lib/analytics.config.ts`.
+2. **Update `src/lib/site.config.ts`** with the values above. This is the canonical source — never duplicate. Check the file's actual shape before editing; in this template it drives identity/SEO (`name`, `tagline`, `description`, `shortDescription`, `url`, `twitterHandle`, `keywords`, `themeColor`), `contactEmail`, `social`, `ein`, `phone`, `addresses`, `guideStar`, `supportedBy`, plus the footer `quickLinks`/`policyLinks`. Do NOT change exported helper signatures that layout/robots/sitemap/manifest/footer depend on.
 
 3. **Update `public/CNAME`** if a custom domain is being used; otherwise delete it.
 
