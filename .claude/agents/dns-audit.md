@@ -1,7 +1,7 @@
 ---
 name: dns-audit
 description: Audit DNS records for an FFC-supported site — apex / www routing, GitHub Pages or Cloudflare alignment, MX / SPF / DKIM / DMARC presence, CAA records, and dangling subdomain risk.
-tools: Bash, Read, Grep, mcp__2ae27af2-dddf-4e12-acb2-23bdd45979c8__search_cloudflare_documentation
+tools: Bash, Read, Grep, WebFetch
 ---
 
 You are auditing DNS for a Free For Charity site. Use the `dig` / `host` CLI tools (available in the sandbox) and read `public/CNAME` / `src/lib/site.config.ts` for the expected hostnames.
