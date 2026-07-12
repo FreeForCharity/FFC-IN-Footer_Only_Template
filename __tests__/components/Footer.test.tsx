@@ -103,13 +103,43 @@ describe('Footer component', () => {
       { text: 'Free For Charity Privacy Policy', href: '/privacy-policy' },
       { text: 'Free For Charity Cookie Policy', href: '/cookie-policy' },
       { text: 'Free For Charity Terms of Service', href: '/terms-of-service' },
+      // FFC's own donation policy: label hardcoded to FFC on purpose.
       { text: 'Free For Charity Donation Policy', href: '/free-for-charity-donation-policy' },
+      // The charity's own donation policy (label follows siteConfig.name
+      // interpolation on the other entries, but this one is fixed).
+      { text: 'Donation Policy', href: '/donation-policy' },
     ]
 
     for (const { text, href } of policyLinks) {
       const link = screen.getByText(text).closest('a')
       expect(link).toHaveAttribute('href', href)
     }
+  })
+
+  it('should have quick links with real anchor labels and the hub login link', () => {
+    render(<Footer />)
+    const quickLinks = [
+      { text: 'Home', href: '/#hero' },
+      { text: 'Mission', href: '/#mission' },
+      { text: 'Programs', href: '/#programs' },
+      { text: 'Events', href: '/#events' },
+      { text: 'Donate', href: '/#donate' },
+      { text: 'Volunteer', href: '/#volunteer' },
+      { text: 'FAQ', href: '/#faq' },
+      { text: 'Team', href: '/#team' },
+    ]
+
+    for (const { text, href } of quickLinks) {
+      const link = screen.getByText(text).closest('a')
+      expect(link).toHaveAttribute('href', href)
+    }
+
+    // FFC footer standard: the hub login link is always rendered and points
+    // at siteConfig.supportedBy.hubUrl.
+    const hubLink = screen.getByText('Supported Charity Login').closest('a')
+    expect(hubLink).toHaveAttribute('href', 'https://freeforcharity.org/hub/')
+    expect(hubLink).toHaveAttribute('target', '_blank')
+    expect(hubLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
   it('should have GuideStar image with alt text', () => {
@@ -119,8 +149,11 @@ describe('Footer component', () => {
 
   it('should have Google Maps links for addresses', () => {
     render(<Footer />)
-    const mainAddress = screen.getByLabelText('Open main address in Google Maps')
-    const paAddress = screen.getByLabelText('Open PA office address in Google Maps')
+    // The address links have no aria-label (WCAG 2.5.3 label-in-name: the
+    // visible text is the accessible name, with sr-only "(opens in Google
+    // Maps)" context appended), so query them by their visible label text.
+    const mainAddress = screen.getByText('Main Address').closest('a')
+    const paAddress = screen.getByText('PA Office Address').closest('a')
 
     expect(mainAddress).toHaveAttribute(
       'href',

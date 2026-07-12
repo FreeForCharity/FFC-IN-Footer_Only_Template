@@ -1,58 +1,112 @@
-export type SiteSocialLink = {
-  label: string
-  href: string
-}
+/**
+ * Central site configuration for Free For Charity template sites.
+ *
+ * EDIT THIS FILE to customize a new FFC-supported nonprofit site.
+ * Most values that vary between sites flow from here so pages, metadata,
+ * the footer, manifest, sitemap, and robots stay in sync.
+ *
+ * The `SiteConfig` shape is the SAME as the FFC Single Page template
+ * (FFC-IN-FFC_Single_Page_Template `src/lib/site.config.ts`), so a config
+ * produced for one template can be transcribed directly into the other.
+ * Keys the footer-only template genuinely has no use for are omitted:
+ *
+ *  - `integrations` (Zeffy / Idealist / SociableKit / Microsoft Forms):
+ *    this template renders no third-party embeds.
+ *  - `foundingDate`, `nonprofitStatus`, `alternateNames`: only consumed by
+ *    the Single Page template's schema.org JSON-LD, which this template
+ *    does not emit.
+ *
+ * All keys present here keep the canonical names and shapes. This template
+ * additionally exports a `sitePath()` helper for GitHub Pages basePath
+ * handling (not part of the shared shape).
+ *
+ * After editing, run `npm run check:drift` to verify nothing here drifts
+ * away from FFC best practices, and `npm run check:rebrand` for a checklist
+ * of template defaults you still need to replace.
+ */
 
-export type SiteLink = {
+export type SiteSocialLink = {
+  /** Display label, also used for aria-label. */
   label: string
+  /** Absolute https URL. Empty string disables the link. */
   href: string
 }
 
 export type SiteAddress = {
+  /** Heading shown above the address (e.g. "Main Address"). */
   label: string
+  /** Address text, one entry per visual line. */
   lines: readonly string[]
-  mapHref: string
-  mapAriaLabel: string
+  /** Google Maps (or other) link opened when the address is clicked. */
+  mapUrl: string
 }
 
 export type SiteConfig = {
+  /** Display name of the charity (used in titles, OG/Twitter cards). */
   name: string
+  /** Short tagline used in the default title template. */
   tagline: string
+  /** Plain-language description used for the <meta description> tag. */
   description: string
-  shortDescription: string
-  url: string
-  twitterHandle: string
-  contactEmail: string
-  ein: string
-  guideStar: {
-    profileHref: string
-    profileAriaLabel: string
-    sharedProfileHref: string
-    sharedProfileLabel: string
-    sealAlt: string
-  }
-  phone: {
-    label: string
-    display: string
-    href: string
-  }
-  addresses: readonly SiteAddress[]
   /**
-   * Permanent "Supported by" attribution to the supporting organization (FFC),
-   * rendered in the footer bottom bar. Part of the FFC footer standard: always
-   * rendered and NOT to be removed or repointed when customizing a fork.
+   * Shorter description tuned for OG/Twitter social card previews.
+   * Falls back to `description` if empty. Aim for <= 200 chars and avoid
+   * em-dashes — some card renderers break on them.
    */
-  supportedBy: {
-    name: string
-    url: string
-  }
+  shortDescription: string
+  /**
+   * Canonical production URL with no trailing slash.
+   * Used by metadataBase, sitemap, and robots. The drift check verifies that
+   * this is updated whenever public/CNAME points to a custom domain, and
+   * that public/.well-known/security.txt no longer carries the placeholder.
+   */
+  url: string
+  /**
+   * Twitter / X handle including the leading @ — e.g. `@freeforcharity`.
+   * Empty string omits the twitter:site meta entirely. Handles without `@`
+   * are auto-prefixed so a typo doesn't silently break attribution.
+   */
+  twitterHandle: string
+  /**
+   * Primary contact email. Used by your own pages; security.txt carries
+   * its own `Contact:` line and is not auto-derived from this value.
+   * Keep them in sync manually when you change either.
+   */
+  contactEmail: string
+  /** SEO keywords used in the root layout metadata. */
   keywords: readonly string[]
+  /** Default theme color (used by manifest and meta tag). */
   themeColor: string
+  /** Where the vulnerability disclosure policy lives on this site. */
   vulnerabilityDisclosurePath: string
+  /** Social links displayed in the footer. */
   social: readonly SiteSocialLink[]
-  quickLinks: readonly SiteLink[]
-  policyHeading: string
-  policyLinks: readonly SiteLink[]
+  /** IRS Employer Identification Number (tax ID), e.g. '46-2471893'. */
+  ein: string
+  /**
+   * Primary phone number. `display` is the human-readable form shown to users;
+   * `tel` is the value used in the `tel:` link (digits, optionally E.164).
+   */
+  phone: { display: string; tel: string }
+  /** Physical office addresses shown in the footer contact column. */
+  addresses: readonly SiteAddress[]
+  /** GuideStar / Candid transparency profile links shown in the footer. */
+  guidestar: { profileUrl: string; directProfileUrl: string }
+  /**
+   * Permanent attribution to the supporting organization (FFC). Drives the
+   * always-rendered "Supported by" clause in the footer bottom bar and the
+   * "Supported Charity Login" quick link (`hubUrl`). This is part of the FFC
+   * footer standard for every supported charity site: it is REQUIRED, always
+   * rendered, and NOT to be removed or repointed when customizing a fork.
+   * Distinct from `parentOrg` below, which covers genuine fiscal-sponsorship
+   * ("a project of") relationships.
+   */
+  supportedBy: { name: string; url: string; hubUrl: string }
+  /**
+   * Parent / umbrella organization, when this site is "a project of" another
+   * nonprofit. Omit for a standalone charity (the footer clause is hidden).
+   */
+  parentOrg?: { name: string; url: string; hubUrl: string }
 }
 
 export const siteConfig: SiteConfig = {
@@ -65,40 +119,6 @@ export const siteConfig: SiteConfig = {
   url: 'https://ffcworkingsite1.org',
   twitterHandle: '@freeforcharity',
   contactEmail: 'clarkemoyer@freeforcharity.org',
-  ein: '46-2471893',
-  guideStar: {
-    profileHref: 'https://www.guidestar.org/profile/46-2471893',
-    profileAriaLabel: 'View Free For Charity GuideStar Profile',
-    sharedProfileHref:
-      'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742',
-    sharedProfileLabel: 'Direct GuideStar Profile Link',
-    sealAlt: 'GuideStar Platinum Seal of Transparency',
-  },
-  phone: {
-    label: 'Call Us Today',
-    display: '(520) 222-8104',
-    href: 'tel:5202228104',
-  },
-  addresses: [
-    {
-      label: 'Main Address',
-      lines: ['4030 Wake Forrest Road', 'Suite 349 Raleigh North', 'Carolina 27609'],
-      mapHref:
-        'https://www.google.com/maps/search/?api=1&query=4030+Wake+Forrest+Road+Suite+349+Raleigh+NC+27609',
-      mapAriaLabel: 'Open main address in Google Maps',
-    },
-    {
-      label: 'PA Office Address',
-      lines: ['301 Science Park Road Suite', '119 State College PA 16803'],
-      mapHref:
-        'https://www.google.com/maps/place/Free+For+Charity/@40.7768455,-77.8963305,17z/data=!3m1!4b1!4m6!3m5!1s0x89cea944b44a2e01:0x6fc2d6bf09e00a0f!8m2!3d40.7768415!4d-77.8937556!16s%2Fg%2F11vzvbl2d7?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D',
-      mapAriaLabel: 'Open PA office address in Google Maps',
-    },
-  ],
-  supportedBy: {
-    name: 'Free For Charity',
-    url: 'https://freeforcharity.org',
-  },
   keywords: [
     'nonprofit',
     'charity',
@@ -117,44 +137,35 @@ export const siteConfig: SiteConfig = {
     // Repo name uses underscores — the hyphenated variant 404s.
     { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template' },
   ],
-  quickLinks: [
-    { label: 'Home (Placeholder)', href: '/#hero' },
-    { label: 'Mission (Placeholder)', href: '/#mission' },
-    { label: 'Programs (Placeholder)', href: '/#programs' },
-    { label: 'Events (Placeholder)', href: '/#events' },
-    { label: 'Donate (Placeholder)', href: '/#donate' },
-    { label: 'Volunteer (Placeholder)', href: '/#volunteer' },
-    { label: 'FAQ (Placeholder)', href: '/#faq' },
-    { label: 'Team (Placeholder)', href: '/#team' },
-    { label: 'Supported Charity Login', href: 'https://freeforcharity.org/hub/' },
-  ],
-  policyHeading: 'Free For Charity Policy',
-  policyLinks: [
+  ein: '46-2471893',
+  phone: { display: '(520) 222-8104', tel: '5202228104' },
+  addresses: [
     {
-      label: 'Free For Charity Donation Policy',
-      href: '/free-for-charity-donation-policy',
+      label: 'Main Address',
+      lines: ['4030 Wake Forrest Road', 'Suite 349 Raleigh North', 'Carolina 27609'],
+      mapUrl:
+        'https://www.google.com/maps/search/?api=1&query=4030+Wake+Forrest+Road+Suite+349+Raleigh+NC+27609',
     },
     {
-      label: 'Free For Charity Privacy Policy',
-      href: '/privacy-policy',
-    },
-    {
-      label: 'Free For Charity Cookie Policy',
-      href: '/cookie-policy',
-    },
-    {
-      label: 'Free For Charity Terms of Service',
-      href: '/terms-of-service',
-    },
-    {
-      label: 'Free For Charity Vulnerability Disclosure Policy',
-      href: '/vulnerability-disclosure-policy',
-    },
-    {
-      label: 'Free For Charity Security Acknowledgement',
-      href: '/security-acknowledgements',
+      label: 'PA Office Address',
+      lines: ['301 Science Park Road Suite', '119 State College PA 16803'],
+      mapUrl:
+        'https://www.google.com/maps/place/Free+For+Charity/@40.7768455,-77.8963305,17z/data=!3m1!4b1!4m6!3m5!1s0x89cea944b44a2e01:0x6fc2d6bf09e00a0f!8m2!3d40.7768415!4d-77.8937556!16s%2Fg%2F11vzvbl2d7?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D',
     },
   ],
+  guidestar: {
+    profileUrl: 'https://www.guidestar.org/profile/46-2471893',
+    directProfileUrl:
+      'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742',
+  },
+  supportedBy: {
+    name: 'Free For Charity',
+    url: 'https://freeforcharity.org',
+    hubUrl: 'https://freeforcharity.org/hub/',
+  },
+  // parentOrg is intentionally unset: this template is for standalone
+  // charities by default. Set it only for a genuine "a project of"
+  // fiscal-sponsorship relationship.
 }
 
 function configuredBasePath(): string {

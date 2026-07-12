@@ -11,6 +11,10 @@ import type { LucideIcon } from 'lucide-react'
 import { assetPath } from '@/lib/assetPath'
 import { siteConfig } from '@/lib/site.config'
 
+// Maps a social link's label (as defined in siteConfig.social) to an icon.
+// Unknown labels fall back to a generic link icon (Link2) so a charity
+// that adds a new social network — Bluesky, Mastodon, YouTube, etc. — gets a
+// sensible placeholder instead of a misleading GitHub mark.
 const socialIconByLabel: Record<string, IconType | LucideIcon> = {
   Facebook: FaFacebookF,
   'X (Twitter)': FaXTwitter,
@@ -23,8 +27,6 @@ const socialIconByLabel: Record<string, IconType | LucideIcon> = {
 const Footer: React.FC = () => {
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
   const socialLinks = siteConfig.social.filter((social) => social.href)
-  const quickLinks = siteConfig.quickLinks.filter((link) => link.href)
-  const policyLinks = siteConfig.policyLinks.filter((link) => link.href)
 
   return (
     <footer className="bg-black text-white">
@@ -35,20 +37,23 @@ const Footer: React.FC = () => {
 
           <div className="space-y-4">
             <a
-              href={siteConfig.guideStar.profileHref}
-              aria-label={siteConfig.guideStar.profileAriaLabel}
+              href={siteConfig.guidestar.profileUrl}
+              aria-label={`View ${siteConfig.name} GuideStar Profile`}
             >
-              <img src={assetPath('/Svgs/footerImage.svg')} alt={siteConfig.guideStar.sealAlt} />
+              <img
+                src={assetPath('/Svgs/footerImage.svg')}
+                alt="GuideStar Platinum Seal of Transparency"
+              />
             </a>
             <Link
-              href={siteConfig.guideStar.sharedProfileHref}
+              href={siteConfig.guidestar.directProfileUrl}
               className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
                 border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
                 transition-all duration-300 hover:border-transparent"
               id="aria-font"
             >
               <span className="text-[17px] font-medium leading-tight sm:text-[18px] md:text-[20px] transition-transform duration-300 group-hover:-translate-x-1">
-                {siteConfig.guideStar.sharedProfileLabel}
+                Direct GuideStar Profile Link
               </span>
 
               <ArrowRight
@@ -70,29 +75,84 @@ const Footer: React.FC = () => {
           <h3 className="text-[28px] text-white">Quick Links</h3>
 
           <ul className="space-y-2 text-sm" id="lato-font">
-            {quickLinks.map((link) => (
-              <li key={link.label}>
-                <Link
-                  href={link.href}
-                  target={link.href.startsWith('http') ? '_blank' : undefined}
-                  className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {[
+              // Adopters: edit these labels and anchors to match your own
+              // site's sections. This footer-only template ships no page
+              // sections besides the team block, so the anchors below are
+              // conventional section ids a charity site typically adds
+              // (matching the FFC Single Page template's sections).
+              { name: 'Home', href: '/#hero' },
+              { name: 'Mission', href: '/#mission' },
+              { name: 'Programs', href: '/#programs' },
+              { name: 'Events', href: '/#events' },
+              { name: 'Donate', href: '/#donate' },
+              { name: 'Volunteer', href: '/#volunteer' },
+              { name: 'FAQ', href: '/#faq' },
+              { name: 'Team', href: '/#team' },
+              // FFC footer standard: every supported charity site links back
+              // to the supporting org's hub. Always rendered — keep this
+              // entry when customizing a fork.
+              { name: 'Supported Charity Login', href: siteConfig.supportedBy.hubUrl },
+            ].map((link) => {
+              const isExternal = link.href.startsWith('http')
+              return (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    target={isExternal ? '_blank' : undefined}
+                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                    className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
 
           <div className="space-y-3">
-            <h4 className="text-[28px] text-white">{siteConfig.policyHeading}</h4>
+            <h4 className="text-[28px] text-white">{siteConfig.name} Policy</h4>
             <ul className="space-y-1 text-sm" id="lato-font">
-              {policyLinks.map((link) => (
-                <li key={link.label}>
+              {[
+                {
+                  // Hardcoded on purpose: this page documents FFC's OWN
+                  // donation policy, so the label must keep FFC's name even
+                  // after a fork rebrands siteConfig.name. The adjacent
+                  // '/donation-policy' entry is the charity's own policy.
+                  name: 'Free For Charity Donation Policy',
+                  href: '/free-for-charity-donation-policy',
+                },
+                {
+                  name: 'Donation Policy',
+                  href: '/donation-policy',
+                },
+                {
+                  name: `${siteConfig.name} Privacy Policy`,
+                  href: '/privacy-policy',
+                },
+                {
+                  name: `${siteConfig.name} Cookie Policy`,
+                  href: '/cookie-policy',
+                },
+                {
+                  name: `${siteConfig.name} Terms of Service`,
+                  href: '/terms-of-service',
+                },
+                {
+                  name: `${siteConfig.name} Vulnerability Disclosure Policy`,
+                  href: '/vulnerability-disclosure-policy',
+                },
+                {
+                  name: `${siteConfig.name} Security Acknowledgement`,
+                  href: '/security-acknowledgements',
+                },
+              ].map((link) => (
+                <li key={link.name}>
                   <Link
                     href={link.href}
                     className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
                   >
-                    {link.label}
+                    {link.name}
                   </Link>
                 </li>
               ))}
@@ -122,9 +182,9 @@ const Footer: React.FC = () => {
             <div className="flex items-start gap-3">
               <Phone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-[500] text-[22px]">{siteConfig.phone.label}</p>
+                <p className="font-[500] text-[22px]">Call Us Today</p>
                 <a
-                  href={siteConfig.phone.href}
+                  href={`tel:${siteConfig.phone.tel}`}
                   className="font-[500] text-[16px] hover:text-cyan-400 transition-colors"
                   id="aria-font"
                 >
@@ -136,10 +196,9 @@ const Footer: React.FC = () => {
             {siteConfig.addresses.map((address) => (
               <a
                 key={address.label}
-                href={address.mapHref}
+                href={address.mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={address.mapAriaLabel}
                 className="flex items-start gap-3 hover:opacity-80 transition-opacity"
               >
                 <MapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -153,6 +212,10 @@ const Footer: React.FC = () => {
                       </React.Fragment>
                     ))}
                   </p>
+                  {/* The accessible name must contain the visible text
+                      (WCAG 2.5.3 label-in-name), so instead of an aria-label
+                      that replaces it, append screen-reader-only context. */}
+                  <span className="sr-only">(opens in Google Maps)</span>
                 </div>
               </a>
             ))}
@@ -195,6 +258,17 @@ const Footer: React.FC = () => {
           >
             {siteConfig.supportedBy.name}
           </Link>
+          {siteConfig.parentOrg && (
+            <>
+              {' | A project of '}
+              <Link
+                href={siteConfig.parentOrg.url}
+                className="underline text-[#2EA3F2] hover:text-[#2EA3F2] transition-colors"
+              >
+                {siteConfig.parentOrg.name}
+              </Link>
+            </>
+          )}
         </p>
       </div>
     </footer>

@@ -175,13 +175,13 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ### Key Customization Points
 
-- **Organization info**: Search and replace "Free For Charity" with your org name
-- **Contact details**: Update `src/components/footer/index.tsx`
+- **Organization info, contact details, SEO identity**: Edit `src/lib/site.config.ts` — the single source of truth (name, EIN, phone, addresses, GuideStar links, social links, contact email). The footer and site metadata read from it. See [TEMPLATE_CUSTOMIZATION.md](./TEMPLATE_CUSTOMIZATION.md) for the full map.
+- **Footer quick links**: Edit the labels/anchors inline in `src/components/footer/index.tsx` to match your site's sections (keep the `Supported Charity Login` entry)
 - **Team members**: Edit JSON files in `src/data/team/`
 - **Policy content**: Update policy page content in `src/app/*/page.tsx`
-- **SEO metadata**: Edit `src/lib/siteMetadata.ts`
-- **Analytics**: Set your GTM ID in environment variables
+- **Analytics**: Set your GTM ID in `src/components/google-tag-manager/index.tsx`
 - **Branding**: Replace logos in `public/` and update color scheme in `globals.css`
+- **Verify completeness**: Run `npm run check:rebrand` for a checklist of FFC template defaults you still need to replace (the permanent "Supported by Free For Charity" attribution is excluded — it stays)
 
 ## Documentation
 
@@ -189,6 +189,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 - [QUICK_START.md](./QUICK_START.md) -- 5-minute setup guide
 - [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md) -- Complete template setup instructions
+- [TEMPLATE_CUSTOMIZATION.md](./TEMPLATE_CUSTOMIZATION.md) -- What to edit (site.config.ts), what stays, and how `check:rebrand` verifies completeness
 - [TEMPLATE_SETUP_CHECKLIST.md](./TEMPLATE_SETUP_CHECKLIST.md) -- Printable setup checklist
 
 ### Development & Testing

@@ -43,6 +43,9 @@ const allPages = [
  */
 const footerPolicyLinks = [
   { name: 'Free For Charity Donation Policy', pathSuffix: '/free-for-charity-donation-policy' },
+  // The charity's own donation policy. Matched with exact names below so this
+  // does not also match "Free For Charity Donation Policy".
+  { name: 'Donation Policy', pathSuffix: '/donation-policy' },
   { name: 'Free For Charity Privacy Policy', pathSuffix: '/privacy-policy' },
   { name: 'Free For Charity Cookie Policy', pathSuffix: '/cookie-policy' },
   { name: 'Free For Charity Terms of Service', pathSuffix: '/terms-of-service' },
@@ -90,7 +93,9 @@ test.describe('Post-deploy smoke tests', () => {
     const footer = page.locator('footer')
 
     for (const { name, pathSuffix } of footerPolicyLinks) {
-      const link = footer.getByRole('link', { name })
+      // exact: true — "Donation Policy" is a substring of "Free For Charity
+      // Donation Policy", so substring matching would hit both links.
+      const link = footer.getByRole('link', { name, exact: true })
       await expect(link, `Policy link "${name}" should be visible`).toBeVisible()
 
       // Use toContain — href may include a basePath prefix on GitHub Pages
