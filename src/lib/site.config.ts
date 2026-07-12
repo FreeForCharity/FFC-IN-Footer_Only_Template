@@ -37,9 +37,14 @@ export type SiteConfig = {
     href: string
   }
   addresses: readonly SiteAddress[]
-  project: {
-    href: string
-    displayHref: string
+  /**
+   * Permanent "Supported by" attribution to the supporting organization (FFC),
+   * rendered in the footer bottom bar. Part of the FFC footer standard: always
+   * rendered and NOT to be removed or repointed when customizing a fork.
+   */
+  supportedBy: {
+    name: string
+    url: string
   }
   keywords: readonly string[]
   themeColor: string
@@ -90,9 +95,9 @@ export const siteConfig: SiteConfig = {
       mapAriaLabel: 'Open PA office address in Google Maps',
     },
   ],
-  project: {
-    href: 'https://freeforcharity.org',
-    displayHref: 'https://freeforcharity.org',
+  supportedBy: {
+    name: 'Free For Charity',
+    url: 'https://freeforcharity.org',
   },
   keywords: [
     'nonprofit',
@@ -109,7 +114,8 @@ export const siteConfig: SiteConfig = {
     { label: 'Facebook', href: 'https://www.facebook.com/freeforcharity' },
     { label: 'X (Twitter)', href: 'https://x.com/freeforcharity1' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/company/freeforcharity/' },
-    { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-Footer-Only-Template' },
+    // Repo name uses underscores — the hyphenated variant 404s.
+    { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template' },
   ],
   quickLinks: [
     { label: 'Home (Placeholder)', href: '/#hero' },

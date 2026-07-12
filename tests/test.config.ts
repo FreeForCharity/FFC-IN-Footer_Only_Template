@@ -30,7 +30,7 @@ export const testConfig = {
       ariaLabel: 'LinkedIn',
     },
     github: {
-      url: 'github.com/FreeForCharity/FFC-IN-Footer-Only-Template',
+      url: 'github.com/FreeForCharity/FFC-IN-Footer_Only_Template',
       ariaLabel: 'GitHub',
     },
   },
@@ -42,8 +42,10 @@ export const testConfig = {
   copyright: {
     text: 'All Rights Are Reserved by Free For Charity a US 501c3 Non Profit',
     searchText: 'All Rights Are Reserved',
+    // The permanent "Supported by Free For Charity" attribution (FFC footer
+    // standard) — keep these expectations when customizing the template.
     linkUrl: 'https://freeforcharity.org',
-    linkText: 'https://freeforcharity.org',
+    linkText: 'Free For Charity',
   },
 
   /**

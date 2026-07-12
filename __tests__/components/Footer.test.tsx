@@ -82,7 +82,7 @@ describe('Footer component', () => {
       { label: 'Facebook', href: 'https://www.facebook.com/freeforcharity' },
       { label: 'X (Twitter)', href: 'https://x.com/freeforcharity1' },
       { label: 'LinkedIn', href: 'https://www.linkedin.com/company/freeforcharity/' },
-      { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-Footer-Only-Template' },
+      { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template' },
     ]) {
       const link = screen.getByLabelText(label)
       expect(link).toBeInTheDocument()
@@ -134,15 +134,16 @@ describe('Footer component', () => {
     expect(paAddress).toHaveTextContent('301 Science Park Road Suite')
   })
 
-  it('should display freeforcharity.org link in copyright bar', () => {
+  it('should display the permanent "Supported by Free For Charity" attribution in copyright bar', () => {
     render(<Footer />)
     const copyright = screen.getByText((_, node) => {
       return (
         node?.tagName.toLowerCase() === 'p' && node.textContent?.includes('All Rights Are Reserved')
       )
     })
-    expect(copyright).toHaveTextContent('Free For Charity')
-    const link = screen.getByText('https://freeforcharity.org')
+    // FFC footer standard: the attribution is always rendered and links to FFC.
+    expect(copyright).toHaveTextContent('Supported by Free For Charity')
+    const link = screen.getByText('Free For Charity')
     expect(link.closest('a')).toHaveAttribute('href', 'https://freeforcharity.org')
   })
 
