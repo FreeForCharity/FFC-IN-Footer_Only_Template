@@ -32,3 +32,8 @@ jobs:
 
       - name: Run drift check
         run: npm run check:drift
+
+      # Report-only (always exits 0 on the template — FFC defaults are the
+      # canonical values here). Forks can gate with `--strict` in their own CI.
+      - name: Rebrand checklist (report only)
+        run: npm run check:rebrand

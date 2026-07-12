@@ -38,35 +38,34 @@ describe('siteConfig contract', () => {
       'LinkedIn',
       'GitHub',
     ])
-    expect(siteConfig.guideStar.profileHref).toBe('https://www.guidestar.org/profile/46-2471893')
-    expect(siteConfig.guideStar.sharedProfileHref).toBe(
+    // Converged shape: these keys must match the FFC Single Page template's
+    // canonical SiteConfig (guidestar.profileUrl / directProfileUrl,
+    // phone.display / phone.tel, addresses[].mapUrl, supportedBy.hubUrl).
+    expect(siteConfig.guidestar.profileUrl).toBe('https://www.guidestar.org/profile/46-2471893')
+    expect(siteConfig.guidestar.directProfileUrl).toBe(
       'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742'
     )
     expect(siteConfig.ein).toBe('46-2471893')
     expect(siteConfig.phone).toEqual({
-      label: 'Call Us Today',
       display: '(520) 222-8104',
-      href: 'tel:5202228104',
+      tel: '5202228104',
     })
     expect(siteConfig.addresses.map((address) => address.label)).toEqual([
       'Main Address',
       'PA Office Address',
     ])
+    for (const address of siteConfig.addresses) {
+      expect(address.mapUrl).toMatch(/^https:\/\/www\.google\.com\/maps\//)
+    }
     // Permanent "Supported by" footer attribution (FFC footer standard) — the
     // values are intentionally FFC's and must survive template customization.
     expect(siteConfig.supportedBy).toEqual({
       name: 'Free For Charity',
       url: 'https://freeforcharity.org',
+      hubUrl: 'https://freeforcharity.org/hub/',
     })
-    expect(siteConfig.quickLinks).toHaveLength(9)
-    expect(siteConfig.policyLinks.map((link) => link.href)).toEqual([
-      '/free-for-charity-donation-policy',
-      '/privacy-policy',
-      '/cookie-policy',
-      '/terms-of-service',
-      '/vulnerability-disclosure-policy',
-      '/security-acknowledgements',
-    ])
+    // Standalone charity by default: no "a project of" parent organization.
+    expect(siteConfig.parentOrg).toBeUndefined()
   })
 
   it('builds same-origin absolute site URLs', () => {
