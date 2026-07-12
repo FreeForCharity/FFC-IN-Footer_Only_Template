@@ -21,6 +21,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:smoke": "playwright test --config=playwright.smoke.config.ts",
     "check:drift": "node scripts/check-drift.mjs",
+    "check:site-config": "node scripts/check-site-config.mjs",
     "check:rebrand": "node scripts/rebrand-check.mjs",
     "prepare": "husky"
   },
