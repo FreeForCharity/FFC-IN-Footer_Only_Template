@@ -29,7 +29,7 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
 
 6. **Swap branded assets** in `public/Images/` and `public/Svgs/`. Keep filenames where possible so the LCP preload in `layout.tsx` and the manifest icons still hit real files.
 
-7. **Footer** — no per-charity CODE edits needed. EIN, addresses, phone, GuideStar links, parent-org link, social rail, and email all come from `siteConfig` (set in step 2). The only footer-related swap is the GuideStar / endorsement seal IMAGE asset in `public/Svgs/` if the charity's endorsements differ.
+7. **Footer** — no per-charity CODE edits needed. EIN, addresses, phone, GuideStar links, "supported by" endorsements, social rail, and email all come from `siteConfig` (set in step 2). The only footer-related swap is the GuideStar / endorsement seal IMAGE asset in `public/Svgs/` if the charity's endorsements differ.
 
 8. **Replace or DELETE demo content.** Update the home-page sections under `src/components/home-page/` and `src/data/` (testimonials, FAQs, team) the charity keeps — and **delete the ones it doesn't**. Any `src/components/home-page/*` section not imported by `src/app/home-page/index.tsx` is dead; remove it and its test rather than leaving FFC content in the tree. Delete `src/data/{team,testimonials,faqs}` if nothing imports them. Keep brand-neutral reusable UI primitives.
 
@@ -84,7 +84,7 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
 
 ## Guardrails
 
-- Never commit real SECRETS, tokens, or passwords. Use GitHub Secrets / `.env` (gitignored). Note: the analytics IDs (GTM / GA / Clarity / Meta Pixel) are PUBLIC identifiers, not secrets — they live in `src/lib/analytics.config.ts` and committing them there is expected.
+- Never commit real SECRETS, tokens, or passwords. Use GitHub Secrets / `.env` (gitignored). (Any public analytics IDs a site uses are not secrets, but this template ships without an analytics config file — add one only if the charity needs tracking.)
 - Never rename route folders to non-kebab-case (CI will fail).
 - Never bypass `assetPath()` for `/Images/`, `/Svgs/`, or `/videos/` references (CI will fail).
 - Never add a third-party origin (analytics, embed, payment) to only one of `public/_headers` or the CSP `<meta>` in `src/app/layout.tsx`. The drift checker enforces sync; one-sided changes will fail CI.
