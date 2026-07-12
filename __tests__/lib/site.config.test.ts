@@ -52,7 +52,12 @@ describe('siteConfig contract', () => {
       'Main Address',
       'PA Office Address',
     ])
-    expect(siteConfig.project.href).toBe('https://freeforcharity.org')
+    // Permanent "Supported by" footer attribution (FFC footer standard) — the
+    // values are intentionally FFC's and must survive template customization.
+    expect(siteConfig.supportedBy).toEqual({
+      name: 'Free For Charity',
+      url: 'https://freeforcharity.org',
+    })
     expect(siteConfig.quickLinks).toHaveLength(9)
     expect(siteConfig.policyLinks.map((link) => link.href)).toEqual([
       '/free-for-charity-donation-policy',

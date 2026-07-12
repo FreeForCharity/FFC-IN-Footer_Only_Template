@@ -184,13 +184,16 @@ const Footer: React.FC = () => {
         id="aria-font"
       >
         <p>
-          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit | A
-          project of{' '}
+          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit
+          {/* FFC footer standard: the "Supported by Free For Charity" attribution
+              below is the permanent part to KEEP when customizing this template
+              (the surrounding copyright text above is placeholder). */}
+          {' | Supported by '}
           <Link
-            href={siteConfig.project.href}
+            href={siteConfig.supportedBy.url}
             className="underline text-[#2EA3F2] hover:text-[#2EA3F2] transition-colors"
           >
-            {siteConfig.project.displayHref}
+            {siteConfig.supportedBy.name}
           </Link>
         </p>
       </div>
