@@ -24,10 +24,10 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 
 ### Technology Stack
 
-- **Framework**: Next.js 16.2.9 with static export
+- **Framework**: Next.js 16.2.10 with static export
 - **Hosting**: GitHub Pages
 - **CI/CD**: GitHub Actions
-- **Node.js**: Version >=20.9.0
+- **Node.js**: Version >=24.0.0
 
 ---
 
@@ -82,13 +82,13 @@ The deployment workflow runs automatically when:
 Runs on all pull requests and pushes to main:
 
 1. **Checkout code**: Retrieves the latest code from the repository
-2. **Setup Node.js**: Installs Node.js 20.x
+2. **Setup Node.js**: Installs Node.js 24.x
 3. **Install dependencies**: Runs `npm ci` for a clean installation
 4. **Check formatting**: Runs Prettier format check
 5. **Run linting**: Executes ESLint to catch code issues
 6. **Run unit tests**: Executes Jest tests to verify code quality
 7. **Install Playwright**: Sets up E2E testing environment
-8. **Build site**: Runs `next build` with appropriate environment variables
+8. **Build site**: Runs `next build` without `NEXT_PUBLIC_BASE_PATH` (E2E tests need a base-path-free build)
 9. **Run E2E tests**: Validates the built site with Playwright tests
 
 #### Deploy Workflow Steps (`.github/workflows/deploy.yml`)
@@ -100,11 +100,11 @@ Triggered automatically after the CI workflow completes successfully on push to 
 The actual steps performed by the deploy workflow are:
 
 1. **Checkout code**: Retrieves the tested code from the repository
-2. **Setup Node.js**: Installs Node.js 20.x
+2. **Setup Node.js**: Installs Node.js 24.x
 3. **Setup Pages**: Configures GitHub Pages settings
 4. **Restore Next.js cache**: Restores build cache for faster builds
 5. **Install dependencies**: Runs `npm ci` for a clean installation
-6. **Build site**: Runs `next build` with basePath for GitHub Pages
+6. **Build site**: Runs `next build` with basePath computed automatically (empty when `public/CNAME` exists, otherwise `/<repo-name>`)
 7. **Upload artifact**: Packages the `./out` directory
 8. **Deploy to GitHub Pages**: Publishes the site to GitHub Pages (separate job)
 
@@ -132,7 +132,7 @@ While automated deployment is recommended, you can also deploy manually if neede
 
 ### Prerequisites
 
-- Node.js 20.x installed
+- Node.js 24.x installed
 - GitHub CLI (`gh`) or GitHub Personal Access Token
 - Write access to the repository
 
