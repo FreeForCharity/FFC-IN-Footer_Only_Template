@@ -81,7 +81,7 @@ Quick checklist of content areas to update:
 git clone https://github.com/YOUR-ORG/YOUR-REPO-NAME.git
 cd YOUR-REPO-NAME
 
-# Verify Node.js version (requires 20.x)
+# Verify Node.js version (requires 24.x)
 node --version
 
 # Install dependencies
@@ -956,6 +956,6 @@ These cannot be automated by AI and require manual work:
 
 ---
 
-**Last Updated**: 2025-12-19  
+**Last Updated**: 2026-07-19  
 **Template Version**: 0.3.0  
-**Compatible with**: Next.js 16.2.9, Node.js >=20.9.0
+**Compatible with**: Next.js 16.2.9, Node.js >=24.0.0
