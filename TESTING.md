@@ -339,7 +339,7 @@ npm run test:ui       # Interactive Playwright UI
 
 Tests run automatically in GitHub Actions with the following configuration:
 
-- **Trigger**: Every push to main branch
+- **Trigger**: Pull requests and pushes to main (plus manual dispatch)
 - **Environment**: Ubuntu latest with Node.js 24
 - **Browser Setup**: `npx playwright install --with-deps chromium`
 - **Build**: Built without `NEXT_PUBLIC_BASE_PATH` (the base path is only applied in the GitHub Pages deploy workflow; E2E tests run against a base-path-free build)

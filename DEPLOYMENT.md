@@ -24,7 +24,7 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 
 ### Technology Stack
 
-- **Framework**: Next.js 16.2.9 with static export
+- **Framework**: Next.js 16.2.10 with static export
 - **Hosting**: GitHub Pages
 - **CI/CD**: GitHub Actions
 - **Node.js**: Version >=24.0.0
@@ -88,7 +88,7 @@ Runs on all pull requests and pushes to main:
 5. **Run linting**: Executes ESLint to catch code issues
 6. **Run unit tests**: Executes Jest tests to verify code quality
 7. **Install Playwright**: Sets up E2E testing environment
-8. **Build site**: Runs `next build` with appropriate environment variables
+8. **Build site**: Runs `next build` without `NEXT_PUBLIC_BASE_PATH` (E2E tests need a base-path-free build)
 9. **Run E2E tests**: Validates the built site with Playwright tests
 
 #### Deploy Workflow Steps (`.github/workflows/deploy.yml`)
@@ -104,7 +104,7 @@ The actual steps performed by the deploy workflow are:
 3. **Setup Pages**: Configures GitHub Pages settings
 4. **Restore Next.js cache**: Restores build cache for faster builds
 5. **Install dependencies**: Runs `npm ci` for a clean installation
-6. **Build site**: Runs `next build` with basePath for GitHub Pages
+6. **Build site**: Runs `next build` with basePath computed automatically (empty when `public/CNAME` exists, otherwise `/<repo-name>`)
 7. **Upload artifact**: Packages the `./out` directory
 8. **Deploy to GitHub Pages**: Publishes the site to GitHub Pages (separate job)
 
