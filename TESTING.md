@@ -342,7 +342,7 @@ Tests run automatically in GitHub Actions with the following configuration:
 - **Trigger**: Every push to main branch
 - **Environment**: Ubuntu latest with Node.js 24
 - **Browser Setup**: `npx playwright install --with-deps chromium`
-- **Build**: Built with `NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template`
+- **Build**: Built without `NEXT_PUBLIC_BASE_PATH` (the base path is only applied in the GitHub Pages deploy workflow; E2E tests run against a base-path-free build)
 - **Retry Logic**: Failed tests retry 2 times
 - **Failure Handling**: Deployment blocked if tests fail
 

@@ -6,7 +6,7 @@
 
 **Last Updated:** July 2026  
 **Status:** Phase 5 Complete - All Critical Gaps Closed  
-**Repository:** FreeForCharity/FFC_Single_Page_Template  
+**Repository:** FreeForCharity/FFC-IN-Footer_Only_Template  
 **Node.js:** 24.x (validated with v24.18.0)
 
 ---

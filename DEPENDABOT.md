@@ -539,6 +539,6 @@ For issues or questions about Dependabot:
 
 **Configuration Version**: 1.0  
 **Last Updated**: 2026-07-19  
-**Repository**: FreeForCharity/FFC_Single_Page_Template  
+**Repository**: FreeForCharity/FFC-IN-Footer_Only_Template  
 **Node.js**: 24.x (validated with v24.18.0)  
 **Maintained By**: FreeForCharity Team
