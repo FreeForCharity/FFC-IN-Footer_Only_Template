@@ -114,8 +114,7 @@ Create ruleset named "Protect Main":
 
 ### Content Data
 
-- [ ] Update team members in `src/data/team/`
-- [ ] Update team photos in `/public/team/`
+- [ ] Update team members in `src/data/team/` (name, role, optional LinkedIn — no photos; cards use initials monograms)
 
 ### Policy Pages
 
