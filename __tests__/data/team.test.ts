@@ -10,9 +10,20 @@ describe('Team data integrity', () => {
     expect(typeof member.name).toBe('string')
     expect(member.name.trim().length).toBeGreaterThan(0)
 
-    expect(member.title).toBeDefined()
-    expect(typeof member.title).toBe('string')
-    expect(member.title.trim().length).toBeGreaterThan(0)
+    expect(member.role).toBeDefined()
+    expect(typeof member.role).toBe('string')
+    expect(member.role.trim().length).toBeGreaterThan(0)
+
+    // Photos were removed in favor of initials monograms — no imageUrl field.
+    expect('imageUrl' in member).toBe(false)
+
+    // linkedinUrl is optional; when set it must be an https:// URL on
+    // linkedin.com (or a subdomain) — the only shape TeamMemberCard turns into
+    // a link (safeLinkedInUrl). Enforcing the host here means bad data fails
+    // the suite instead of silently rendering as a non-link.
+    if (member.linkedinUrl !== undefined) {
+      expect(member.linkedinUrl).toMatch(/^https:\/\/([a-z0-9-]+\.)*linkedin\.com(\/|$)/i)
+    }
   })
 
   it('should have no duplicate names', () => {

@@ -47,7 +47,8 @@ body {
 #aria-font {
   font-family: var(--font-open-sans), sans-serif !important;
 }
-#lato-font {
+#lato-font,
+.lato-font {
   font-family: var(--font-lato), sans-serif !important;
 }
 #montserrat-font {
