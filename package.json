@@ -28,7 +28,7 @@
   "dependencies": {
     "framer-motion": "^12.42.2",
     "lucide-react": "^0.555.0",
-    "next": "^16.2.10",
+    "next": "^16.2.11",
     "postcss": "^8.5.16",
     "react": "19.2.7",
     "react-dom": "19.2.7",
@@ -64,6 +64,7 @@
     "typescript": "^6"
   },
   "overrides": {
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "postcss": "$postcss"
   }
 }
