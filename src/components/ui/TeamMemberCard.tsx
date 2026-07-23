@@ -59,19 +59,15 @@ export default function TeamMemberCard({ name, role, linkedinUrl }: TeamMemberCa
         aria-hidden="true"
         className="relative w-[300px] h-[300px] mb-6 rounded-full overflow-hidden ring-4 ring-white shadow-xl bg-primary text-paper flex items-center justify-center"
       >
-        <span className="text-[96px] font-[400] leading-none select-none" id="lato-font">
+        <span className="text-[96px] font-[400] leading-none select-none lato-font">
           {memberInitials(name)}
         </span>
       </div>
 
       {/* Text Content */}
       <div className="text-center space-y-2">
-        <h3 className="text-[32px] font-[400]" id="lato-font">
-          {name}
-        </h3>
-        <p className="text-[25px] font-[400]" id="lato-font">
-          {role}
-        </p>
+        <h3 className="text-[32px] font-[400] lato-font">{name}</h3>
+        <p className="text-[25px] font-[400] lato-font">{role}</p>
       </div>
     </div>
   )
