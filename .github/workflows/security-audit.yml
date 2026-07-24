@@ -44,4 +44,4 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Audit high-severity production deps
-        run: npm audit --omit=dev --audit-level=high
+        run: npm run audit:high
