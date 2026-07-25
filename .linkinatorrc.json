@@ -1,5 +1,6 @@
 {
   "skip": [
+    "^https://ffcworkingsite1\\.org/.*",
     "^https://github.com/(?!FreeForCharity/FFC_Single_Page_Template).*",
     "^https://www.linkedin.com/.*",
     "^https://twitter.com/.*",

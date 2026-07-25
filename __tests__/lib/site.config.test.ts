@@ -1,4 +1,5 @@
 import {
+  canonicalPath,
   cardDescription,
   siteConfig,
   sitePath,
@@ -68,14 +69,21 @@ describe('siteConfig contract', () => {
     expect(siteConfig.parentOrg).toBeUndefined()
   })
 
-  it('builds same-origin absolute site URLs', () => {
+  it('builds same-origin absolute site URLs in the served (canonical) shape', () => {
     delete process.env.NEXT_PUBLIC_BASE_PATH
+    // sitePath() is basePath-only and deliberately slash-agnostic.
     expect(sitePath('/')).toBe('/')
     expect(sitePath('/privacy-policy')).toBe('/privacy-policy')
+    // canonicalPath() owns the trailingSlash policy; siteUrl() applies both.
+    expect(canonicalPath('/')).toBe('/')
+    expect(canonicalPath('/privacy-policy')).toBe('/privacy-policy/')
     expect(siteUrl('/')).toBe('https://ffcworkingsite1.org/')
-    expect(siteUrl('/privacy-policy')).toBe('https://ffcworkingsite1.org/privacy-policy')
+    expect(siteUrl('/privacy-policy')).toBe('https://ffcworkingsite1.org/privacy-policy/')
+    // Files are served verbatim and must not gain a slash.
+    expect(siteUrl('/sitemap.xml')).toBe('https://ffcworkingsite1.org/sitemap.xml')
     expect(() => siteUrl('privacy-policy')).toThrow(TypeError)
     expect(() => siteUrl('//example.com')).toThrow(TypeError)
+    expect(() => canonicalPath('//example.com')).toThrow(TypeError)
   })
 
   it('builds same-origin URLs that include the GitHub Pages base path', () => {
@@ -85,7 +93,10 @@ describe('siteConfig contract', () => {
     expect(sitePath('/privacy-policy')).toBe('/FFC-IN-Footer_Only_Template/privacy-policy')
     expect(siteUrl('/')).toBe('https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/')
     expect(siteUrl('/privacy-policy')).toBe(
-      'https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/privacy-policy'
+      'https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/privacy-policy/'
+    )
+    expect(siteUrl('/sitemap.xml')).toBe(
+      'https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/sitemap.xml'
     )
   })
 
