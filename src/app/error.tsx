@@ -31,7 +31,7 @@ export default function Error({
   return (
     <main id="main-content" className="pt-[130px] pb-[54px]">
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
-        <div className="border-t-[5px] border-[#b91c1c] pt-[25px]" id="lato-font">
+        <div className="border-t-[5px] border-[#b91c1c] pt-[25px]">
           <p className="text-[14px] font-[700] tracking-[2px] text-[#b91c1c] uppercase mb-[10px]">
             Something went wrong
           </p>

@@ -20,7 +20,7 @@ export default function NotFound() {
   return (
     <main id="main-content" className="pt-[130px] pb-[54px]">
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
-        <div className="border-t-[5px] border-[#0073e6] pt-[25px]" id="lato-font">
+        <div className="lato-font border-t-[5px] border-[#0073e6] pt-[25px]">
           <p className="text-[14px] font-[700] tracking-[2px] text-[#0073e6] uppercase mb-[10px]">
             Error 404
           </p>
