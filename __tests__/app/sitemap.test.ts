@@ -104,7 +104,11 @@ describe('sitemap URL shape matches the trailingSlash config', () => {
     expect(result).toHaveLength(routes.length)
     result.forEach((entry, index) => {
       expect(entry.url).toBe(siteUrl(routes[index].path))
-      expect(entry.url.endsWith('/')).toBe(trailingSlash)
+      // Compare against canonicalPath rather than asserting endsWith('/') === trailingSlash.
+      // The root entry ends with '/' in BOTH modes, so the direct comparison fails on '/' the
+      // moment trailingSlash is turned off — a test that breaks on a valid config change is a
+      // test people delete rather than trust.
+      expect(entry.url.endsWith('/')).toBe(canonicalPath(routes[index].path).endsWith('/'))
       // Belt and braces: siteUrl() is what we are asserting about, so also
       // check the raw string against the configured origin + served path.
       expect(entry.url).toBe(`https://ffcworkingsite1.org${canonicalPath(routes[index].path)}`)

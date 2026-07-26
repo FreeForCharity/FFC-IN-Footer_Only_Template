@@ -236,11 +236,26 @@ function isFilePath(path: string): boolean {
 export function canonicalPath(path = '/'): string {
   assertSameOriginPath(path)
 
-  if (!trailingSlash || path.endsWith('/') || isFilePath(path)) {
+  // File paths (robots.txt, sitemap.xml) never take a slash in either mode.
+  if (isFilePath(path)) {
     return path
   }
 
-  return `${path}/`
+  // Root is '/' in both modes.
+  if (path === '/') {
+    return '/'
+  }
+
+  // Symmetric on purpose. An add-only helper silently does the wrong thing the
+  // day trailingSlash is turned off: an input already written as
+  // '/privacy-policy/' would keep its slash, and the sitemap would advertise a
+  // URL the export no longer publishes — the exact drift this helper exists to
+  // prevent, just in the other direction.
+  if (trailingSlash) {
+    return path.endsWith('/') ? path : `${path}/`
+  }
+
+  return path.replace(/\/+$/, '')
 }
 
 /**
