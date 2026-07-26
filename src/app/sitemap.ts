@@ -9,6 +9,12 @@ type SitemapEntry = {
   priority: number
 }
 
+/**
+ * Route identifiers, written without a trailing slash. `siteUrl()` applies
+ * the site's `trailingSlash` policy (and the GitHub Pages basePath) so every
+ * `<loc>` is emitted in the exact shape the export serves — do NOT hand-write
+ * the served shape here.
+ */
 export const routes: readonly SitemapEntry[] = [
   { path: '/', changeFrequency: 'weekly', priority: 1.0 },
   { path: '/privacy-policy', changeFrequency: 'yearly', priority: 0.2 },

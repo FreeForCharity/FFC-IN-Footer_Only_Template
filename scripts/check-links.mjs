@@ -6,6 +6,12 @@
  * `/privacy-policy` should resolve to `out/privacy-policy.html` or
  * `out/privacy-policy/index.html`. Serving `out/` locally keeps CI aligned with
  * the deployed static host without requiring a live deployment.
+ *
+ * .linkinatorrc.json skips the site's own production origin
+ * (siteConfig.url). Pages now carry self-referential <link rel="canonical">
+ * tags pointing at that origin, and checking them would validate the build
+ * against the PREVIOUS deployment — a page added in this commit would always
+ * 404 until it ships. Same-origin coverage comes from the local server above.
  */
 import { spawn } from 'node:child_process'
 import { createReadStream } from 'node:fs'
