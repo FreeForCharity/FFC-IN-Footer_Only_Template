@@ -8,7 +8,10 @@
  *  3. Common secret patterns committed under src/ or public/.
  *  4. The template placeholder URL ffcworkingsite1.org left behind after a site rebrands.
  *  5. Static security metadata (_headers and security.txt) drifting away from
- *     footer-only runtime origins or src/lib/site.config.ts.
+ *     footer-only runtime origins or src/lib/site.config.ts. Note that
+ *     public/_headers is inert on FFC deploys — see checkCspSync.
+ *
+ * Exits non-zero on errors; warnings do not fail the check.
  */
 import { readdir, readFile } from 'node:fs/promises'
 import { dirname, join, relative, sep } from 'node:path'
@@ -359,34 +362,62 @@ function checkSiteConfigUrl(siteConfig) {
   }
 }
 
+// What actually protects an FFC site, and what only looks like it does:
+//
+//   public/_headers is INERT on the stack FFC deploys. It is a Cloudflare
+//   Pages / Netlify *build* feature; FFC sites are a GitHub Pages origin behind
+//   the Cloudflare *proxy*, and neither of those reads the file. Measured on
+//   the wire, not inferred: FFC-Cloudflare-Automation#884. It is kept for
+//   forward-compatibility with a future Cloudflare Pages deploy, so its CSP is
+//   still worth keeping in sync — but its presence is not coverage, which is
+//   why its findings are warnings rather than errors.
+//
+//   The <meta http-equiv="Content-Security-Policy"> tag in layout.tsx is the
+//   only security header an FFC site actually serves. Its absence is an error,
+//   and no finding about the inert file may mask it.
+//
+//   The other five headers (HSTS, X-Frame-Options, X-Content-Type-Options,
+//   Referrer-Policy, Permissions-Policy) cannot be set from a static export at
+//   all — <meta http-equiv> is ignored for them. They need a response-header
+//   rule on the zone (Cloudflare Transform Rule); fleet posture is measured by
+//   FFC-Cloudflare-Automation#894.
 async function checkCspSync() {
   const headersBody = await readIfExists(join(PUBLIC_DIR, '_headers'))
   const layoutBody = await readIfExists(join(SRC_DIR, 'app', 'layout.tsx'))
 
   if (!headersBody) {
-    errors.push(
-      'public/_headers is missing. Add static security headers for Cloudflare/Netlify-compatible hosts.'
+    warnings.push(
+      'public/_headers is missing. Neither GitHub Pages nor the Cloudflare proxy in front of it ' +
+        'reads this file, so it is inert on FFC deploys and nothing is served differently ' +
+        'today — restore it from the template only to stay forward-compatible with a Cloudflare ' +
+        'Pages deploy.'
     )
   }
 
   if (!layoutBody) {
     errors.push('src/app/layout.tsx is missing. Restore the root layout with CSP metadata.')
+    return // nothing left to assert: the live CSP lives in this file
   }
 
-  if (!headersBody || !layoutBody) return
-
-  const headersMatch = headersBody.match(/Content-Security-Policy:\s*([^\n]+)/)
+  // A null here means the inert file is absent — already warned about above.
+  // The layout check below still runs, because whether the live CSP exists is
+  // independent of that file.
+  const headersMatch = headersBody ? headersBody.match(/Content-Security-Policy:\s*([^\n]+)/) : null
   const layoutPolicy = extractLayoutCsp(layoutBody)
 
-  if (!headersMatch) {
-    errors.push(
-      'public/_headers has no Content-Security-Policy directive. Add one with footer-only origins.'
+  if (headersBody && !headersMatch) {
+    warnings.push(
+      'public/_headers has no Content-Security-Policy directive. This changes nothing that is ' +
+        'served today (the file is inert on FFC deploys); add one with the footer-only origins ' +
+        'to keep the forward-compatible copy aligned with the layout.tsx meta tag.'
     )
   }
 
   if (!layoutPolicy) {
     errors.push(
-      'src/app/layout.tsx has no Content-Security-Policy meta tag. Add one for GitHub Pages deploys.'
+      'src/app/layout.tsx has no Content-Security-Policy meta tag. This is the ONLY security ' +
+        'header an FFC site actually serves — without it the site has no CSP at all, whatever ' +
+        'public/_headers contains.'
     )
   }
 

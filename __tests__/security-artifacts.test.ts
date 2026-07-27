@@ -17,7 +17,13 @@ function payload(body: string): string {
 }
 
 describe('deployable security artifacts', () => {
-  it('ships host-readable security headers with a footer-only CSP', () => {
+  // Names what this asserts and what it does NOT. public/_headers is inert on
+  // FFC deploys (FFC-Cloudflare-Automation#884) — no host in FFC's stack reads
+  // it — so this locks the forward-compatible copy's content for a possible
+  // future Cloudflare Pages deploy. It is not evidence that any of these
+  // headers reach a browser today; that is measured on the wire by
+  // FFC-Cloudflare-Automation#894, not by a file check.
+  it('keeps the forward-compatible _headers copy intact with a footer-only CSP', () => {
     expect(existsSync(join(root, 'public/_headers'))).toBe(true)
 
     const headers = readFixture('public/_headers')

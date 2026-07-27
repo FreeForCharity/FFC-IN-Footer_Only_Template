@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -72,19 +72,18 @@ function makeFixture(
 }
 
 function runDrift(dir: string) {
-  try {
-    const output = execFileSync('node', ['scripts/check-drift.mjs'], {
-      cwd: dir,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-    return { status: 0, output }
-  } catch (error) {
-    const err = error as { status?: number; stdout?: string; stderr?: string }
-    return {
-      status: err.status ?? 1,
-      output: `${err.stdout ?? ''}${err.stderr ?? ''}`,
-    }
+  // Both streams, always. The script prints errors AND warnings to stderr
+  // (console.error / console.warn) and only the summary line to stdout, so
+  // reading stdout alone on the success path makes every warning assertion
+  // fail vacuously — and makes a "does not contain" assertion pass for the
+  // wrong reason, which is the more dangerous half.
+  const result = spawnSync('node', ['scripts/check-drift.mjs'], {
+    cwd: dir,
+    encoding: 'utf8',
+  })
+  return {
+    status: result.status ?? 1,
+    output: `${result.stdout ?? ''}${result.stderr ?? ''}`,
   }
 }
 
@@ -96,15 +95,58 @@ describe('security drift guard', () => {
     fixtures = []
   })
 
-  it('fails when public/_headers is missing', () => {
+  // public/_headers is a Cloudflare Pages / Netlify build feature and is inert
+  // on the stack FFC deploys — a GitHub Pages origin behind the Cloudflare
+  // proxy, neither of which reads it (measured in
+  // FFC-Cloudflare-Automation#884). So its absence changes nothing that is
+  // served and must not fail the run, and must never mask the finding about
+  // the layout.tsx CSP meta tag, which is the only header actually served.
+  it('warns rather than fails when public/_headers is missing', () => {
     const dir = makeFixture({ headers: null })
     fixtures.push(dir)
 
     const result = runDrift(dir)
 
-    expect(result.status).not.toBe(0)
     expect(result.output).toContain('public/_headers is missing')
+    expect(result.output).toContain('inert on FFC deploys')
+    expect(result.output).not.toContain('security headers will not be served')
+    expect(result.status).toBe(0)
   })
+
+  it('warns rather than fails when public/_headers carries no CSP', () => {
+    const dir = makeFixture({ headers: '/*\n  X-Frame-Options: SAMEORIGIN\n' })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.output).toContain('public/_headers has no Content-Security-Policy directive')
+    expect(result.status).toBe(0)
+  })
+
+  // A matrix rather than one case: the risk lives in the early returns, so a
+  // regression would only show up in the _headers states that return before
+  // reaching the layout check.
+  const headersStates: Array<[string, string | null]> = [
+    ['absent', null],
+    ['present without a CSP', '/*\n  X-Frame-Options: SAMEORIGIN\n'],
+    ['present with a CSP', `/*\n  Content-Security-Policy: ${syncedCsp}\n`],
+  ]
+
+  it.each(headersStates)(
+    'fails on a missing layout CSP meta tag when _headers is %s',
+    (_label, headers) => {
+      const dir = makeFixture({
+        headers,
+        layout: 'export default function RootLayout() {\n  return <html><body /></html>\n}\n',
+      })
+      fixtures.push(dir)
+
+      const result = runDrift(dir)
+
+      expect(result.output).toContain('src/app/layout.tsx has no Content-Security-Policy meta tag')
+      expect(result.status).not.toBe(0)
+    }
+  )
 
   it('fails when root and well-known security.txt payloads drift', () => {
     const dir = makeFixture({ rootSecurity: payload('2028-01-01T00:00:00.000Z') })
