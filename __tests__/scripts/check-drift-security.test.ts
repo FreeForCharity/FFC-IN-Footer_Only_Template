@@ -113,6 +113,24 @@ describe('security drift guard', () => {
     expect(result.status).toBe(0)
   })
 
+  // The warning severity above is correct only for a genuinely absent file. A
+  // file that exists but cannot be read is a different fact: reporting it as
+  // missing sends the reader to restore a file they already have, and — because
+  // absent is only a warning — would let the run pass on a filesystem error.
+  it('errors, not warns, when public/_headers exists but cannot be read', () => {
+    const dir = makeFixture({ headers: null })
+    fixtures.push(dir)
+    // A directory where the file should be: readFile gives EISDIR, which is
+    // portable and needs no chmod (root ignores permission bits in CI).
+    mkdirSync(join(dir, 'public/_headers'))
+
+    const result = runDrift(dir)
+
+    expect(result.output).toContain('Could not read public/_headers')
+    expect(result.output).not.toContain('public/_headers is missing')
+    expect(result.status).not.toBe(0)
+  })
+
   it('warns rather than fails when public/_headers carries no CSP', () => {
     const dir = makeFixture({ headers: '/*\n  X-Frame-Options: SAMEORIGIN\n' })
     fixtures.push(dir)

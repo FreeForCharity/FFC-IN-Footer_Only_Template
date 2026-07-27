@@ -381,9 +381,35 @@ function checkSiteConfigUrl(siteConfig) {
 //   all — <meta http-equiv> is ignored for them. They need a response-header
 //   rule on the zone (Cloudflare Transform Rule); fleet posture is measured by
 //   FFC-Cloudflare-Automation#894.
+// Deliberately separate from the shared readIfExists(), which several other
+// checks call and whose falsy-means-absent contract they rely on. Only this
+// check downgrades "absent" to a warning, so only this check needs to tell
+// "absent" apart from "present but unreadable" — otherwise a permission or I/O
+// error would be reported as a missing file (sending the reader to restore a
+// file that is already there) and, being a mere warning, would let the run pass.
+const UNREADABLE = Symbol('unreadable')
+
+async function readForCspCheck(path) {
+  try {
+    return await readFile(path, 'utf8')
+  } catch (err) {
+    if (err.code === 'ENOENT') return null
+    errors.push(
+      `Could not read ${relative(ROOT, path)} (${err.code || err.message}). ` +
+        `The file is present but unreadable — this is not the same as it being absent, ` +
+        `so fix the read error rather than restoring the file from the template.`
+    )
+    return UNREADABLE
+  }
+}
+
 async function checkCspSync() {
-  const headersBody = await readIfExists(join(PUBLIC_DIR, '_headers'))
-  const layoutBody = await readIfExists(join(SRC_DIR, 'app', 'layout.tsx'))
+  const headersBody = await readForCspCheck(join(PUBLIC_DIR, '_headers'))
+  const layoutBody = await readForCspCheck(join(SRC_DIR, 'app', 'layout.tsx'))
+
+  // The read failure is already recorded as an error; asserting on a file we
+  // could not read would only stack a wrong diagnosis on top of it.
+  if (headersBody === UNREADABLE || layoutBody === UNREADABLE) return
 
   if (!headersBody) {
     warnings.push(
