@@ -131,6 +131,26 @@ describe('security drift guard', () => {
     expect(result.status).not.toBe(0)
   })
 
+  // Unreadable is the fourth state _headers can be in, and it must obey the
+  // same rule as the other three: never end the check before the layout CSP has
+  // been assessed. The run fails either way, so the cost is not a silent pass —
+  // it is a reader who fixes the read error, re-runs, and only then learns the
+  // site has no CSP.
+  it('still reports the missing live CSP alongside an unreadable _headers', () => {
+    const dir = makeFixture({
+      headers: null,
+      layout: 'export default function RootLayout() {\n  return <html><body /></html>\n}\n',
+    })
+    fixtures.push(dir)
+    mkdirSync(join(dir, 'public/_headers'))
+
+    const result = runDrift(dir)
+
+    expect(result.output).toContain('Could not read public/_headers')
+    expect(result.output).toContain('src/app/layout.tsx has no Content-Security-Policy meta tag')
+    expect(result.status).not.toBe(0)
+  })
+
   it('warns rather than fails when public/_headers carries no CSP', () => {
     const dir = makeFixture({ headers: '/*\n  X-Frame-Options: SAMEORIGIN\n' })
     fixtures.push(dir)

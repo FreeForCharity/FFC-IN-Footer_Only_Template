@@ -404,14 +404,27 @@ async function readForCspCheck(path) {
 }
 
 async function checkCspSync() {
-  const headersBody = await readForCspCheck(join(PUBLIC_DIR, '_headers'))
-  const layoutBody = await readForCspCheck(join(SRC_DIR, 'app', 'layout.tsx'))
+  const headersRaw = await readForCspCheck(join(PUBLIC_DIR, '_headers'))
+  const layoutRaw = await readForCspCheck(join(SRC_DIR, 'app', 'layout.tsx'))
 
-  // The read failure is already recorded as an error; asserting on a file we
-  // could not read would only stack a wrong diagnosis on top of it.
-  if (headersBody === UNREADABLE || layoutBody === UNREADABLE) return
+  // Only layout.tsx can end the check early, because the live CSP lives in it
+  // and there is nothing left to assert without it. An unreadable _headers must
+  // NOT end it: readForCspCheck has already recorded that read failure as its
+  // own error, and stopping here would suppress the layout finding — the same
+  // masking bug this function guards against, wearing a fourth costume.
+  if (layoutRaw === UNREADABLE) return // error already recorded by readForCspCheck
+  if (!layoutRaw) {
+    errors.push('src/app/layout.tsx is missing. Restore the root layout with CSP metadata.')
+    return
+  }
+  const layoutBody = layoutRaw
 
-  if (!headersBody) {
+  // Unreadable and absent are both "no forward-compatible copy to compare
+  // against", but only absent earns the warning — an unreadable file is already
+  // reported with its real cause, and calling it missing would be a wrong
+  // diagnosis on top of a correct one.
+  const headersBody = headersRaw === UNREADABLE ? null : headersRaw
+  if (headersRaw !== UNREADABLE && !headersBody) {
     warnings.push(
       'public/_headers is missing. Neither GitHub Pages nor the Cloudflare proxy in front of it ' +
         'reads this file, so it is inert on FFC deploys and nothing is served differently ' +
@@ -420,14 +433,6 @@ async function checkCspSync() {
     )
   }
 
-  if (!layoutBody) {
-    errors.push('src/app/layout.tsx is missing. Restore the root layout with CSP metadata.')
-    return // nothing left to assert: the live CSP lives in this file
-  }
-
-  // A null here means the inert file is absent — already warned about above.
-  // The layout check below still runs, because whether the live CSP exists is
-  // independent of that file.
   const headersMatch = headersBody ? headersBody.match(/Content-Security-Policy:\s*([^\n]+)/) : null
   const layoutPolicy = extractLayoutCsp(layoutBody)
 
