@@ -8,7 +8,10 @@
  *  3. Common secret patterns committed under src/ or public/.
  *  4. The template placeholder URL ffcworkingsite1.org left behind after a site rebrands.
  *  5. Static security metadata (_headers and security.txt) drifting away from
- *     footer-only runtime origins or src/lib/site.config.ts.
+ *     footer-only runtime origins or src/lib/site.config.ts. Note that
+ *     public/_headers is inert on FFC deploys — see checkCspSync.
+ *
+ * Exits non-zero on errors; warnings do not fail the check.
  */
 import { readdir, readFile } from 'node:fs/promises'
 import { dirname, join, relative, sep } from 'node:path'
@@ -359,34 +362,98 @@ function checkSiteConfigUrl(siteConfig) {
   }
 }
 
-async function checkCspSync() {
-  const headersBody = await readIfExists(join(PUBLIC_DIR, '_headers'))
-  const layoutBody = await readIfExists(join(SRC_DIR, 'app', 'layout.tsx'))
+// What actually protects an FFC site, and what only looks like it does:
+//
+//   public/_headers is INERT on the stack FFC deploys. It is a Cloudflare
+//   Pages / Netlify *build* feature; FFC sites are a GitHub Pages origin behind
+//   the Cloudflare *proxy*, and neither of those reads the file. Measured on
+//   the wire, not inferred: FFC-Cloudflare-Automation#884. It is kept for
+//   forward-compatibility with a future Cloudflare Pages deploy, so its CSP is
+//   still worth keeping in sync — but its presence is not coverage, which is
+//   why its findings are warnings rather than errors.
+//
+//   The <meta http-equiv="Content-Security-Policy"> tag in layout.tsx is the
+//   only security header an FFC site actually serves. Its absence is an error,
+//   and no finding about the inert file may mask it.
+//
+//   The other five headers (HSTS, X-Frame-Options, X-Content-Type-Options,
+//   Referrer-Policy, Permissions-Policy) cannot be set from a static export at
+//   all — <meta http-equiv> is ignored for them. They need a response-header
+//   rule on the zone (Cloudflare Transform Rule); fleet posture is measured by
+//   FFC-Cloudflare-Automation#894.
+// Deliberately separate from the shared readIfExists(), which several other
+// checks call and whose falsy-means-absent contract they rely on. Only this
+// check downgrades "absent" to a warning, so only this check needs to tell
+// "absent" apart from "present but unreadable" — otherwise a permission or I/O
+// error would be reported as a missing file (sending the reader to restore a
+// file that is already there) and, being a mere warning, would let the run pass.
+const UNREADABLE = Symbol('unreadable')
 
-  if (!headersBody) {
+async function readForCspCheck(path) {
+  try {
+    return await readFile(path, 'utf8')
+  } catch (err) {
+    if (err.code === 'ENOENT') return null
+    // Normalise to forward slashes. `relative()` returns platform separators,
+    // so on Windows this message alone would spell the file `public\_headers`
+    // while every hard-coded mention in this script — and in the tests — uses a
+    // forward slash. One run would name one file two ways.
+    const rel = relative(ROOT, path).split(sep).join('/')
     errors.push(
-      'public/_headers is missing. Add static security headers for Cloudflare/Netlify-compatible hosts.'
+      `Could not read ${rel} (${err.code || err.message}). ` +
+        `The file is present but unreadable — this is not the same as it being absent, ` +
+        `so fix the read error rather than restoring the file from the template.`
+    )
+    return UNREADABLE
+  }
+}
+
+async function checkCspSync() {
+  const headersRaw = await readForCspCheck(join(PUBLIC_DIR, '_headers'))
+  const layoutRaw = await readForCspCheck(join(SRC_DIR, 'app', 'layout.tsx'))
+
+  // Only layout.tsx can end the check early, because the live CSP lives in it
+  // and there is nothing left to assert without it. An unreadable _headers must
+  // NOT end it: readForCspCheck has already recorded that read failure as its
+  // own error, and stopping here would suppress the layout finding — the same
+  // masking bug this function guards against, wearing a fourth costume.
+  if (layoutRaw === UNREADABLE) return // error already recorded by readForCspCheck
+  if (!layoutRaw) {
+    errors.push('src/app/layout.tsx is missing. Restore the root layout with CSP metadata.')
+    return
+  }
+  const layoutBody = layoutRaw
+
+  // Unreadable and absent are both "no forward-compatible copy to compare
+  // against", but only absent earns the warning — an unreadable file is already
+  // reported with its real cause, and calling it missing would be a wrong
+  // diagnosis on top of a correct one.
+  const headersBody = headersRaw === UNREADABLE ? null : headersRaw
+  if (headersRaw !== UNREADABLE && !headersBody) {
+    warnings.push(
+      'public/_headers is missing. Neither GitHub Pages nor the Cloudflare proxy in front of it ' +
+        'reads this file, so it is inert on FFC deploys and nothing is served differently ' +
+        'today — restore it from the template only to stay forward-compatible with a Cloudflare ' +
+        'Pages deploy.'
     )
   }
 
-  if (!layoutBody) {
-    errors.push('src/app/layout.tsx is missing. Restore the root layout with CSP metadata.')
-  }
-
-  if (!headersBody || !layoutBody) return
-
-  const headersMatch = headersBody.match(/Content-Security-Policy:\s*([^\n]+)/)
+  const headersMatch = headersBody ? headersBody.match(/Content-Security-Policy:\s*([^\n]+)/) : null
   const layoutPolicy = extractLayoutCsp(layoutBody)
 
-  if (!headersMatch) {
-    errors.push(
-      'public/_headers has no Content-Security-Policy directive. Add one with footer-only origins.'
+  if (headersBody && !headersMatch) {
+    warnings.push(
+      'public/_headers has no Content-Security-Policy directive. This changes nothing that is ' +
+        'served today (the file is inert on FFC deploys); add one with the footer-only origins ' +
+        'to keep the forward-compatible copy aligned with the layout.tsx meta tag.'
     )
   }
 
   if (!layoutPolicy) {
     errors.push(
-      'src/app/layout.tsx has no Content-Security-Policy meta tag. Add one for GitHub Pages deploys.'
+      'src/app/layout.tsx has no Content-Security-Policy meta tag. This is the ONLY security ' +
+        'header an FFC site actually serves — without it the site has no CSP at all, whatever ' +
+        'public/_headers contains.'
     )
   }
 
