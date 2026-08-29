@@ -25,6 +25,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      # The check scripts are dependency-free (node: built-ins only), so no
+      # install step is needed — but pnpm itself is not preinstalled on
+      # GitHub runners, so `pnpm run` needs this setup step.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:

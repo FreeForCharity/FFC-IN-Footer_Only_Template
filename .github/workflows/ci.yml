@@ -107,7 +107,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests (sharded)
-        run: pnpm run test:e2e -- --shard=${{ matrix.shard }}/4
+        run: pnpm run test:e2e --shard=${{ matrix.shard }}/4
         env:
           CI: true
 
