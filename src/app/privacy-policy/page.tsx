@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
             <strong>Privacy Policy</strong>
           </h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <em>Effective Date: 12-07-2025</em>
+            <em>Effective Date: 08-29-2026</em>
           </p>
 
           {/* Section 1 */}
@@ -332,6 +332,101 @@ export default function PrivacyPolicy() {
           <ol className="list-decimal list-inside pb-[1em]" start={8}>
             <li>
               <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+                <strong>Your Rights in the European Union, United Kingdom, and EEA (GDPR)</strong>
+              </h2>
+            </li>
+          </ol>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            If you visit from the European Union, the United Kingdom, or the wider European Economic
+            Area, the EU General Data Protection Regulation (GDPR) or the UK GDPR applies to our
+            handling of your personal data, and this section supplements the rest of this policy.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>Legal bases.</strong> We process personal data only on these bases:
+          </p>
+          <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
+            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+              <strong>Consent:</strong> Analytics and marketing cookies are off until you opt in
+              through the cookie consent banner. You can withdraw consent at any time via Cookie
+              Preferences, and withdrawal deletes the associated tracking cookies from your browser.
+            </li>
+            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+              <strong>Legitimate interests:</strong> Operating, securing, and improving this website
+              (for example, essential cookies and server logs), balanced against your rights.
+            </li>
+            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+              <strong>Legal obligation:</strong> Where processing is required to comply with
+              applicable law.
+            </li>
+          </ul>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>Your rights.</strong> You have the right to: access the personal data we hold
+            about you; have inaccurate data rectified; have your data erased; restrict or object to
+            processing; receive your data in a portable format; and withdraw any consent you have
+            given, at any time, without affecting the lawfulness of processing before withdrawal.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>Exercising your rights and complaints.</strong> Contact us at{' '}
+            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
+              clarkemoyer@freeforcharity.org
+            </a>{' '}
+            to exercise any of these rights; we will respond within the time limits the GDPR sets.
+            You also have the right to lodge a complaint with your national data protection
+            supervisory authority (in the UK, the Information Commissioner&apos;s Office).
+          </p>
+
+          {/* Section 9 */}
+          <ol className="list-decimal list-inside pb-[1em]" start={9}>
+            <li>
+              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+                <strong>Your California Privacy Rights (CCPA/CPRA)</strong>
+              </h2>
+            </li>
+          </ol>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            If you are a California resident, the California Consumer Privacy Act, as amended by the
+            California Privacy Rights Act (CCPA/CPRA), gives you specific rights, and this section
+            supplements the rest of this policy.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>We do not sell or share your personal information.</strong> Free For Charity
+            does not sell personal information, and does not share it for cross-context behavioral
+            advertising, as those terms are defined by California law — and has not done so in the
+            preceding 12 months. We do not knowingly collect or sell the personal information of
+            anyone under 16. We do not collect sensitive personal information beyond what is
+            necessary to provide this website and our services, and we do not use it to infer
+            characteristics about you.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>Your rights.</strong> You have the right to: know what personal information we
+            collect, use, and disclose, and to access it; delete personal information we collected
+            from you; correct inaccurate personal information; opt out of any sale or sharing of
+            personal information (not applicable, since we do neither); limit the use of sensitive
+            personal information; and not be discriminated against for exercising any of these
+            rights.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>Opt-out preference signals (Global Privacy Control / Do Not Track).</strong>{' '}
+            Tracking on this site is opt-in for every visitor, everywhere: analytics and marketing
+            cookies stay off until you accept them, and declining or withdrawing consent keeps you —
+            or returns you — to that untracked state. Because we also do not sell or share personal
+            information, every visitor already receives at least the protection a Global Privacy
+            Control or Do Not Track signal would request.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>Exercising your rights.</strong> Submit a request to{' '}
+            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
+              clarkemoyer@freeforcharity.org
+            </a>
+            . We will verify your request using information associated with your interactions with
+            us, and you may use an authorized agent to submit a request on your behalf. We will
+            respond within the timeframes California law requires.
+          </p>
+
+          {/* Section 10 */}
+          <ol className="list-decimal list-inside pb-[1em]" start={10}>
+            <li>
+              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
                 <strong>Security Measures</strong>
               </h2>
             </li>
@@ -360,8 +455,8 @@ export default function PrivacyPolicy() {
             electronic storage is 100% secure.
           </p>
 
-          {/* Section 9 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={9}>
+          {/* Section 11 */}
+          <ol className="list-decimal list-inside pb-[1em]" start={11}>
             <li>
               <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
                 <strong>Third-Party Links</strong>
@@ -375,8 +470,8 @@ export default function PrivacyPolicy() {
             Policy of every site you visit.
           </p>
 
-          {/* Section 10 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={10}>
+          {/* Section 12 */}
+          <ol className="list-decimal list-inside pb-[1em]" start={12}>
             <li>
               <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
                 <strong>Children’s Privacy</strong>
@@ -398,8 +493,8 @@ export default function PrivacyPolicy() {
             </li>
           </ul>
 
-          {/* Section 11 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={11}>
+          {/* Section 13 */}
+          <ol className="list-decimal list-inside pb-[1em]" start={13}>
             <li>
               <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
                 <strong>International Data Transfers</strong>
@@ -422,8 +517,8 @@ export default function PrivacyPolicy() {
             </li>
           </ul>
 
-          {/* Section 12 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={12}>
+          {/* Section 14 */}
+          <ol className="list-decimal list-inside pb-[1em]" start={14}>
             <li>
               <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
                 <strong>Changes to This Privacy Policy</strong>
@@ -445,8 +540,8 @@ export default function PrivacyPolicy() {
             </li>
           </ul>
 
-          {/* Section 13 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={13}>
+          {/* Section 15 */}
+          <ol className="list-decimal list-inside pb-[1em]" start={15}>
             <li>
               <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
                 <strong>Contact Us</strong>
@@ -466,8 +561,8 @@ export default function PrivacyPolicy() {
             </li>
           </ul>
 
-          {/* Section 14 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={14}>
+          {/* Section 16 */}
+          <ol className="list-decimal list-inside pb-[1em]" start={16}>
             <li>
               <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
                 <strong>Additional Information</strong>
@@ -476,7 +571,7 @@ export default function PrivacyPolicy() {
           </ol>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>14.1. Data Protection Officer</strong>
+            <strong>16.1. Data Protection Officer</strong>
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             We have appointed a Data Protection Officer (DPO) responsible for overseeing questions
