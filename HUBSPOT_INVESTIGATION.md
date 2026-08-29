@@ -230,7 +230,7 @@ If HubSpot tracking is unacceptable, consider these alternatives:
 1. **Open Application in Browser:**
 
    ```bash
-   npm run dev
+   pnpm run dev
    # Navigate to http://localhost:3000
    ```
 

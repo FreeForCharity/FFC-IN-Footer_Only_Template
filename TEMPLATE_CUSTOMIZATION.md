@@ -61,12 +61,12 @@ charity's name, URL, contact email, social links, etc.
   [`tests/test.config.ts`](./tests/test.config.ts); update them alongside your
   content edits.
 
-After editing, **run `npm run check:drift`** to confirm nothing else still
+After editing, **run `pnpm run check:drift`** to confirm nothing else still
 references the old placeholder values.
 
-### Are you done rebranding? — `npm run check:rebrand`
+### Are you done rebranding? — `pnpm run check:rebrand`
 
-Run **`npm run check:rebrand`** at any point to get a checklist of every value
+Run **`pnpm run check:rebrand`** at any point to get a checklist of every value
 that still matches the Free For Charity template defaults — charity name, EIN,
 phone, contact email, domain/CNAME, the GTM analytics container, and the sample
 team content. It is a guide, not a gate: it always exits 0 on the template

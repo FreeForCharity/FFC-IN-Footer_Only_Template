@@ -10,16 +10,16 @@ This directory contains end-to-end (E2E) tests that validate the footer-only tem
 
 ```bash
 # Build the site first
-npm run build
+pnpm run build
 
 # Run tests
-npm run test:e2e
+pnpm run test:e2e
 
 # Run tests with UI (interactive)
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 
 # Run tests in headed mode (see browser)
-npm run test:e2e:headed
+pnpm run test:e2e:headed
 ```
 
 ## Customizing Tests for Your Organization
@@ -106,7 +106,7 @@ export const testConfig = {
 
 **Tests fail after customization**: Verify all values in `test.config.ts` match your page content exactly. Text matching is case-sensitive.
 
-**Tests can't find elements**: Run tests with the UI to see what's happening: `npm run test:e2e:ui`
+**Tests can't find elements**: Run tests with the UI to see what's happening: `pnpm run test:e2e:ui`
 
 **GTM tests fail**: Update `googleTagManager.id` with your actual GTM container ID.
 
