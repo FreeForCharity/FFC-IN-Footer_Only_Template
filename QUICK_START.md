@@ -24,7 +24,7 @@ cd FFC-IN-Footer-Only-Template
 ### 2. Install Dependencies (17 seconds)
 
 ```bash
-npm install
+pnpm install
 ```
 
 **Expected output**: 1000+ packages installed successfully
@@ -32,7 +32,7 @@ npm install
 ### 3. Start Development Server (1 second)
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 **Open**: [http://localhost:3000](http://localhost:3000)
@@ -45,13 +45,13 @@ Run tests to ensure everything works:
 
 ```bash
 # Lint code (2 seconds)
-npm run lint
+pnpm run lint
 
 # Run unit tests (3 seconds)
-npm test
+pnpm test
 
 # Build for production (20 seconds)
-npm run build
+pnpm run build
 ```
 
 **Expected**: All checks pass with 0 errors (2 warnings about `<img>` tags are expected for static export)
@@ -64,59 +64,59 @@ npm run build
 
 ```bash
 # Start dev server with hot reload
-npm run dev
+pnpm run dev
 
 # Start on different port
-PORT=3001 npm run dev
+PORT=3001 pnpm run dev
 ```
 
 ### Code Quality
 
 ```bash
 # Format code with Prettier
-npm run format
+pnpm run format
 
 # Check formatting without changes
-npm run format:check
+pnpm run format:check
 
 # Lint code with ESLint
-npm run lint
+pnpm run lint
 ```
 
 ### Testing
 
 ```bash
 # Run unit tests
-npm test
+pnpm test
 
 # Run tests in watch mode (for development)
-npm run test:watch
+pnpm run test:watch
 
 # Run tests with coverage report
-npm run test:coverage
+pnpm run test:coverage
 
 # Run E2E tests with Playwright
-npm run test:e2e
+pnpm run test:e2e
 
 # Run E2E tests in headed mode (see browser)
-npm run test:e2e:headed
+pnpm run test:e2e:headed
 
 # Open Playwright UI
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 ### Building & Previewing
 
 ```bash
 # Build for production
-npm run build
+pnpm run build
 
 # Preview production build locally
-npm run preview
+pnpm run preview
 # Opens at http://localhost:3000
 
 # Check for broken links (requires build first)
-npm run check-links
+pnpm run check-links
 ```
 
 ### Git Workflow
@@ -248,7 +248,7 @@ describe('MyComponent', () => {
 Run the test:
 
 ```bash
-npm test MyComponent
+pnpm test MyComponent
 ```
 
 ---
@@ -260,23 +260,23 @@ npm test MyComponent
 ```bash
 npx kill-port 3000
 # Or use a different port
-PORT=3001 npm run dev
+PORT=3001 pnpm run dev
 ```
 
 ### Build Fails
 
 ```bash
 rm -rf .next
-rm -rf node_modules package-lock.json
-npm install
-npm run build
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+pnpm run build
 ```
 
 ### E2E Tests Fail
 
 ```bash
-npx playwright install --with-deps chromium
-npm run test:e2e
+pnpm exec playwright install --with-deps chromium
+pnpm run test:e2e
 ```
 
 ### Module Not Found Errors
@@ -298,20 +298,20 @@ The `@` alias points to `src/`. Make sure file paths are correct and restart you
 
 ```bash
 # Development
-npm run dev                 # Start dev server
-npm run build               # Build for production
-npm run preview             # Preview production build
+pnpm run dev                 # Start dev server
+pnpm run build               # Build for production
+pnpm run preview             # Preview production build
 
 # Quality Checks
-npm run lint                # Lint code
-npm run format              # Format code
-npm run format:check        # Check formatting
+pnpm run lint                # Lint code
+pnpm run format              # Format code
+pnpm run format:check        # Check formatting
 
 # Testing
-npm test                    # Run unit tests
-npm run test:watch          # Watch mode
-npm run test:coverage       # With coverage
-npm run test:e2e            # E2E tests
-npm run test:e2e:headed     # E2E with browser
-npm run check-links         # Check for broken links
+pnpm test                    # Run unit tests
+pnpm run test:watch          # Watch mode
+pnpm run test:coverage       # With coverage
+pnpm run test:e2e            # E2E tests
+pnpm run test:e2e:headed     # E2E with browser
+pnpm run check-links         # Check for broken links
 ```

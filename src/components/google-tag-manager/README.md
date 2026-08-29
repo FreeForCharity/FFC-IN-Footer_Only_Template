@@ -98,7 +98,7 @@ Comprehensive tests are available in `tests/google-tag-manager.spec.ts`:
 
 ```bash
 # Run GTM tests
-npm run test:e2e -- tests/google-tag-manager.spec.ts
+pnpm run test:e2e tests/google-tag-manager.spec.ts
 ```
 
 Test coverage includes:
@@ -126,7 +126,7 @@ To test GTM locally:
 
 ```bash
 # Start development server
-npm run dev
+pnpm run dev
 ```
 
 The GTM script will load automatically with the configured GTM ID.

@@ -2,13 +2,14 @@
   "name": "free-for-charity",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.34.5",
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "preview": "npx serve out -l 3000",
+    "preview": "pnpm exec serve out -l 3000",
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -23,7 +24,7 @@
     "check:drift": "node scripts/check-drift.mjs",
     "check:site-config": "node scripts/check-site-config.mjs",
     "check:rebrand": "node scripts/rebrand-check.mjs",
-    "audit:high": "npm audit --omit=dev --audit-level=high",
+    "audit:high": "pnpm audit --prod --audit-level high",
     "prepare": "husky"
   },
   "dependencies": {
@@ -61,11 +62,15 @@
     "jest-environment-jsdom": "^30.2.0",
     "linkinator": "^7.5.1",
     "prettier": "^3.7.4",
+    "serve": "^14.2.6",
     "tailwindcss": "^4.1.12",
     "typescript": "^6"
   },
-  "overrides": {
-    "sharp": "^0.35.3",
-    "postcss": "$postcss"
+  "pnpm": {
+    "overrides": {
+      "sharp": "^0.35.3",
+      "postcss": "$postcss",
+      "nanoid@<3.3.18": "^3.3.18"
+    }
   }
 }

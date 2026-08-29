@@ -26,28 +26,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: npm run format:check
+        run: pnpm run format:check
 
       - name: Run linting
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Run unit tests
-        run: npm test
+        run: pnpm test
         env:
           CI: true
 
       - name: Build Next.js site
-        run: npm run build
+        run: pnpm run build
         # Note: Do NOT set NEXT_PUBLIC_BASE_PATH here
         # The basePath is only needed for actual GitHub Pages deployment (in deploy.yml)
         # E2E tests need to run against a build without basePath since the test server
@@ -77,14 +80,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Download build output
         uses: actions/download-artifact@v8
@@ -95,13 +101,13 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests (sharded)
-        run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
+        run: pnpm run test:e2e --shard=${{ matrix.shard }}/4
         env:
           CI: true
 
@@ -125,19 +131,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build Next.js site
-        run: npm run build
+        run: pnpm run build
         # Keep this build base-path-free like build-and-unit so the local
         # link-check server can resolve clean URLs the same way GitHub Pages does.
 
       - name: Run link checker
-        run: npm run check-links
+        run: pnpm run check-links
