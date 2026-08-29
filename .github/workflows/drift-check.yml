@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # The check scripts are dependency-free (node: built-ins only), so no
       # install step is needed — but pnpm itself is not preinstalled on
