@@ -32,6 +32,10 @@ afterAll(() => {
   } else {
     process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID = ORIGINAL_GA_ENV
   }
+  // Purge the module cache too: the component copy cached above has the
+  // real GA id baked in, and a later in-band suite requiring it would
+  // get that copy instead of one that reads the restored env.
+  jest.resetModules()
 })
 
 // Mock localStorage (jsdom's is fine, but keep parity with the main suite)
@@ -53,6 +57,8 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
+  // Leave the property re-definable for any later suite in this worker.
+  configurable: true,
 })
 
 describe('CookieConsent Consent Mode ordering (real GA id)', () => {

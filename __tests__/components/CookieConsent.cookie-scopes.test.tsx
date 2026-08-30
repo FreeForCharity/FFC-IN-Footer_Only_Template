@@ -34,6 +34,8 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
+  // Leave the property re-definable for any later suite in this worker.
+  configurable: true,
 })
 
 describe('CookieConsent cookie deletion scopes (multi-label hostname)', () => {
