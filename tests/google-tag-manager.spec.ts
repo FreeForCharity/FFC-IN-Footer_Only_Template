@@ -97,6 +97,43 @@ test.describe('Google Tag Manager Integration', () => {
     expect(dataLayerInitialized).toBe(true)
   })
 
+  test('should emit Google Consent Mode defaults before GTM starts', async ({ page }) => {
+    await page.goto('/')
+    await waitForGtmScript(page)
+    await waitForDataLayer(page)
+    // Wait for the GTM inline snippet to have actually executed.
+    await page.waitForFunction(
+      () => (window.dataLayer || []).some((e) => e && typeof e === 'object' && 'gtm.start' in e),
+      { timeout: 15000 }
+    )
+
+    const order = await page.evaluate(() => {
+      // The inline bootstrap script is server-rendered in <head>.
+      const bootstrap = document.querySelector('script#consent-mode-default')
+      const dl = (window.dataLayer || []) as unknown as Array<Record<string, unknown>>
+      // gtag('consent','default',…) pushes an arguments object: [0]='consent', [1]='default'.
+      const consentDefaultIdx = dl.findIndex((e) => e && e[0] === 'consent' && e[1] === 'default')
+      const gtmStartIdx = dl.findIndex((e) => e && typeof e === 'object' && 'gtm.start' in e)
+      return {
+        hasBootstrap: bootstrap !== null,
+        bootstrapContent: bootstrap?.textContent ?? '',
+        consentDefaultIdx,
+        gtmStartIdx,
+      }
+    })
+
+    expect(order.hasBootstrap).toBe(true)
+    // Region-scoped denial for the EEA/UK/CH plus the unscoped grant.
+    expect(order.bootstrapContent).toContain("'region'")
+    expect(order.bootstrapContent).toContain('"GB"')
+    expect(order.bootstrapContent).toContain('"CH"')
+    // The consent defaults must land in the dataLayer before GTM's own
+    // gtm.start entry — i.e. before any Google tag begins executing.
+    expect(order.consentDefaultIdx).toBeGreaterThanOrEqual(0)
+    expect(order.gtmStartIdx).toBeGreaterThanOrEqual(0)
+    expect(order.consentDefaultIdx).toBeLessThan(order.gtmStartIdx)
+  })
+
   test('should work with cookie consent system', async ({ page, context }) => {
     // Clear cookies and localStorage
     await context.clearCookies()

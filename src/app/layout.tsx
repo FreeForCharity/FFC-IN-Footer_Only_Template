@@ -15,6 +15,7 @@ import {
 } from '@/lib/fonts'
 import { siteMetadata } from '@/lib/siteMetadata'
 import { assetPath } from '@/lib/assetPath'
+import { CONSENT_MODE_BOOTSTRAP } from '@/lib/consent-mode'
 
 export const metadata = siteMetadata
 
@@ -59,6 +60,16 @@ export default function RootLayout({
           fetchPriority="high"
         />
 
+        {/*
+          Google Consent Mode v2 defaults. MUST come before <GoogleTagManager />
+          (and any other Google tag) so the regional defaults are in place
+          before the first tag executes: denied-by-default in the EEA/UK/CH,
+          granted-by-default everywhere else. See src/lib/consent-mode.ts.
+        */}
+        <script
+          id="consent-mode-default"
+          dangerouslySetInnerHTML={{ __html: CONSENT_MODE_BOOTSTRAP }}
+        />
         <GoogleTagManager />
       </head>
       <body

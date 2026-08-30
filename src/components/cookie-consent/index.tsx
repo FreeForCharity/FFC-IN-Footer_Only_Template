@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { updateGoogleConsent, isConfigured } from '@/lib/consent-mode'
 
 // Environment variables for tracking IDs (replace with actual values)
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX'
@@ -43,9 +44,17 @@ export default function CookieConsent() {
   const modalRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
+  // Loads GA4 directly whenever a REAL measurement id is configured — on
+  // every pageview, regardless of the analytics toggle. Google Consent Mode
+  // (bootstrapped in the root layout) gates what the tag may STORE, not
+  // whether it loads: denied-by-default in the EEA/UK/CH (cookieless pings
+  // until the visitor accepts), granted-by-default everywhere else. With
+  // the shipped placeholder id this stays inert; fleet sites get GA4
+  // delivered through GTM instead.
   const loadGoogleAnalytics = useCallback(() => {
     if (
       typeof window !== 'undefined' &&
+      isConfigured(GA_MEASUREMENT_ID) &&
       !document.querySelector('script[src*="googletagmanager.com/gtag"]')
     ) {
       const gaScript = document.createElement('script')
@@ -70,7 +79,11 @@ export default function CookieConsent() {
   }, [])
 
   const loadMetaPixel = useCallback(() => {
-    if (typeof window !== 'undefined' && !document.querySelector('script[src*="fbevents.js"]')) {
+    if (
+      typeof window !== 'undefined' &&
+      isConfigured(META_PIXEL_ID) &&
+      !document.querySelector('script[src*="fbevents.js"]')
+    ) {
       const fbScript = document.createElement('script')
       fbScript.textContent = `
         !function(f,b,e,v,n,t,s)
@@ -98,7 +111,11 @@ export default function CookieConsent() {
   }, [])
 
   const loadMicrosoftClarity = useCallback(() => {
-    if (typeof window !== 'undefined' && !document.querySelector('script[src*="clarity.ms"]')) {
+    if (
+      typeof window !== 'undefined' &&
+      isConfigured(CLARITY_PROJECT_ID) &&
+      !document.querySelector('script[src*="clarity.ms"]')
+    ) {
       const clarityScript = document.createElement('script')
       clarityScript.textContent = `
         (function(c,l,a,r,i,t,y){
@@ -166,9 +183,21 @@ export default function CookieConsent() {
         })
       }
 
-      // Load scripts based on consent independently
+      // Push the Google Consent Mode `update` — for EEA/UK/CH visitors this
+      // is what lifts the regional denied-by-default; for everyone else it
+      // is what enforces an explicit decline (storage denied, cookieless
+      // pings only).
+      updateGoogleConsent(prefs)
+
+      // Google tags load on every pageview; Consent Mode gates their
+      // storage (see src/lib/consent-mode.ts). This call is a no-op when
+      // the GA4 id is still the shipped placeholder.
+      loadGoogleAnalytics()
+
+      // NON-Google tags do not speak Consent Mode, so they stay strictly
+      // opt-in everywhere: Clarity only on an explicit analytics grant,
+      // Meta Pixel only on an explicit marketing grant.
       if (prefs.analytics) {
-        loadGoogleAnalytics()
         loadMicrosoftClarity()
       }
       if (prefs.marketing) {
@@ -239,6 +268,12 @@ export default function CookieConsent() {
       loadPreferencesFromLocalStorage(false)
     }
 
+    // Google tags load on every pageview, decided or not: with no stored
+    // choice the banner is shown AND GA4 still loads (GTM already loads
+    // from the layout), running under the regional Consent Mode default —
+    // cookieless in the EEA/UK/CH, full measurement elsewhere.
+    loadGoogleAnalytics()
+
     // Check if user has already made a choice with error handling
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPreferencesFromLocalStorage(true)
@@ -247,7 +282,7 @@ export default function CookieConsent() {
     return () => {
       delete window.openCookiePreferences
     }
-  }, [loadPreferencesFromLocalStorage])
+  }, [loadGoogleAnalytics, loadPreferencesFromLocalStorage])
 
   // Focus management for modal
   useEffect(() => {
