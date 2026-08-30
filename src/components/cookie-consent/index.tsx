@@ -316,8 +316,10 @@ export default function CookieConsent() {
     // stored choice → consent update first, then GA; no stored choice →
     // banner + GA under the regional defaults. Do NOT load GA before this
     // runs — a returning non-EEA visitor's stored decline must reach the
-    // dataLayer ahead of GA's config, and the unscoped granted default is
-    // not held by wait_for_update.
+    // dataLayer ahead of GA's config. Both consent defaults carry
+    // wait_for_update, but that is only a brief hold window, not an
+    // ordering guarantee — this restore-before-load order is what
+    // guarantees it.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPreferencesFromLocalStorage(true)
 

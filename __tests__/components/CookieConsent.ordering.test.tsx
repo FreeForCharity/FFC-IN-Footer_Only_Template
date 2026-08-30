@@ -19,8 +19,10 @@ const REAL_GA_ID = 'G-TEST1234AB'
 
 // The GA id is read once at the component module's load, so set the env
 // BEFORE requiring it (a require, not a hoisted import — and no
-// jest.resetModules, which would hand the component a second React copy).
-// Save the original so afterAll can restore it for any later suite.
+// jest.resetModules BEFORE the require, which would hand the component a
+// second React copy). afterAll restores the env and THEN resets modules,
+// so no later in-band suite can require the copy cached with the real GA
+// id baked in.
 const ORIGINAL_GA_ENV = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID = REAL_GA_ID
 const CookieConsent = require('../../src/components/cookie-consent')
