@@ -110,10 +110,18 @@ test.describe('Google Tag Manager Integration', () => {
     const order = await page.evaluate(() => {
       // The inline bootstrap script is server-rendered in <head>.
       const bootstrap = document.querySelector('script#consent-mode-default')
-      const dl = (window.dataLayer || []) as unknown as Array<Record<string, unknown>>
+      // Entries are heterogeneous: gtag() pushes `arguments` objects
+      // (array-like, numeric keys), GTM pushes plain objects — so type as
+      // unknown[] and cast only where indexed.
+      const dl = (window.dataLayer || []) as unknown[]
       // gtag('consent','default',…) pushes an arguments object: [0]='consent', [1]='default'.
-      const consentDefaultIdx = dl.findIndex((e) => e && e[0] === 'consent' && e[1] === 'default')
-      const gtmStartIdx = dl.findIndex((e) => e && typeof e === 'object' && 'gtm.start' in e)
+      const consentDefaultIdx = dl.findIndex((e) => {
+        const args = e as Record<number, unknown> | null | undefined
+        return !!args && args[0] === 'consent' && args[1] === 'default'
+      })
+      const gtmStartIdx = dl.findIndex(
+        (e) => !!e && typeof e === 'object' && 'gtm.start' in (e as object)
+      )
       return {
         hasBootstrap: bootstrap !== null,
         bootstrapContent: bootstrap?.textContent ?? '',

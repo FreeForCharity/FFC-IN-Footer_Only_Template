@@ -514,14 +514,14 @@ describe('CookieConsent component', () => {
 
       fireEvent.click(screen.getByText('Decline All'))
 
-      // jsdom runs on localhost, so hostname and apex coincide; the
-      // variants that must appear are host-only, exact host, and the
-      // leading-dot form.
+      // jsdom runs on localhost — a single-label host, where a Domain
+      // attribute is invalid — so label-walking produces no domain
+      // candidates and only the host-only expiry is written. (Multi-label
+      // hostnames are covered in CookieConsent.cookie-scopes.test.tsx.)
       for (const name of ['_ga', '_gid', '_fbp', 'fr', '_clck', '_clsk']) {
         const expiries = writes.filter((w) => w.startsWith(`${name}=`) && w.includes('01 Jan 1970'))
         expect(expiries.some((w) => !w.includes('domain='))).toBe(true)
-        expect(expiries.some((w) => w.includes('domain=localhost'))).toBe(true)
-        expect(expiries.some((w) => w.includes('domain=.localhost'))).toBe(true)
+        expect(expiries.some((w) => w.includes('domain='))).toBe(false)
       }
     } finally {
       Reflect.deleteProperty(document, 'cookie')
