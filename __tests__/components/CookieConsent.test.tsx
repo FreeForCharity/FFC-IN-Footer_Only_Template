@@ -487,6 +487,47 @@ describe('CookieConsent component', () => {
     expect(document.querySelector('script[src*="googletagmanager.com/gtag"]')).toBeNull()
   })
 
+  it('should expire tracking cookies across host-only and dotted-domain scopes on decline', async () => {
+    // Cookies set with a leading-dot Domain attribute (GA4's default for
+    // _ga) can only be deleted by a write carrying that same attribute —
+    // record every cookie write to verify all scopes are attempted.
+    const writes: string[] = []
+    const cookieDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie')!
+    Object.defineProperty(document, 'cookie', {
+      configurable: true,
+      get: () => cookieDescriptor.get!.call(document),
+      set: (value: string) => {
+        writes.push(value)
+        cookieDescriptor.set!.call(document, value)
+      },
+    })
+
+    try {
+      render(<CookieConsent />)
+
+      await waitFor(
+        () => {
+          expect(screen.getByText('Decline All')).toBeInTheDocument()
+        },
+        { timeout: 2000 }
+      )
+
+      fireEvent.click(screen.getByText('Decline All'))
+
+      // jsdom runs on localhost, so hostname and apex coincide; the
+      // variants that must appear are host-only, exact host, and the
+      // leading-dot form.
+      for (const name of ['_ga', '_gid', '_fbp', 'fr', '_clck', '_clsk']) {
+        const expiries = writes.filter((w) => w.startsWith(`${name}=`) && w.includes('01 Jan 1970'))
+        expect(expiries.some((w) => !w.includes('domain='))).toBe(true)
+        expect(expiries.some((w) => w.includes('domain=localhost'))).toBe(true)
+        expect(expiries.some((w) => w.includes('domain=.localhost'))).toBe(true)
+      }
+    } finally {
+      Reflect.deleteProperty(document, 'cookie')
+    }
+  })
+
   it('should push denied consent to dataLayer on decline', async () => {
     render(<CookieConsent />)
 

@@ -99,6 +99,14 @@ export const CONSENT_WAIT_FOR_UPDATE_MS = 500
  * identifiers from tag requests while `ad_storage` is denied — both are
  * no-ops once consent is granted, so they cost nothing outside the EEA.
  *
+ * DELIBERATE DEVIATION from the freeforcharity reference: the UNSCOPED
+ * grant also carries `wait_for_update`. There, GTM loads behind the
+ * consent component, after the stored-choice restore; here GTM loads
+ * unconditionally from the layout, so without a hold on the grant a
+ * returning non-EEA visitor's stored DECLINE could arrive after GTM has
+ * already evaluated tags under the granted default. The 500ms window
+ * lets the restore's `consent update` land first.
+ *
  * Declared as a function declaration so `gtag` lands on `window` and every
  * later caller (the GA4 loader, the consent banner) shares one queue.
  */
@@ -123,7 +131,8 @@ gtag('consent', 'default', {
   'analytics_storage': 'granted',
   'functionality_storage': 'granted',
   'personalization_storage': 'granted',
-  'security_storage': 'granted'
+  'security_storage': 'granted',
+  'wait_for_update': ${CONSENT_WAIT_FOR_UPDATE_MS}
 });
 gtag('set', 'url_passthrough', true);
 gtag('set', 'ads_data_redaction', true);
@@ -148,12 +157,15 @@ declare global {
  *
  * The template ships placeholder ids (`G-XXXXXXXXXX`, `XXXXXXXXXXXXXXX`,
  * `XXXXXXXXXX`) so that every integration is effectively inert until a
- * site sets its own id. Loaders must honor that promise: a falsy value or
- * a shipped placeholder means "not configured, do not load".
+ * site sets its own id. Loaders must honor that promise: a falsy,
+ * whitespace-only, or shipped-placeholder value means "not configured, do
+ * not load".
  */
 export function isConfigured(id: string | undefined | null): boolean {
   if (!id) return false
-  return !/^[A-Z0-9-]*X{6,}$/.test(id)
+  const trimmed = id.trim()
+  if (!trimmed) return false
+  return !/^[A-Z0-9-]*X{6,}$/.test(trimmed)
 }
 
 /**

@@ -65,9 +65,17 @@ describe('CONSENT_MODE_BOOTSTRAP', () => {
     expect(CONSENT_MODE_BOOTSTRAP.match(/'region'/g)).toHaveLength(1)
   })
 
-  it('holds tags for the stored-choice restore via wait_for_update', () => {
+  it('holds tags for the stored-choice restore via wait_for_update on BOTH defaults', () => {
     expect(CONSENT_WAIT_FOR_UPDATE_MS).toBe(500)
-    expect(CONSENT_MODE_BOOTSTRAP).toContain(`'wait_for_update': ${CONSENT_WAIT_FOR_UPDATE_MS}`)
+    // Both the region-scoped denial AND the unscoped grant carry the hold:
+    // GTM loads unconditionally from the layout here (unlike the
+    // freeforcharity reference), so the grant needs the window too — a
+    // returning non-EEA decliner's stored `consent update` must be able
+    // to land before tags evaluate under the granted default.
+    const holds = CONSENT_MODE_BOOTSTRAP.match(
+      new RegExp(`'wait_for_update': ${CONSENT_WAIT_FOR_UPDATE_MS}`, 'g')
+    )
+    expect(holds).toHaveLength(2)
   })
 
   it('keeps click ids and redacts ad identifiers while consent is denied', () => {
@@ -91,6 +99,13 @@ describe('isConfigured', () => {
     expect(isConfigured('')).toBe(false)
     expect(isConfigured(undefined)).toBe(false)
     expect(isConfigured(null)).toBe(false)
+  })
+
+  it('trims before testing, so whitespace cannot smuggle a value past the guard', () => {
+    expect(isConfigured('   ')).toBe(false)
+    expect(isConfigured('\t\n')).toBe(false)
+    expect(isConfigured(' G-XXXXXXXXXX ')).toBe(false)
+    expect(isConfigured(' G-ABC123DEF4 ')).toBe(true)
   })
 
   it('treats real ids as configured', () => {
