@@ -147,4 +147,33 @@ describe('CookieConsent Consent Mode ordering (real GA id)', () => {
     // No stored choice → nothing to restore → no consent update pushed.
     expect(events).not.toContain('consent-update')
   })
+  it('queues the Consent Mode update BEFORE the custom consent_update event', async () => {
+    // Both writes land in the same dataLayer queue and GTM processes it in
+    // order, so a container trigger keyed on `consent_update` must not be
+    // able to run before the consent state for this choice is queued.
+    const queue = window.dataLayer as unknown[]
+    const originalPush = queue.push.bind(queue)
+    queue.push = ((...entries: unknown[]) => {
+      for (const entry of entries) {
+        if ((entry as { event?: string } | undefined)?.event === 'consent_update') {
+          events.push('custom-consent-event')
+        }
+      }
+      return originalPush(...(entries as []))
+    }) as typeof queue.push
+
+    localStorageMock.setItem(
+      'cookie-consent',
+      JSON.stringify({ necessary: true, functional: true, analytics: false, marketing: false })
+    )
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(events).toContain('consent-update')
+      expect(events).toContain('custom-consent-event')
+    })
+
+    expect(events.indexOf('consent-update')).toBeLessThan(events.indexOf('custom-consent-event'))
+  })
 })
