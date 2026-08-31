@@ -162,42 +162,54 @@ export default function CookieConsent() {
     })
   }, [])
 
-  // Deletes ALL third-party tracking cookies this site's tags can set:
-  // Google Analytics (_ga, _gid, _ga_*), Meta Pixel (_fbp, fr), and
-  // Microsoft Clarity (_clck, _clsk) — hence "tracking", not "analytics".
-  // Runs only on an actual withdrawal, so the combined list is safe.
-  const deleteTrackingCookies = useCallback(() => {
-    expireCookies(['_ga', '_gid', '_fbp', 'fr', '_clck', '_clsk'])
+  // Expires the cookies of each category NOT granted in `prefs`. Analytics
+  // covers GA4 + Microsoft Clarity; marketing covers the Meta Pixel. Called
+  // with no argument it drops both.
+  //
+  // Scoped by category because a visitor who keeps analytics but drops
+  // marketing must not have their `_ga` client id wiped along with the
+  // Pixel's.
+  const deleteTrackingCookies = useCallback(
+    (prefs?: CookiePreferences) => {
+      const deleteAnalytics = !prefs || !prefs.analytics
+      const deleteMarketing = !prefs || !prefs.marketing
 
-    // Dynamically delete all cookies matching _ga_* (e.g., _ga_G-XXXXXXXXXX)
-    if (typeof document !== 'undefined') {
-      const regex = /(?:^|;\s*)(_ga_[^=;\s]*)/g
-      const cookieStr = document.cookie
-      const found: string[] = []
-      let match: RegExpExecArray | null
-      while ((match = regex.exec(cookieStr)) !== null) {
-        found.push(match[1])
+      expireCookies([
+        ...(deleteAnalytics ? ['_ga', '_gid', '_clck', '_clsk'] : []),
+        ...(deleteMarketing ? ['_fbp', 'fr'] : []),
+      ])
+
+      // Dynamically delete all cookies matching _ga_* (e.g., _ga_G-XXXXXXXXXX)
+      if (deleteAnalytics && typeof document !== 'undefined') {
+        const regex = /(?:^|;\s*)(_ga_[^=;\s]*)/g
+        const cookieStr = document.cookie
+        const found: string[] = []
+        let match: RegExpExecArray | null
+        while ((match = regex.exec(cookieStr)) !== null) {
+          found.push(match[1])
+        }
+        expireCookies(found)
       }
-      expireCookies(found)
-    }
-  }, [expireCookies])
+    },
+    [expireCookies]
+  )
 
   const applyConsent = useCallback(
-    (prefs: CookiePreferences, previousPrefs?: CookiePreferences) => {
+    (prefs: CookiePreferences) => {
       // Set a cookie to indicate consent status with Secure flag (only on HTTPS)
       const cookieValue = JSON.stringify(prefs)
       const secureFlag =
         typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : ''
       document.cookie = `cookie-consent=${encodeURIComponent(cookieValue)}; path=/; max-age=31536000; SameSite=Lax${secureFlag}`
 
-      // Check if consent was withdrawn and delete cookies if needed
-      if (previousPrefs) {
-        if (
-          (previousPrefs.analytics && !prefs.analytics) ||
-          (previousPrefs.marketing && !prefs.marketing)
-        ) {
-          deleteTrackingCookies()
-        }
+      // Delete each non-granted category's cookies on EVERY apply — not only
+      // on withdrawal of a stored grant. Under the regional Consent Mode
+      // defaults storage is GRANTED outside the EEA/UK/CH before any choice
+      // is made, so cookies can already exist the first time a visitor
+      // declines, and a restore from storage carries no previous state at
+      // all. Keying on the resulting preferences covers both.
+      if (!prefs.analytics || !prefs.marketing) {
+        deleteTrackingCookies(prefs)
       }
 
       // Push the Google Consent Mode `update` — for EEA/UK/CH visitors this
@@ -381,7 +393,7 @@ export default function CookieConsent() {
       // If localStorage is unavailable, continue anyway
       console.warn('Unable to save preferences to localStorage:', e)
     }
-    applyConsent(allAccepted, savedPreferencesBackup)
+    applyConsent(allAccepted)
     setSavedPreferencesBackup(allAccepted)
     setShowBanner(false)
   }
@@ -404,7 +416,7 @@ export default function CookieConsent() {
     // Delete third-party cookies when consent is withdrawn
     deleteTrackingCookies()
 
-    applyConsent(onlyNecessary, savedPreferencesBackup)
+    applyConsent(onlyNecessary)
     setSavedPreferencesBackup(onlyNecessary)
     setShowBanner(false)
   }
@@ -416,7 +428,7 @@ export default function CookieConsent() {
       // If localStorage is unavailable, continue anyway
       console.warn('Unable to save preferences to localStorage:', e)
     }
-    applyConsent(preferences, savedPreferencesBackup)
+    applyConsent(preferences)
     setSavedPreferencesBackup(preferences)
     setShowBanner(false)
     setShowPreferences(false)
