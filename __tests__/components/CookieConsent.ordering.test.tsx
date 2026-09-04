@@ -2,14 +2,18 @@
  * Consent Mode ordering guarantees, tested with a REAL (non-placeholder)
  * GA4 measurement id so the direct GA loader actually injects scripts.
  *
- * The race this locks out: a returning visitor OUTSIDE the EEA/UK/CH who
- * previously DECLINED analytics runs under the unscoped granted-by-default
- * bootstrap. If GA's `config` were queued before the stored denial's
- * `consent update`, GA could set cookies and send a cookie-based hit
- * before the denial applied — the bootstrap's `wait_for_update` on the
- * grant only buys a 500ms window, it is not an ordering guarantee. The
- * component must therefore push the consent update BEFORE injecting the
- * GA script — one ordered path, no earlier mount effect that loads GA
+ * The race this locks out inverted with the defaults, and the ordering
+ * requirement survived it. It used to be a returning visitor OUTSIDE the
+ * EEA/UK/CH who had DECLINED: under the unscoped granted-by-default
+ * bootstrap, GA's `config` queued ahead of their stored denial could set
+ * cookies and send a cookie-based hit before the denial applied. There is no
+ * permissive default now, so that visitor is safe by default — and a
+ * returning visitor who ACCEPTED is the one at risk, since their opening hit
+ * would go out cookieless if GA loaded before their stored grant. Either
+ * way `wait_for_update` only buys a 500ms window, which is not an ordering
+ * guarantee. The component must therefore push the consent update BEFORE
+ * injecting the GA script — one ordered path, no earlier mount effect that
+ * loads GA
  * before the stored-choice restore.
  */
 import React from 'react'

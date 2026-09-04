@@ -69,10 +69,10 @@ export default function CookieConsent() {
   // Loads GA4 directly whenever a REAL measurement id is configured — on
   // every pageview, regardless of the analytics toggle. Google Consent Mode
   // (bootstrapped in the root layout) gates what the tag may STORE, not
-  // whether it loads: denied-by-default in the EEA/UK/CH (cookieless pings
-  // until the visitor accepts), granted-by-default everywhere else. With
-  // the shipped placeholder id this stays inert; fleet sites get GA4
-  // delivered through GTM instead.
+  // whether it loads: denied-by-default for every visitor worldwide, so the
+  // tag sends cookieless pings until they accept. There is no
+  // granted-by-default branch any more. With the shipped placeholder id this
+  // stays inert; fleet sites get GA4 delivered through GTM instead.
   const loadGoogleAnalytics = useCallback(() => {
     if (
       typeof window !== 'undefined' &&
@@ -366,10 +366,10 @@ export default function CookieConsent() {
     // used to be that a returning decliner's stored denial had to beat GA's
     // config, since the default was permissive; now it is a returning
     // GRANTER's stored acceptance that must, or their opening hit goes out
-    // cookieless. Both consent defaults carry
-    // wait_for_update, but that is only a brief hold window, not an
-    // ordering guarantee — this restore-before-load order is what
-    // guarantees it.
+    // cookieless. The single consent default carries wait_for_update, but
+    // that is only a brief hold window, not an ordering guarantee — this
+    // restore-before-load order is what guarantees it. (There is one default
+    // call now; this said "both" when the bootstrap emitted two.)
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPreferencesFromLocalStorage(true)
 
