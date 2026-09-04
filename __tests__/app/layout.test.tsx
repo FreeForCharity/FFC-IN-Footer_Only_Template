@@ -30,7 +30,6 @@ jest.mock('../../src/components/google-tag-manager', () => ({
 }))
 
 import RootLayout from '../../src/app/layout'
-import { EU_CONSENT_REGIONS } from '../../src/lib/consent-mode'
 
 describe('Root layout', () => {
   it('preserves the skip link without wrapping route pages in another main landmark', () => {
@@ -85,21 +84,26 @@ describe('Root layout', () => {
     expect(bootstrapIndex).toBeLessThan(gtmIndex)
   })
 
-  it('scopes the denied consent default to the 32 EU/EEA/UK/CH region codes', () => {
+  it('emits ONE unscoped denied consent default, with no region scoping', () => {
     const markup = renderToStaticMarkup(
       <RootLayout>
         <main id="main-content">Route content</main>
       </RootLayout>
     )
 
-    expect(EU_CONSENT_REGIONS).toHaveLength(32)
-    expect(markup).toContain(`'region': ${JSON.stringify([...EU_CONSENT_REGIONS])}`)
+    // Asserted on the RENDERED markup rather than on the exported constant,
+    // which is the point of keeping this case: it is the only check that
+    // what actually reaches the page carries the contract. A lib-level test
+    // passes even if the layout stops emitting the bootstrap.
+    const defaultCalls = markup.split("gtag('consent', 'default'").length - 1
+    expect(defaultCalls).toBe(1)
+    expect(markup).toContain("'analytics_storage': 'denied'")
 
-    // Both defaults are present, denial (region-scoped) before grant.
-    const deniedIndex = markup.indexOf("'analytics_storage': 'denied'")
-    const grantedIndex = markup.indexOf("'analytics_storage': 'granted'")
-    expect(deniedIndex).toBeGreaterThan(-1)
-    expect(grantedIndex).toBeGreaterThan(-1)
-    expect(deniedIndex).toBeLessThan(grantedIndex)
+    // By absence too. This case previously asserted that the denial came
+    // BEFORE the grant, which is satisfied by any file containing both --
+    // so it would have passed unchanged against a permissive default.
+    expect(markup).not.toContain("'analytics_storage': 'granted'")
+    expect(markup).not.toContain("'ad_storage': 'granted'")
+    expect(markup).not.toContain("'region'")
   })
 })

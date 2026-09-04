@@ -62,9 +62,10 @@ export default function RootLayout({
 
         {/*
           Google Consent Mode v2 defaults. MUST come before <GoogleTagManager />
-          (and any other Google tag) so the regional defaults are in place
-          before the first tag executes: denied-by-default in the EEA/UK/CH,
-          granted-by-default everywhere else. See src/lib/consent-mode.ts.
+          (and any other Google tag) so the defaults are in place before the
+          first tag executes: analytics and advertising storage denied for
+          every visitor, worldwide, with no region carve-out and no
+          permissive default. See src/lib/consent-mode.ts.
         */}
         <script
           id="consent-mode-default"
