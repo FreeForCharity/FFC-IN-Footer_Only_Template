@@ -131,10 +131,21 @@ test.describe('Google Tag Manager Integration', () => {
     })
 
     expect(order.hasBootstrap).toBe(true)
-    // Region-scoped denial for the EEA/UK/CH plus the unscoped grant.
-    expect(order.bootstrapContent).toContain("'region'")
-    expect(order.bootstrapContent).toContain('"GB"')
-    expect(order.bootstrapContent).toContain('"CH"')
+    // ONE unscoped denial, applying to every visitor. This used to assert the
+    // bootstrap CONTAINED 'region', "GB" and "CH" — the region-scoped denial
+    // plus the unscoped grant — so it is the assertion that had to invert
+    // when the model did, and it is asserted by absence for the same reason
+    // the unit tests are: reinstating a permissive default is a one-line edit
+    // that any presence-only check would pass.
+    expect(order.bootstrapContent).toContain("'analytics_storage': 'denied'")
+    expect(order.bootstrapContent).not.toContain("'region'")
+    expect(order.bootstrapContent).not.toContain("'analytics_storage': 'granted'")
+    expect(order.bootstrapContent).not.toContain("'ad_storage': 'granted'")
+    // functionality_storage and security_storage stay granted: neither carries
+    // measurement, and a site that cannot remember a consent choice cannot
+    // honour one.
+    expect(order.bootstrapContent).toContain("'functionality_storage': 'granted'")
+    expect(order.bootstrapContent).toContain("'security_storage': 'granted'")
     // The consent defaults must land in the dataLayer before GTM's own
     // gtm.start entry — i.e. before any Google tag begins executing.
     expect(order.consentDefaultIdx).toBeGreaterThanOrEqual(0)

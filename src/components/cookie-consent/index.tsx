@@ -291,10 +291,15 @@ export default function CookieConsent() {
       //
       // ORDERING MATTERS on the stored-choice path below: applyConsent
       // pushes the Consent Mode `update` BEFORE loadGoogleAnalytics queues
-      // GA's `config`, so a returning visitor's stored DENIAL is in the
-      // dataLayer ahead of the first hit. Only the undecided branches may
-      // load GA without a preceding update — there is no stored choice to
-      // apply. Never load GA before this restore has run.
+      // GA's `config`, so a returning visitor's stored choice is in the
+      // dataLayer ahead of the first hit. Which choice is at risk inverted
+      // with the defaults: it used to be a stored DENIAL that had to arrive
+      // first, because the default was permissive and the hit would
+      // otherwise go out with cookies; now it is a stored GRANT, because the
+      // default is denied and the hit would otherwise go out cookieless.
+      // Either way the fix is the same order. Only the undecided branches
+      // may load GA without a preceding update — there is no stored choice
+      // to apply. Never load GA before this restore has run.
       const handleMissingChoice = () => {
         if (showBannerIfMissing) setShowBanner(true)
         loadGoogleAnalytics()
