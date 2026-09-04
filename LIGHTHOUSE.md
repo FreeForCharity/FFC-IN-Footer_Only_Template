@@ -141,7 +141,7 @@ The Lighthouse CI configuration is in `lighthouserc.json`:
     "collect": {
       "staticDistDir": "./out",
       "url": [
-        "http://localhost/",
+        "http://localhost/index.html",
         "http://localhost/cookie-policy/",
         "http://localhost/privacy-policy/",
         "http://localhost/terms-of-service/"
@@ -152,7 +152,7 @@ The Lighthouse CI configuration is in `lighthouserc.json`:
 }
 ```
 
-**Important**: URLs should match the exported route paths that the local preview server resolves. With `trailingSlash: true`, Next.js static export writes pages like `privacy-policy/index.html`, so Lighthouse should audit `/privacy-policy/` rather than `/privacy-policy.html`. This site has a single homepage with sections (About Us, Donate, Volunteer) rather than separate pages for those features. However, the policy pages are separate routes that generate individual exported directories.
+**Important**: URLs should match the exported route paths that the local preview server resolves. With `trailingSlash: true`, Next.js static export writes pages like `privacy-policy/index.html`, so Lighthouse should audit `/privacy-policy/` rather than `/privacy-policy.html`. However, the policy pages are separate routes that generate individual exported directories.
 
 You can add more pages to audit by adding URLs to the `url` array. To see which pages are generated, check the `out/` directory after running `pnpm run build`.
 
