@@ -225,19 +225,23 @@ export default function CookieConsent() {
       document.cookie = `cookie-consent=${encodeURIComponent(cookieValue)}; path=/; max-age=31536000; SameSite=Lax${secureFlag}`
 
       // Delete each non-granted category's cookies on EVERY apply — not only
-      // on withdrawal of a stored grant. Under the regional Consent Mode
-      // defaults storage is GRANTED outside the EEA/UK/CH before any choice
-      // is made, so cookies can already exist the first time a visitor
-      // declines, and a restore from storage carries no previous state at
-      // all. Keying on the resulting preferences covers both.
+      // on withdrawal of a stored grant. The original reason was that
+      // storage was GRANTED outside the EEA/UK/CH before any choice, so
+      // cookies could already exist the first time a visitor declined. That
+      // is no longer true and the sweep is still right: a restore from
+      // storage carries no previous state at all, and cookies set under an
+      // earlier grant outlive the choice that allowed them. Keying on the
+      // resulting preferences covers both.
       if (!prefs.analytics || !prefs.marketing) {
         deleteTrackingCookies(prefs)
       }
 
-      // Push the Google Consent Mode `update` — for EEA/UK/CH visitors this
-      // is what lifts the regional denied-by-default; for everyone else it
-      // is what enforces an explicit decline (storage denied, cookieless
-      // pings only).
+      // Push the Google Consent Mode `update`. Storage is now denied by
+      // default for every visitor, so this is the ONLY thing that ever
+      // lifts it — and on a decline it is what pins storage denied with
+      // cookieless pings only. It used to read that this lifts the denial
+      // for EEA/UK/CH visitors and merely enforces a decline for everyone
+      // else; there is no permissive default left for anyone.
       //
       // Queued BEFORE the custom `consent_update` event pushed below: both
       // writes land in the same dataLayer queue and GTM processes it in order,
@@ -279,8 +283,11 @@ export default function CookieConsent() {
   const loadPreferencesFromLocalStorage = useCallback(
     (showBannerIfMissing = true) => {
       // No (valid) stored choice: show the banner, and still load the
-      // Google tags — they run under the regional Consent Mode defaults
-      // (cookieless in the EEA/UK/CH, full measurement elsewhere).
+      // Google tags — they run under the denied-by-default Consent Mode
+      // state, which is cookieless everywhere, for everyone. Loading them
+      // is not the same as measuring with cookies: the tags send cookieless
+      // pings, so an undecided visit is counted in aggregate and stores
+      // nothing on the device.
       //
       // ORDERING MATTERS on the stored-choice path below: applyConsent
       // pushes the Consent Mode `update` BEFORE loadGoogleAnalytics queues
@@ -354,9 +361,12 @@ export default function CookieConsent() {
     // Check if user has already made a choice with error handling. This
     // single ordered path also loads the Google tags on every pageview:
     // stored choice → consent update first, then GA; no stored choice →
-    // banner + GA under the regional defaults. Do NOT load GA before this
-    // runs — a returning non-EEA visitor's stored decline must reach the
-    // dataLayer ahead of GA's config. Both consent defaults carry
+    // banner + GA under the denied-by-default state. Do NOT load GA before
+    // this runs. The reason inverted with the defaults and still holds: it
+    // used to be that a returning decliner's stored denial had to beat GA's
+    // config, since the default was permissive; now it is a returning
+    // GRANTER's stored acceptance that must, or their opening hit goes out
+    // cookieless. Both consent defaults carry
     // wait_for_update, but that is only a brief hold window, not an
     // ordering guarantee — this restore-before-load order is what
     // guarantees it.

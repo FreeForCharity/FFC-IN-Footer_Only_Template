@@ -137,14 +137,18 @@ describe('CookieConsent Consent Mode ordering (real GA id)', () => {
     )
   })
 
-  it('still loads GA (regional defaults, no update needed) when no choice is stored', async () => {
+  it('still loads GA, with no consent update, when no choice is stored', async () => {
     render(<CookieConsent />)
 
     await waitFor(() => {
       expect(events).toContain('ga-script')
     })
 
-    // No stored choice → nothing to restore → no consent update pushed.
+    // No stored choice → nothing to restore → no consent update pushed, so
+    // the tag stays in the denied default state and sends cookieless pings.
+    // Loading GA here is deliberate and is not the same as measuring with
+    // cookies; the title used to say "regional defaults", which described a
+    // permissive default that no longer exists.
     expect(events).not.toContain('consent-update')
   })
   it('queues the Consent Mode update BEFORE the custom consent_update event', async () => {
