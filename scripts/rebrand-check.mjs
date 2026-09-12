@@ -168,8 +168,28 @@ async function checkSampleContent() {
   }
 }
 
+// --- Donation policy "Use of Donations" ---------------------------------------
+// The template ships Free For Charity's OWN list of what donations fund (free
+// domains, hosting, volunteer coordination). That is accurate for FFC and wrong
+// for every adopter, and nothing else notices: the page carries no FFC name or
+// contact details, so the identity checks pass while the page still describes
+// another organization's programs to this charity's donors.
+async function checkDonationUse() {
+  const rel = 'src/app/donation-policy/page.tsx'
+  const body = await readText(rel)
+  if (body === null) return
+  if (body.includes('Free domain registration and hosting services')) {
+    flag(
+      'Donation policy',
+      '"Use of Donations" still lists Free For Charity\u2019s services \u2014 replace it with what YOUR donations fund',
+      rel
+    )
+  }
+}
+
 await checkSiteConfig()
 await checkAnalyticsConfig()
+await checkDonationUse()
 await checkDeployment()
 await checkSampleContent()
 
