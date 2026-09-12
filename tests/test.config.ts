@@ -29,9 +29,12 @@ export const testConfig = {
    * disabled in the footer and are excluded here to match.
    */
   socialLinks: siteConfig.social
-    .filter((link) => link.href)
+    // Trimmed, matching how GTM_ID and phone decide "configured vs empty".
+    // A whitespace-only href is disabled, not enabled: treating it as enabled
+    // produced an `href*="   "` selector that matches nothing and fails.
+    .filter((link) => link.href.trim() !== '')
     .map((link) => ({
-      url: hrefNeedle(link.href),
+      url: hrefNeedle(link.href.trim()),
       ariaLabel: link.label,
     })),
 
