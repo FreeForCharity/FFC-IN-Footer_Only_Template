@@ -170,10 +170,9 @@ export default function TermsOfService() {
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Our Services are provided on an “as is” and “as available” basis. {siteConfig.name}{' '}
             makes no representations or warranties of any kind, express or implied, regarding the
-            use or the results of our Services in terms of accuracy, reliability, or otherwise. Free
-            For Charity disclaims all warranties, express or implied, including, but not limited to,
-            implied warranties of merchantability, fitness for a particular purpose, and
-            non-infringement.
+            use or the results of our Services in terms of accuracy, reliability, or otherwise. We
+            disclaim all warranties, express or implied, including, but not limited to, implied
+            warranties of merchantability, fitness for a particular purpose, and non-infringement.
           </p>
 
           {/* Limitation of Liability */}

@@ -20,15 +20,15 @@ Google Tag Manager (GTM) is a tag management system that allows you to manage an
 - ✅ Uses Next.js Script component with `afterInteractive` strategy
 - ✅ Includes noscript fallback for accessibility
 - ✅ Integrates with existing cookie consent system
-- ✅ GTM ID hardcoded directly in component (no environment variable needed)
+- ✅ GTM ID in `src/lib/analytics.config.ts` (no environment variable needed)
 
 ## Configuration
 
 ### Setting Your GTM ID
 
-The GTM container ID is hardcoded directly in the component file. To update it:
+The GTM container ID lives in `src/lib/analytics.config.ts`. To update it:
 
-1. Open `src/components/GoogleTagManager/index.tsx`
+1. Open `src/lib/analytics.config.ts`
 2. Update the `GTM_ID` constant with your actual GTM container ID:
 
 ```tsx
@@ -116,9 +116,11 @@ Test coverage includes:
 The site automatically deploys to GitHub Pages via `.github/workflows/nextjs.yml`. The GTM implementation works on both:
 
 1. **Custom domain**: https://www.ffcworkingsite1.org
-2. **GitHub Pages**: https://freeforcharity.github.io/FFC_Single_Page_Template/
+2. **GitHub Pages**: the GitHub Pages address for this repository
 
-The GTM ID is hardcoded in the component, so no additional configuration is needed for deployment.
+The GTM ID lives in `src/lib/analytics.config.ts`, so no additional configuration is needed for deployment.
+An EMPTY id is supported and means "no container provisioned yet": both components then render nothing
+rather than emitting a tag that requests `gtm.js?id=` and fails in the browser.
 
 ### Local Development
 
@@ -163,12 +165,12 @@ In GTM, use Preview mode to:
 
 ## Security Considerations
 
-- ✅ GTM ID is hardcoded in the component (visible in source code)
+- ✅ GTM ID is in `src/lib/analytics.config.ts` (visible in source code)
 - ✅ Script uses official Google CDN
 - ✅ No sensitive data is sent to GTM by default
 - ✅ Integrates with cookie consent for privacy compliance
 
-**Note**: Since the GTM ID is hardcoded and visible in the source code, ensure you're using proper GTM security features like allowlists and container permissions to prevent unauthorized modifications.
+**Note**: Since the GTM ID is committed and visible in the source code, ensure you're using proper GTM security features like allowlists and container permissions to prevent unauthorized modifications.
 
 ## Performance
 
@@ -183,7 +185,7 @@ The GTM implementation is optimized for performance:
 
 ### GTM Not Loading
 
-1. Verify the GTM ID in `src/components/GoogleTagManager/index.tsx` is correct
+1. Verify the GTM ID in `src/lib/analytics.config.ts` is correct
 
 2. Check GTM ID format (should be `GTM-XXXXXXX`)
 
@@ -209,7 +211,7 @@ Note: Ad blockers may prevent GTM from loading. This is expected behavior and af
 
 To change the GTM container ID:
 
-1. Open `src/components/GoogleTagManager/index.tsx`
+1. Open `src/lib/analytics.config.ts`
 2. Update the `GTM_ID` constant:
    ```tsx
    const GTM_ID = 'GTM-NEW1234' // Your new GTM ID
