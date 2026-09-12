@@ -23,6 +23,10 @@ const pages = [
   { name: 'Vulnerability Disclosure Policy', Component: VulnDisclosurePage, meta: vulnMeta },
 ]
 
+function escapeForRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 describe('Policy page metadata', () => {
   it.each(pages)('$name should export a title', ({ meta }) => {
     expect(meta.title).toBeDefined()
@@ -43,7 +47,9 @@ describe('Policy page metadata', () => {
   it.each(pages)('$name title omits the site name the template appends', ({ meta }) => {
     expect(typeof meta.title).toBe('string')
     expect((meta.title as string).length).toBeGreaterThan(0)
-    expect(meta.title).not.toContain(siteConfig.name)
+    expect(meta.title as string).not.toMatch(
+      new RegExp(`\\|\\s*${escapeForRegExp(siteConfig.name)}\\s*$`)
+    )
   })
 })
 

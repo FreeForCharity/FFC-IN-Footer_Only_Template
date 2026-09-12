@@ -137,13 +137,27 @@ describe('Footer component', () => {
     }
   })
 
-  it('should have social media links open in new tabs', () => {
+  // A fork may disable every social link -- an empty href is the documented
+  // "off" state -- and that is a correct configuration, not a failure. Requiring
+  // a first enabled link made such a fork fail here. Checking EVERY enabled link
+  // rather than just the first also means a footer that opens one of several in
+  // the same tab is caught.
+  it('opens every enabled social link in a new tab, and renders none when all are disabled', () => {
     render(<Footer />)
-    const [firstSocial] = siteConfig.social.filter((link) => link.href)
-    expect(firstSocial).toBeDefined()
-    const link = screen.getByLabelText(firstSocial.label)
-    expect(link).toHaveAttribute('target', '_blank')
-    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    const enabled = siteConfig.social.filter((link) => link.href.trim())
+
+    if (enabled.length === 0) {
+      expect(screen.queryAllByRole('link', { name: /facebook|twitter|linkedin|github/i })).toEqual(
+        []
+      )
+      return
+    }
+
+    for (const { label } of enabled) {
+      const link = screen.getByLabelText(label)
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    }
   })
 
   it('should have policy links with correct hrefs', () => {

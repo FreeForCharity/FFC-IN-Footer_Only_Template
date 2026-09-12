@@ -34,8 +34,12 @@ export default function PrivacyPolicy() {
           </ol>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             At {siteConfig.name}, accessible from{' '}
-            <a href={siteConfig.url} className="text-[#007bff] underline">
-              {siteConfig.url}
+            {/*
+              siteUrl(), not siteConfig.url -- see ContactDetails: the origin
+              alone drops the GitHub Pages base path and links off this site.
+            */}
+            <a href={siteUrl('/')} className="text-[#007bff] underline">
+              {siteUrl('/')}
             </a>
             , your privacy is one of our primary concerns. This Privacy Policy sets out what
             information we collect and record, how we use it, and what you can ask us to do about

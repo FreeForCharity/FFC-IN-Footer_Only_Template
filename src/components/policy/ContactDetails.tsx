@@ -1,5 +1,5 @@
 import React from 'react'
-import { siteConfig } from '@/lib/site.config'
+import { siteConfig, siteUrl } from '@/lib/site.config'
 
 /**
  * The organization's own contact details, for use in policy pages.
@@ -47,8 +47,13 @@ export default function ContactDetails({ heading }: { heading?: string }) {
         ))}
         <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
           <strong>Website:</strong>{' '}
-          <a href={siteConfig.url} className="text-[#007bff] underline">
-            {siteConfig.url}
+          {/*
+            siteUrl(), not siteConfig.url: the latter is the ORIGIN alone, so on
+            a GitHub Pages project-path deploy it points at the domain root
+            rather than at this site.
+          */}
+          <a href={siteUrl('/')} className="text-[#007bff] underline">
+            {siteUrl('/')}
           </a>
         </li>
       </ul>

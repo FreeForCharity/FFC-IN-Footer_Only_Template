@@ -3,10 +3,11 @@ import { join } from 'node:path'
 
 /**
  * The GitHub Pages project path this site is published under, e.g.
- * `/FFC-EX-example.org`. It appears in public/security.txt (which advertises
- * both the apex and the project-path URLs, because the site is reachable at
- * both before a domain cutover) and in scripts/check-drift.mjs, which verifies
- * that advertisement.
+ * `/FFC-EX-example.org`. One deploy serves ONE origin+prefix -- public/CNAME
+ * decides which -- so public/security.txt advertises the project-path URLs
+ * only while no CNAME exists, and the apex only once one does. This value is
+ * the prefix for the first case; scripts/check-drift.mjs reads the same signal
+ * and verifies the advertisement matches.
  *
  * Read from the script rather than duplicated here. Two copies of a value that
  * changes on every fork is exactly how the rebrand-vs-test contradiction got
