@@ -74,19 +74,52 @@ describe('Footer component', () => {
   // The alternative the template used to allow — a placeholder in the config —
   // ships a `tel:` link that dials nothing, which is worse than an absent one
   // because it looks callable.
-  it('renders the phone block only when a number is configured', () => {
-    render(<Footer />)
+  // Every combination is exercised by varying the config, not just whichever
+  // one this fork happens to ship. Reading the fork's own value only tests the
+  // branch it is already in, so the case that matters most here — a `tel` set
+  // with no `display`, which renders a link with no accessible name — would go
+  // untested on every site that has a complete phone number.
+  describe('the phone block', () => {
+    const original = { ...siteConfig.phone }
+    afterEach(() => {
+      siteConfig.phone = original
+    })
 
-    if (siteConfig.phone.tel === '') {
+    const absent = [
+      ['both empty', { display: '', tel: '' }],
+      ['tel only', { display: '', tel: '5551234567' }],
+      ['display only', { display: '(555) 123-4567', tel: '' }],
+      ['whitespace only', { display: '   ', tel: '   ' }],
+    ] as const
+
+    it.each(absent)('is not rendered when %s', (_label, phone) => {
+      siteConfig.phone = { ...phone }
+      render(<Footer />)
+
       expect(screen.queryByText('Call Us Today')).not.toBeInTheDocument()
       expect(document.querySelector('a[href^="tel:"]')).toBeNull()
-    } else {
+    })
+
+    it('is rendered, and dialable, when both fields are set', () => {
+      siteConfig.phone = { display: '(555) 123-4567', tel: '5551234567' }
+      render(<Footer />)
+
       expect(screen.getByText('Call Us Today')).toBeInTheDocument()
-      expect(screen.getByText(siteConfig.phone.display).closest('a')).toHaveAttribute(
+      expect(screen.getByText('(555) 123-4567').closest('a')).toHaveAttribute(
         'href',
-        `tel:${siteConfig.phone.tel}`
+        'tel:5551234567'
       )
-    }
+    })
+
+    it('trims a padded number rather than dialing the padding', () => {
+      siteConfig.phone = { display: '(555) 123-4567', tel: '  5551234567  ' }
+      render(<Footer />)
+
+      expect(screen.getByText('(555) 123-4567').closest('a')).toHaveAttribute(
+        'href',
+        'tel:5551234567'
+      )
+    })
   })
 
   it('should display the charity policy section', () => {

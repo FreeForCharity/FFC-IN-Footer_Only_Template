@@ -25,7 +25,11 @@ export const GTM_ID: string = 'GTM-TQ5H8HPR'
 type GoogleTagManagerProps = { gtmId?: string }
 
 export default function GoogleTagManager({ gtmId = GTM_ID }: GoogleTagManagerProps = {}) {
-  if (!gtmId) return null
+  // Trim first: a whitespace-only id is unconfigured, not configured. Without
+  // this it passes the truthiness check and the snippet requests
+  // `gtm.js?id=%20%20`, which fails in the browser exactly like an empty id.
+  const id = gtmId.trim()
+  if (!id) return null
   return (
     <>
       {/* Google Tag Manager Script - loaded with lazyOnload for better performance */}
@@ -38,7 +42,7 @@ export default function GoogleTagManager({ gtmId = GTM_ID }: GoogleTagManagerPro
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
             j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','${gtmId}');
+            })(window,document,'script','dataLayer','${id}');
           `,
         }}
       />
@@ -48,11 +52,12 @@ export default function GoogleTagManager({ gtmId = GTM_ID }: GoogleTagManagerPro
 
 // Export a component for the noscript iframe that goes in the body
 export function GoogleTagManagerNoScript({ gtmId = GTM_ID }: GoogleTagManagerProps = {}) {
-  if (!gtmId) return null
+  const id = gtmId.trim()
+  if (!id) return null
   return (
     <noscript>
       <iframe
-        src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+        src={`https://www.googletagmanager.com/ns.html?id=${id}`}
         height="0"
         width="0"
         style={{ display: 'none', visibility: 'hidden' }}

@@ -43,9 +43,12 @@ export const testConfig = {
     text: `All Rights Are Reserved by ${siteConfig.name} a US 501c3 Non Profit`,
     searchText: 'All Rights Are Reserved',
     // The permanent "Supported by Free For Charity" attribution (FFC footer
-    // standard) — these stay FFC's on every fork, by design.
-    linkUrl: siteConfig.supportedBy.url,
-    linkText: siteConfig.supportedBy.name,
+    // standard). Deliberately LITERAL, not read from siteConfig.supportedBy:
+    // the whole point of the standard is that a fork may not repoint or remove
+    // it, and deriving these from the config would make a fork that changed
+    // them pass — the check would follow the defect instead of catching it.
+    linkUrl: 'https://freeforcharity.org',
+    linkText: 'Free For Charity',
   },
 
   /**
@@ -57,8 +60,11 @@ export const testConfig = {
    * for a script that an unconfigured site correctly never injects.
    */
   googleTagManager: {
-    id: GTM_ID,
-    configured: GTM_ID !== '',
+    // Trimmed to match the component, which treats a whitespace-only id as
+    // unconfigured. Without the trim here, '   ' would be reported as
+    // configured and the E2E suite would wait for a tag that never renders.
+    id: GTM_ID.trim(),
+    configured: GTM_ID.trim() !== '',
   },
 
   /**

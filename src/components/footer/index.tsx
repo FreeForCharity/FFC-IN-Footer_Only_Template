@@ -206,13 +206,13 @@ const Footer: React.FC = () => {
               way to express "no phone" was a placeholder string, which shipped
               as `tel:PENDING` on a live charity site.
             */}
-            {siteConfig.phone.tel && (
+            {siteConfig.phone.tel.trim() && siteConfig.phone.display.trim() && (
               <div className="flex items-start gap-3">
                 <Phone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-[500] text-[22px]">Call Us Today</p>
                   <a
-                    href={`tel:${siteConfig.phone.tel}`}
+                    href={`tel:${siteConfig.phone.tel.trim()}`}
                     className="font-[500] text-[16px] hover:text-cyan-400 transition-colors"
                     id="aria-font"
                   >
