@@ -31,6 +31,7 @@ jest.mock('../../src/components/google-tag-manager', () => ({
 
 import RootLayout from '../../src/app/layout'
 import { EU_CONSENT_REGIONS } from '../../src/lib/consent-mode'
+import { siteConfig } from '../../src/lib/site.config'
 
 describe('Root layout', () => {
   it('preserves the skip link without wrapping route pages in another main landmark', () => {
@@ -65,8 +66,10 @@ describe('Root layout', () => {
     expect(document.querySelector('meta[name="color-scheme"]')?.getAttribute('content')).toBe(
       'light'
     )
+    // Sourced from siteConfig so a fork's brand colour does not fail this suite;
+    // the manifest reads the same field, asserted in manifest-lighthouse-parity.
     expect(document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe(
-      '#ffffff'
+      siteConfig.themeColor
     )
   })
 

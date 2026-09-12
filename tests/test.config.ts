@@ -1,59 +1,72 @@
 /**
  * Test Configuration for Template Customization
  *
- * This file contains all content-specific values used in E2E tests.
- * When customizing this template for a new organization, update these
- * values to match your content instead of modifying individual test files.
+ * Content-specific values used in E2E tests.
  *
- * This makes it easy to:
- * 1. Identify what needs to change when using the template
- * 2. Keep tests working with customized content
- * 3. Maintain a single source of truth for test expectations
+ * These are DERIVED from src/lib/site.config.ts rather than copied. A fork's
+ * rebrand edits one file; duplicating the same values here means a correct
+ * rebrand turns the E2E suite red, which is the contradiction that already
+ * existed between the unit suite and `npm run check:rebrand`.
+ *
+ * Only values that genuinely have no home in siteConfig — test-structural
+ * strings like cookie-banner button labels — are literals here.
  */
+import { siteConfig } from '../src/lib/site.config'
+import { GTM_ID } from '../src/components/google-tag-manager'
+
+/** Strip the scheme so specs can match with a CSS `href*=` substring selector. */
+function hrefNeedle(url: string): string {
+  return url.replace(/^https?:\/\//, '').replace(/\/$/, '')
+}
 
 export const testConfig = {
   /**
    * Social Media Links Configuration
    * Used in: tests/social-links.spec.ts
+   *
+   * Derived from siteConfig.social, so the number of links and which platforms
+   * appear follow the charity's own configuration. Links with an empty href are
+   * disabled in the footer and are excluded here to match.
    */
-  socialLinks: {
-    facebook: {
-      url: 'facebook.com/freeforcharity',
-      ariaLabel: 'Facebook',
-    },
-    twitter: {
-      url: 'x.com/freeforcharity1',
-      ariaLabel: 'X (Twitter)',
-    },
-    linkedin: {
-      url: 'linkedin.com/company/freeforcharity',
-      ariaLabel: 'LinkedIn',
-    },
-    github: {
-      url: 'github.com/FreeForCharity/FFC-IN-Footer_Only_Template',
-      ariaLabel: 'GitHub',
-    },
-  },
+  socialLinks: siteConfig.social
+    .filter((link) => link.href)
+    .map((link) => ({
+      url: hrefNeedle(link.href),
+      ariaLabel: link.label,
+    })),
 
   /**
    * Copyright Configuration
    * Used in: tests/copyright.spec.ts
    */
   copyright: {
-    text: 'All Rights Are Reserved by Free For Charity a US 501c3 Non Profit',
+    text: `All Rights Are Reserved by ${siteConfig.name} a US 501c3 Non Profit`,
     searchText: 'All Rights Are Reserved',
     // The permanent "Supported by Free For Charity" attribution (FFC footer
-    // standard) — keep these expectations when customizing the template.
-    linkUrl: 'https://freeforcharity.org',
-    linkText: 'Free For Charity',
+    // standard) — these stay FFC's on every fork, by design.
+    linkUrl: siteConfig.supportedBy.url,
+    linkText: siteConfig.supportedBy.name,
   },
 
   /**
    * Google Tag Manager Configuration
    * Used in: tests/google-tag-manager.spec.ts
+   *
+   * Empty until the charity's own container is provisioned (FFC workflows
+   * 505/503). The GTM spec skips itself while this is empty rather than waiting
+   * for a script that an unconfigured site correctly never injects.
    */
   googleTagManager: {
-    id: 'GTM-TQ5H8HPR',
+    id: GTM_ID,
+    configured: GTM_ID !== '',
+  },
+
+  /**
+   * Site identity
+   * Used in: tests/policy-pages.spec.ts, tests/smoke.spec.ts
+   */
+  site: {
+    name: siteConfig.name,
   },
 
   /**
@@ -61,12 +74,15 @@ export const testConfig = {
    * Used in: tests/footer-only.spec.ts
    */
   logo: {
-    headerAlt: 'Free For Charity',
+    headerAlt: siteConfig.name,
   },
 
   /**
    * Cookie Consent Configuration
    * Used in: tests/cookie-consent.spec.ts
+   *
+   * Genuinely template-structural: these are the component's own button labels,
+   * identical on every fork.
    */
   cookieConsent: {
     bannerHeading: 'We Value Your Privacy',

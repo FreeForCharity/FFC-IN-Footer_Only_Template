@@ -57,7 +57,11 @@ Quick checklist of content areas to update:
 - [ ] Customize color scheme and branding in `src/app/globals.css`
 - [ ] Update policy page content in `src/app/*/page.tsx`
 - [ ] Update SEO metadata in `src/lib/siteMetadata.ts`
-- [ ] Update E2E test config in `tests/test.config.ts`
+- [ ] Replace the GTM container ID in `src/components/google-tag-manager/index.tsx`
+      (or set it to `''` until your container is provisioned)
+- [ ] Trim the footer quick links to the sections your site actually has
+- [ ] Run `pnpm test` — the suites derive from `site.config.ts`, so they should
+      still pass after a rebrand; a failure is a real finding
 
 ---
 

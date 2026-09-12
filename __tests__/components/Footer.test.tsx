@@ -1,11 +1,18 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import Footer from '../../src/components/footer'
+import RootPage from '../../src/app/page'
+import { routes } from '../../src/app/sitemap'
+import { siteConfig } from '../../src/lib/site.config'
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations)
 
+// Every charity-specific expectation is read from src/lib/site.config.ts, the
+// documented single customization point. Pinning this charity's own name, EIN,
+// email or addresses here would make a correct rebrand fail — the exact
+// contradiction `npm run check:rebrand` is meant to prevent.
 describe('Footer component', () => {
   it('should render the footer', () => {
     render(<Footer />)
@@ -42,48 +49,55 @@ describe('Footer component', () => {
 
   it('should have GuideStar profile link', () => {
     render(<Footer />)
-    expect(screen.getByLabelText('View Free For Charity GuideStar Profile')).toHaveAttribute(
+    expect(screen.getByLabelText(`View ${siteConfig.name} GuideStar Profile`)).toHaveAttribute(
       'href',
-      'https://www.guidestar.org/profile/46-2471893'
+      siteConfig.guidestar.profileUrl
     )
     expect(screen.getByText('Direct GuideStar Profile Link').closest('a')).toHaveAttribute(
       'href',
-      'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742'
+      siteConfig.guidestar.directProfileUrl
     )
   })
 
   it('should have email contact link', () => {
     render(<Footer />)
-    const emailLink = screen.getByText('clarkemoyer@freeforcharity.org').closest('a')
-    expect(emailLink).toHaveAttribute('href', 'mailto:clarkemoyer@freeforcharity.org')
+    const emailLink = screen.getByText(siteConfig.contactEmail).closest('a')
+    expect(emailLink).toHaveAttribute('href', `mailto:${siteConfig.contactEmail}`)
   })
 
   it('should display the EIN number', () => {
     render(<Footer />)
-    expect(screen.getByText(/46-2471893/)).toBeInTheDocument()
+    expect(screen.getByText(new RegExp(siteConfig.ein))).toBeInTheDocument()
   })
 
-  it('should have phone contact link', () => {
+  // A charity with no published phone number must render NO phone block at all.
+  // The alternative the template used to allow — a placeholder in the config —
+  // ships a `tel:` link that dials nothing, which is worse than an absent one
+  // because it looks callable.
+  it('renders the phone block only when a number is configured', () => {
     render(<Footer />)
-    expect(screen.getByText('(520) 222-8104').closest('a')).toHaveAttribute(
-      'href',
-      'tel:5202228104'
-    )
+
+    if (siteConfig.phone.tel === '') {
+      expect(screen.queryByText('Call Us Today')).not.toBeInTheDocument()
+      expect(document.querySelector('a[href^="tel:"]')).toBeNull()
+    } else {
+      expect(screen.getByText('Call Us Today')).toBeInTheDocument()
+      expect(screen.getByText(siteConfig.phone.display).closest('a')).toHaveAttribute(
+        'href',
+        `tel:${siteConfig.phone.tel}`
+      )
+    }
   })
 
-  it('should display the Free For Charity Policy section', () => {
+  it('should display the charity policy section', () => {
     render(<Footer />)
-    expect(screen.getByText('Free For Charity Policy')).toBeInTheDocument()
+    expect(screen.getByText(`${siteConfig.name} Policy`)).toBeInTheDocument()
   })
 
   it('should have all social media links with correct aria-labels', () => {
     render(<Footer />)
-    for (const { href, label } of [
-      { label: 'Facebook', href: 'https://www.facebook.com/freeforcharity' },
-      { label: 'X (Twitter)', href: 'https://x.com/freeforcharity1' },
-      { label: 'LinkedIn', href: 'https://www.linkedin.com/company/freeforcharity/' },
-      { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template' },
-    ]) {
+    // Only links with a non-empty href are rendered (an empty href disables one).
+    for (const { label, href } of siteConfig.social.filter((link) => link.href)) {
       const link = screen.getByLabelText(label)
       expect(link).toBeInTheDocument()
       expect(link).toHaveAttribute('href', href)
@@ -92,22 +106,29 @@ describe('Footer component', () => {
 
   it('should have social media links open in new tabs', () => {
     render(<Footer />)
-    const fbLink = screen.getByLabelText('Facebook')
-    expect(fbLink).toHaveAttribute('target', '_blank')
-    expect(fbLink).toHaveAttribute('rel', 'noopener noreferrer')
+    const [firstSocial] = siteConfig.social.filter((link) => link.href)
+    expect(firstSocial).toBeDefined()
+    const link = screen.getByLabelText(firstSocial.label)
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
   it('should have policy links with correct hrefs', () => {
     render(<Footer />)
     const policyLinks = [
-      { text: 'Free For Charity Privacy Policy', href: '/privacy-policy' },
-      { text: 'Free For Charity Cookie Policy', href: '/cookie-policy' },
-      { text: 'Free For Charity Terms of Service', href: '/terms-of-service' },
-      // FFC's own donation policy: label hardcoded to FFC on purpose.
+      // FFC's own donation policy: label hardcoded to FFC on purpose, since it
+      // describes FFC's policy and not this charity's.
       { text: 'Free For Charity Donation Policy', href: '/free-for-charity-donation-policy' },
-      // The charity's own donation policy (label follows siteConfig.name
-      // interpolation on the other entries, but this one is fixed).
+      // The charity's own donation policy: fixed label, no name interpolation.
       { text: 'Donation Policy', href: '/donation-policy' },
+      { text: `${siteConfig.name} Privacy Policy`, href: '/privacy-policy' },
+      { text: `${siteConfig.name} Cookie Policy`, href: '/cookie-policy' },
+      { text: `${siteConfig.name} Terms of Service`, href: '/terms-of-service' },
+      {
+        text: `${siteConfig.name} Vulnerability Disclosure Policy`,
+        href: '/vulnerability-disclosure-policy',
+      },
+      { text: `${siteConfig.name} Security Acknowledgement`, href: '/security-acknowledgements' },
     ]
 
     for (const { text, href } of policyLinks) {
@@ -116,28 +137,55 @@ describe('Footer component', () => {
     }
   })
 
-  it('should have quick links with real anchor labels and the hub login link', () => {
+  // The template shipped quick links pointing at homepage anchors (/#mission,
+  // /#programs, /#donate …) that a footer-only fork has no sections for, so
+  // every one rendered as a working link to nothing. Asserting the LABELS froze
+  // that bug in place; asserting that each destination actually exists is what
+  // catches it, and it keeps holding after a fork rewrites the list.
+  it('points every quick link at a route this site actually serves', () => {
     render(<Footer />)
-    const quickLinks = [
-      { text: 'Home', href: '/#hero' },
-      { text: 'Mission', href: '/#mission' },
-      { text: 'Programs', href: '/#programs' },
-      { text: 'Events', href: '/#events' },
-      { text: 'Donate', href: '/#donate' },
-      { text: 'Volunteer', href: '/#volunteer' },
-      { text: 'FAQ', href: '/#faq' },
-      { text: 'Team', href: '/#team' },
-    ]
 
-    for (const { text, href } of quickLinks) {
-      const link = screen.getByText(text).closest('a')
-      expect(link).toHaveAttribute('href', href)
+    const quickLinksList = screen.getByText('Quick Links').parentElement!.querySelector('ul')!
+    const links = within(quickLinksList).getAllByRole('link')
+    expect(links.length).toBeGreaterThan(0)
+
+    const servedPaths = new Set(routes.map((route) => route.path))
+
+    // Anchor targets have to be resolved against the page that actually renders
+    // them, not just accepted because the path before the '#' exists. Checking
+    // only the path is what let the template's dead `/#mission` links look
+    // valid: they all resolve to '/', which is always a real route.
+    const { container: homeContainer } = render(<RootPage />)
+    const homeIds = new Set(Array.from(homeContainer.querySelectorAll('[id]')).map((el) => el.id))
+
+    for (const link of links) {
+      const href = link.getAttribute('href')!
+      if (href.startsWith('http')) {
+        expect(href).toMatch(/^https:\/\//)
+        expect(link).toHaveAttribute('target', '_blank')
+        expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+        continue
+      }
+
+      const [path, fragment] = href.split('#')
+      const normalized = path === '' ? '/' : path.replace(/\/$/, '') || '/'
+      expect(servedPaths).toContain(normalized)
+
+      if (fragment === undefined) continue
+
+      expect(fragment.length).toBeGreaterThan(0)
+      // Only the home page is rendered here, so an anchor into any other route
+      // cannot be verified and is therefore not allowed in the quick links.
+      expect(normalized).toBe('/')
+      expect(homeIds).toContain(fragment)
     }
+  })
 
-    // FFC footer standard: the hub login link is always rendered and points
-    // at siteConfig.supportedBy.hubUrl.
+  it('always renders the FFC hub login link', () => {
+    render(<Footer />)
+    // FFC footer standard: always rendered, points at siteConfig.supportedBy.hubUrl.
     const hubLink = screen.getByText('Supported Charity Login').closest('a')
-    expect(hubLink).toHaveAttribute('href', 'https://freeforcharity.org/hub/')
+    expect(hubLink).toHaveAttribute('href', siteConfig.supportedBy.hubUrl)
     expect(hubLink).toHaveAttribute('target', '_blank')
     expect(hubLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
@@ -152,19 +200,13 @@ describe('Footer component', () => {
     // The address links have no aria-label (WCAG 2.5.3 label-in-name: the
     // visible text is the accessible name, with sr-only "(opens in Google
     // Maps)" context appended), so query them by their visible label text.
-    const mainAddress = screen.getByText('Main Address').closest('a')
-    const paAddress = screen.getByText('PA Office Address').closest('a')
-
-    expect(mainAddress).toHaveAttribute(
-      'href',
-      'https://www.google.com/maps/search/?api=1&query=4030+Wake+Forrest+Road+Suite+349+Raleigh+NC+27609'
-    )
-    expect(paAddress).toHaveAttribute(
-      'href',
-      'https://www.google.com/maps/place/Free+For+Charity/@40.7768455,-77.8963305,17z/data=!3m1!4b1!4m6!3m5!1s0x89cea944b44a2e01:0x6fc2d6bf09e00a0f!8m2!3d40.7768415!4d-77.8937556!16s%2Fg%2F11vzvbl2d7?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D'
-    )
-    expect(mainAddress).toHaveTextContent('4030 Wake Forrest Road')
-    expect(paAddress).toHaveTextContent('301 Science Park Road Suite')
+    for (const address of siteConfig.addresses) {
+      const link = screen.getByText(address.label).closest('a')
+      expect(link).toHaveAttribute('href', address.mapUrl)
+      for (const line of address.lines) {
+        expect(link).toHaveTextContent(line)
+      }
+    }
   })
 
   it('should display the permanent "Supported by Free For Charity" attribution in copyright bar', () => {
@@ -175,6 +217,8 @@ describe('Footer component', () => {
       )
     })
     // FFC footer standard: the attribution is always rendered and links to FFC.
+    // These values are intentionally literal — the standard forbids a fork from
+    // removing or repointing them.
     expect(copyright).toHaveTextContent('Supported by Free For Charity')
     const link = screen.getByText('Free For Charity')
     expect(link.closest('a')).toHaveAttribute('href', 'https://freeforcharity.org')

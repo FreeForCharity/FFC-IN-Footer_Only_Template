@@ -2,9 +2,15 @@ import { spawnSync } from 'node:child_process'
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { githubPagesProjectPath } from '../helpers/githubPagesProjectPath'
 
 const syncedCsp =
   "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+
+// Read from scripts/check-drift.mjs, the copy of this value the script itself
+// uses, so the fixture stays correct on any fork. Hardcoding the template's
+// own project path here is what made this suite fail on a correct rebrand.
+const projectPath = githubPagesProjectPath()
 
 function payload(expires = '2027-12-31T00:00:00.000Z'): string {
   return [
@@ -13,12 +19,12 @@ function payload(expires = '2027-12-31T00:00:00.000Z'): string {
     'Preferred-Languages: en',
     'Canonical: https://ffcworkingsite1.org/.well-known/security.txt',
     'Canonical: https://ffcworkingsite1.org/security.txt',
-    'Canonical: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/.well-known/security.txt',
-    'Canonical: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/security.txt',
+    `Canonical: https://ffcworkingsite1.org${projectPath}/.well-known/security.txt`,
+    `Canonical: https://ffcworkingsite1.org${projectPath}/security.txt`,
     'Policy: https://ffcworkingsite1.org/vulnerability-disclosure-policy',
-    'Policy: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/vulnerability-disclosure-policy',
+    `Policy: https://ffcworkingsite1.org${projectPath}/vulnerability-disclosure-policy`,
     'Acknowledgments: https://ffcworkingsite1.org/security-acknowledgements',
-    'Acknowledgments: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/security-acknowledgements',
+    `Acknowledgments: https://ffcworkingsite1.org${projectPath}/security-acknowledgements`,
     '',
   ].join('\n')
 }

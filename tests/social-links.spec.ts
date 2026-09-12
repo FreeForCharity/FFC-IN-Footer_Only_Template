@@ -9,7 +9,9 @@ import { testConfig } from './test.config'
  * 2. Defunct platforms (like Google+) are not present
  * 3. All social icons link to correct destinations
  *
- * Note: Test expectations use values from test.config.ts for easy customization
+ * Expectations come from test.config.ts, which derives them from
+ * src/lib/site.config.ts — so which platforms appear, and how many, follow the
+ * charity's own configuration instead of the template's original four.
  */
 
 test.describe('Footer Social Links', () => {
@@ -27,52 +29,26 @@ test.describe('Footer Social Links', () => {
   })
 
   test('should display active social media links', async ({ page }) => {
-    // Navigate to the homepage
     await page.goto('/')
 
-    // Verify Facebook link is present
-    const facebookLink = page.locator(`footer a[href*="${testConfig.socialLinks.facebook.url}"]`)
-    await expect(facebookLink).toBeVisible()
-    await expect(facebookLink).toHaveAttribute(
-      'aria-label',
-      testConfig.socialLinks.facebook.ariaLabel
-    )
+    expect(testConfig.socialLinks.length).toBeGreaterThan(0)
 
-    // Verify X (Twitter) link is present
-    const twitterLink = page.locator(`footer a[href*="${testConfig.socialLinks.twitter.url}"]`)
-    await expect(twitterLink).toBeVisible()
-    await expect(twitterLink).toHaveAttribute(
-      'aria-label',
-      testConfig.socialLinks.twitter.ariaLabel
-    )
-
-    // Verify LinkedIn link is present
-    const linkedInLink = page.locator(`footer a[href*="${testConfig.socialLinks.linkedin.url}"]`)
-    await expect(linkedInLink).toBeVisible()
-    await expect(linkedInLink).toHaveAttribute(
-      'aria-label',
-      testConfig.socialLinks.linkedin.ariaLabel
-    )
-
-    // Verify GitHub link is present
-    const githubLink = page.locator(`footer a[href*="${testConfig.socialLinks.github.url}"]`)
-    await expect(githubLink).toBeVisible()
-    await expect(githubLink).toHaveAttribute('aria-label', testConfig.socialLinks.github.ariaLabel)
+    for (const social of testConfig.socialLinks) {
+      const link = page.locator(`footer a[href*="${social.url}"]`)
+      await expect(link).toBeVisible()
+      await expect(link).toHaveAttribute('aria-label', social.ariaLabel)
+    }
   })
 
-  test('should have exactly 4 social media icons', async ({ page }) => {
-    // Navigate to the homepage
+  test('should render exactly the configured social icons', async ({ page }) => {
     await page.goto('/')
 
-    // Count all social media links in the footer
-    // They are identified by having target="_blank" and being in the footer's social links section
+    // Count links by the aria-labels the configuration declares, so an extra
+    // hardcoded icon in the footer fails just as loudly as a missing one.
+    const selector = testConfig.socialLinks
+      .map((social) => `footer a[aria-label="${social.ariaLabel}"]`)
+      .join(', ')
 
-    // We should have exactly 4 social icons: Facebook, X (Twitter), LinkedIn, GitHub
-    // Note: This count might be higher due to other external links in footer
-    // So let's be more specific and count only links with aria-label containing social platform names
-    const socialMediaLinks = page.locator(
-      `footer a[aria-label="${testConfig.socialLinks.facebook.ariaLabel}"], footer a[aria-label="${testConfig.socialLinks.twitter.ariaLabel}"], footer a[aria-label="${testConfig.socialLinks.linkedin.ariaLabel}"], footer a[aria-label="${testConfig.socialLinks.github.ariaLabel}"]`
-    )
-    await expect(socialMediaLinks).toHaveCount(4)
+    await expect(page.locator(selector)).toHaveCount(testConfig.socialLinks.length)
   })
 })

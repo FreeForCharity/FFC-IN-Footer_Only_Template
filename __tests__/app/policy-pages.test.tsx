@@ -1,5 +1,6 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
+import { siteConfig } from '../../src/lib/site.config'
 
 // Import page components and their metadata exports
 import DonationPolicyPage, { metadata as donationMeta } from '../../src/app/donation-policy/page'
@@ -35,8 +36,14 @@ describe('Policy page metadata', () => {
     expect((meta.description as string).length).toBeGreaterThan(0)
   })
 
-  it.each(pages)('$name title should contain Free For Charity', ({ meta }) => {
-    expect(meta.title).toContain('Free For Charity')
+  // A page's own title is the PAGE name only. The root layout's
+  // `title.template` (`%s | <site name>`) appends the site name, so a page that
+  // also carries it renders "Privacy Policy | Acme | Acme". The full
+  // composition is asserted for every route in __tests__/app/sitemap.test.ts.
+  it.each(pages)('$name title omits the site name the template appends', ({ meta }) => {
+    expect(typeof meta.title).toBe('string')
+    expect((meta.title as string).length).toBeGreaterThan(0)
+    expect(meta.title).not.toContain(siteConfig.name)
   })
 })
 
@@ -55,7 +62,7 @@ describe('Policy page rendering', () => {
   it('Donation Policy renders heading and EIN', () => {
     render(<DonationPolicyPage />)
     expect(screen.getByText('Donation Policy')).toBeInTheDocument()
-    expect(screen.getByText(/46-2471893/)).toBeInTheDocument()
+    expect(screen.getByText(new RegExp(siteConfig.ein))).toBeInTheDocument()
   })
 
   it('Donation Policy contains expected sections', () => {
@@ -67,8 +74,8 @@ describe('Policy page rendering', () => {
 
   it('Donation Policy has a contact email link', () => {
     render(<DonationPolicyPage />)
-    const emailLink = screen.getByText('clarkemoyer@freeforcharity.org')
-    expect(emailLink.closest('a')).toHaveAttribute('href', 'mailto:clarkemoyer@freeforcharity.org')
+    const emailLink = screen.getByText(siteConfig.contactEmail)
+    expect(emailLink.closest('a')).toHaveAttribute('href', `mailto:${siteConfig.contactEmail}`)
   })
 
   it('Security Acknowledgements renders heading', () => {

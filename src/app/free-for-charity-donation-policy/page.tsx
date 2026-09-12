@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { siteUrl } from '@/lib/site.config'
 
 export const metadata: Metadata = {
-  title: 'Free For Charity Donation Policy | Free For Charity',
+  title: 'Free For Charity Donation Policy',
   description: 'Free For Charity Donation Policy - Learn about our donation policies',
   // Own canonical: without it Next inherits the layout's, which points at the home page.
   alternates: { canonical: siteUrl('/free-for-charity-donation-policy') },
