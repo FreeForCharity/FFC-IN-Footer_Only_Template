@@ -7,6 +7,8 @@
  *  2. Hardcoded /Images, /Svgs, or /videos paths missing assetPath().
  *  3. Common secret patterns committed under src/ or public/.
  *  4. The template placeholder URL ffcworkingsite1.org left behind after a site rebrands.
+ *  4b. siteConfig.url naming an origin this deploy is not served on -- the
+ *      custom domain without the public/CNAME that would actually serve it.
  *  5. Static security metadata (_headers and security.txt) drifting away from
  *     footer-only runtime origins or src/lib/site.config.ts. Note that
  *     public/_headers is inert on FFC deploys — see checkCspSync.
@@ -292,6 +294,75 @@ async function checkSecrets() {
   }
 }
 
+/**
+ * The path prefix this deploy actually serves under.
+ *
+ * `.github/workflows/deploy.yml` sets NEXT_PUBLIC_BASE_PATH from exactly one
+ * signal: a non-empty `public/CNAME` means a custom domain (no base path),
+ * and its absence means the GitHub Pages project path. Every guard that
+ * reasons about live URLs reads the same signal, so they cannot disagree with
+ * the build.
+ */
+async function deployPathPrefix() {
+  const cname = (await readIfExists(join(PUBLIC_DIR, 'CNAME')))?.trim()
+  return cname ? '' : GITHUB_PAGES_PROJECT_PATH
+}
+
+/**
+ * siteConfig.url must be the origin this deploy is reachable at.
+ *
+ * siteUrl() composes `siteConfig.url` with sitePath(), which supplies the
+ * GitHub Pages base path. So `url` is the ORIGIN only, and which origin is
+ * correct depends on whether public/CNAME exists:
+ *
+ *  - CNAME present  -> the custom domain, and no base path is applied.
+ *  - CNAME absent   -> https://<owner>.github.io, and sitePath() adds
+ *                      /<repo>, giving the project URL Pages really serves.
+ *
+ * Getting this wrong is silent and ships: a custom-domain origin with no
+ * CNAME emits canonicals like `https://example.org/<repo>/privacy-policy/`,
+ * a URL that exists on neither host. Nothing else in the build notices,
+ * because both halves are individually well-formed.
+ */
+async function checkDeployOrigin(siteConfig) {
+  const configHost = hostnameOf(siteConfig?.url)
+  // A missing or unparseable url is already reported by checkSiteConfigUrl.
+  if (!configHost) return
+
+  const cname = (await readIfExists(join(PUBLIC_DIR, 'CNAME')))?.trim()
+
+  if (cname) {
+    // A CNAME file is a bare hostname, but tolerate a pasted URL so the
+    // error names the real mismatch instead of a parsing artifact.
+    const cnameHost = cname
+      .split(/\s+/)[0]
+      .replace(/^https?:\/\//, '')
+      .replace(/\/.*$/, '')
+
+    if (cnameHost !== configHost) {
+      errors.push(
+        `public/CNAME points at "${cnameHost}" but src/lib/site.config.ts: siteConfig.url is ` +
+          `"${siteConfig.url}". The deploy drops the base path for the CNAME host, so canonical ` +
+          'URLs, the sitemap and security.txt would advertise an origin this site is not served on.'
+      )
+    }
+    return
+  }
+
+  // The un-rebranded template is not deployed as anyone's charity site.
+  if (configHost === PLACEHOLDER_HOST) return
+
+  if (!configHost.endsWith('.github.io')) {
+    errors.push(
+      `src/lib/site.config.ts: siteConfig.url is "${siteConfig.url}" but there is no public/CNAME, ` +
+        `so this site is served at https://<owner>.github.io${GITHUB_PAGES_PROJECT_PATH}/. ` +
+        `Canonical URLs would read "https://${configHost}${GITHUB_PAGES_PROJECT_PATH}/...", which ` +
+        'is served by neither host. Either add public/CNAME once the custom domain resolves to ' +
+        'GitHub Pages, or set siteConfig.url to the https://<owner>.github.io origin until it does.'
+    )
+  }
+}
+
 async function checkPlaceholderUrl(siteConfig) {
   const cname = (await readIfExists(join(PUBLIC_DIR, 'CNAME')))?.trim() || null
   const configUrl = siteConfig?.url ?? null
@@ -538,23 +609,41 @@ async function checkSecurityTxtSync(siteConfig) {
 
   if (!siteConfig?.url) return
   const origin = siteConfig.url.replace(/\/$/, '')
+
+  // One deploy serves ONE origin+prefix. This used to require both the apex
+  // and the project-path variant of every line, which is only satisfiable by
+  // gluing them together: with a custom-domain origin and no CNAME that
+  // produced `https://example.org/<repo>/security.txt`, a URL no host serves.
+  // RFC 9116 treats a Canonical URI as the address the file is meant to be
+  // fetched from, so listing an unreachable one is worse than listing none.
+  const prefix = await deployPathPrefix()
   const expectedLines = [
     siteConfig.contactEmail ? `Contact: mailto:${siteConfig.contactEmail}` : null,
     'Preferred-Languages: en',
-    `Canonical: ${origin}/.well-known/security.txt`,
-    `Canonical: ${origin}/security.txt`,
-    `Canonical: ${origin}${GITHUB_PAGES_PROJECT_PATH}/.well-known/security.txt`,
-    `Canonical: ${origin}${GITHUB_PAGES_PROJECT_PATH}/security.txt`,
-    `Policy: ${origin}${siteConfig.vulnerabilityDisclosurePath}`,
-    `Policy: ${origin}${GITHUB_PAGES_PROJECT_PATH}${siteConfig.vulnerabilityDisclosurePath}`,
-    `Acknowledgments: ${origin}/security-acknowledgements`,
-    `Acknowledgments: ${origin}${GITHUB_PAGES_PROJECT_PATH}/security-acknowledgements`,
+    `Canonical: ${origin}${prefix}/.well-known/security.txt`,
+    `Canonical: ${origin}${prefix}/security.txt`,
+    `Policy: ${origin}${prefix}${siteConfig.vulnerabilityDisclosurePath}`,
+    `Acknowledgments: ${origin}${prefix}/security-acknowledgements`,
   ].filter(Boolean)
 
   for (const line of expectedLines) {
     if (wellKnownPayload.includes(line)) continue
     errors.push(
       `public/.well-known/security.txt is not aligned with src/lib/site.config.ts. Missing: ${line}`
+    )
+  }
+
+  // A leftover line from a previous origin or deploy mode still parses and
+  // still looks authoritative. Warn rather than error: a site mid-cutover may
+  // deliberately carry both while DNS propagates.
+  const expected = new Set(expectedLines)
+  for (const line of wellKnownPayload.split('\n')) {
+    const trimmed = line.trim()
+    if (!/^(Canonical|Policy|Acknowledgments):/.test(trimmed)) continue
+    if (expected.has(trimmed)) continue
+    warnings.push(
+      `public/.well-known/security.txt lists "${trimmed}", which this deploy does not serve ` +
+        `(it serves ${origin}${prefix}/). Remove it once the cutover it belongs to is finished.`
     )
   }
 }
@@ -564,6 +653,7 @@ checkSiteConfigUrl(siteConfig)
 await checkKebabCaseRoutes()
 await checkAssetPathUsage()
 await checkSecrets()
+await checkDeployOrigin(siteConfig)
 await checkPlaceholderUrl(siteConfig)
 await checkCspSync()
 await checkSecurityTxtSync(siteConfig)

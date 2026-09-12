@@ -12,26 +12,33 @@ const syncedCsp =
 // own project path here is what made this suite fail on a correct rebrand.
 const projectPath = githubPagesProjectPath()
 
-function payload(expires = '2027-12-31T00:00:00.000Z'): string {
+/**
+ * One deploy serves one origin+prefix, so the payload takes the prefix rather
+ * than listing both variants. `origin` varies too: the CNAME cases below need
+ * a payload on the custom domain with no base path.
+ */
+function payload(
+  expires = '2027-12-31T00:00:00.000Z',
+  { origin = 'https://ffcworkingsite1.org', prefix = projectPath } = {}
+): string {
   return [
     'Contact: mailto:clarkemoyer@freeforcharity.org',
     `Expires: ${expires}`,
     'Preferred-Languages: en',
-    'Canonical: https://ffcworkingsite1.org/.well-known/security.txt',
-    'Canonical: https://ffcworkingsite1.org/security.txt',
-    `Canonical: https://ffcworkingsite1.org${projectPath}/.well-known/security.txt`,
-    `Canonical: https://ffcworkingsite1.org${projectPath}/security.txt`,
-    'Policy: https://ffcworkingsite1.org/vulnerability-disclosure-policy',
-    `Policy: https://ffcworkingsite1.org${projectPath}/vulnerability-disclosure-policy`,
-    'Acknowledgments: https://ffcworkingsite1.org/security-acknowledgements',
-    `Acknowledgments: https://ffcworkingsite1.org${projectPath}/security-acknowledgements`,
+    `Canonical: ${origin}${prefix}/.well-known/security.txt`,
+    `Canonical: ${origin}${prefix}/security.txt`,
+    `Policy: ${origin}${prefix}/vulnerability-disclosure-policy`,
+    `Acknowledgments: ${origin}${prefix}/security-acknowledgements`,
     '',
   ].join('\n')
 }
 
 function makeFixture(
   overrides: Partial<
-    Record<'headers' | 'layout' | 'siteConfig' | 'wellKnown' | 'rootSecurity', string | null>
+    Record<
+      'headers' | 'layout' | 'siteConfig' | 'wellKnown' | 'rootSecurity' | 'cname',
+      string | null
+    >
   > = {}
 ) {
   const dir = mkdtempSync(join(tmpdir(), 'ffc-drift-'))
@@ -62,6 +69,9 @@ function makeFixture(
       "export const siteConfig = { url: 'https://ffcworkingsite1.org', vulnerabilityDisclosurePath: '/vulnerability-disclosure-policy' }\n",
     wellKnown: payload(),
     rootSecurity: payload(),
+    // No public/CNAME by default: that is the state a freshly provisioned
+    // charity repo is in, and the state the deploy reads as "project path".
+    cname: null,
     ...overrides,
   }
 
@@ -73,6 +83,7 @@ function makeFixture(
     writeFileSync(join(dir, 'public/.well-known/security.txt'), files.wellKnown)
   if (files.rootSecurity !== null)
     writeFileSync(join(dir, 'public/security.txt'), files.rootSecurity)
+  if (files.cname !== null) writeFileSync(join(dir, 'public/CNAME'), files.cname)
 
   return dir
 }
@@ -214,6 +225,106 @@ describe('security drift guard', () => {
     expect(result.status).not.toBe(0)
     expect(result.output).toContain('siteConfig.url')
     expect(result.output).toContain('must start with "https://"')
+  })
+
+  // siteConfig.url is the ORIGIN; sitePath() supplies the GitHub Pages base
+  // path, and deploy.yml derives that base path from public/CNAME alone. So
+  // the two have to move together. The failure this guards is silent: both
+  // halves are individually well-formed and the build never complains, but
+  // siteUrl() then emits `https://custom.example/<repo>/page/` — an address
+  // neither the custom domain nor github.io serves.
+  const rebrandedConfig = (url: string) =>
+    `export const siteConfig = { url: '${url}', vulnerabilityDisclosurePath: '/vulnerability-disclosure-policy' }\n`
+
+  it('fails when siteConfig.url names a custom domain but there is no CNAME', () => {
+    const dir = makeFixture({
+      siteConfig: rebrandedConfig('https://charity.example'),
+      wellKnown: payload(undefined, { origin: 'https://charity.example' }),
+      rootSecurity: payload(undefined, { origin: 'https://charity.example' }),
+    })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain('there is no public/CNAME')
+    expect(result.output).toContain(`https://charity.example${projectPath}/...`)
+  })
+
+  it('fails when public/CNAME and siteConfig.url name different hosts', () => {
+    const dir = makeFixture({
+      cname: 'charity.example\n',
+      siteConfig: rebrandedConfig('https://freeforcharity.github.io'),
+      wellKnown: payload(undefined, { origin: 'https://freeforcharity.github.io', prefix: '' }),
+      rootSecurity: payload(undefined, { origin: 'https://freeforcharity.github.io', prefix: '' }),
+    })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain('public/CNAME points at "charity.example"')
+  })
+
+  it('accepts a custom domain when the CNAME and the origin agree', () => {
+    const dir = makeFixture({
+      cname: 'charity.example\n',
+      siteConfig: rebrandedConfig('https://charity.example'),
+      wellKnown: payload(undefined, { origin: 'https://charity.example', prefix: '' }),
+      rootSecurity: payload(undefined, { origin: 'https://charity.example', prefix: '' }),
+    })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.output).not.toContain('public/CNAME points at')
+    expect(result.output).not.toContain('there is no public/CNAME')
+    expect(result.status).toBe(0)
+  })
+
+  // The un-rebranded template ships no CNAME and keeps the placeholder host.
+  // That is not a charity deploy, so the origin rule must stay quiet — the
+  // placeholder itself is what checkPlaceholderUrl is for.
+  it('stays quiet about the origin while the placeholder host is still in place', () => {
+    const dir = makeFixture()
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.output).not.toContain('there is no public/CNAME')
+    expect(result.status).toBe(0)
+  })
+
+  it('requires security.txt to follow the CNAME across the cutover', () => {
+    const dir = makeFixture({
+      cname: 'charity.example\n',
+      siteConfig: rebrandedConfig('https://charity.example'),
+      // Left on the project path: the config and CNAME moved, this did not.
+      wellKnown: payload(undefined, { origin: 'https://charity.example' }),
+      rootSecurity: payload(undefined, { origin: 'https://charity.example' }),
+    })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain(
+      'Missing: Canonical: https://charity.example/.well-known/security.txt'
+    )
+  })
+
+  it('warns about a security.txt line this deploy does not serve', () => {
+    const stale = `${payload()}Canonical: https://charity.example/security.txt\n`
+    const dir = makeFixture({ wellKnown: stale, rootSecurity: stale })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.output).toContain('which this deploy does not serve')
+    expect(result.output).toContain('https://charity.example/security.txt')
+    // A leftover line during a cutover is untidy, not broken: the required
+    // lines are all present, so this must not fail the build.
+    expect(result.status).toBe(0)
   })
 
   it('fails when security.txt Expires is regex-shaped but not parseable', () => {

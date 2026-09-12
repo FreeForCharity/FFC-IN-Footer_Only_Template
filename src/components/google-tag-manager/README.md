@@ -113,10 +113,11 @@ Test coverage includes:
 
 ### GitHub Pages Deployment
 
-The site automatically deploys to GitHub Pages via `.github/workflows/nextjs.yml`. The GTM implementation works on both:
+The site automatically deploys to GitHub Pages via `.github/workflows/deploy.yml`. The GTM implementation works on both:
 
-1. **Custom domain**: https://www.ffcworkingsite1.org
-2. **GitHub Pages**: the GitHub Pages address for this repository
+1. **GitHub Pages**: the project address for this repository, which is where the site is served while
+   no `public/CNAME` exists
+2. **Custom domain**: whatever `public/CNAME` names, once one is in service
 
 The GTM ID lives in `src/lib/analytics.config.ts`, so no additional configuration is needed for deployment.
 An EMPTY id is supported and means "no container provisioned yet": both components then render nothing
