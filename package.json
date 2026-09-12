@@ -30,7 +30,7 @@
   "dependencies": {
     "framer-motion": "^12.42.2",
     "lucide-react": "^0.555.0",
-    "next": "^16.2.11",
+    "next": "^16.3.3",
     "postcss": "^8.5.23",
     "react": "19.2.7",
     "react-dom": "19.2.7",
@@ -42,6 +42,7 @@
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/eslintrc": "^3",
+    "@jest/globals": "^30.2.0",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.17",
@@ -68,7 +69,8 @@
   },
   "pnpm": {
     "overrides": {
-      "sharp": "^0.35.3",
+      "sharp": ">=0.35.4",
+      "browserslist": ">=4.28.7",
       "postcss": "$postcss",
       "nanoid@<3.3.18": "^3.3.18"
     }
