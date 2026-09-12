@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { siteConfig, siteUrl } from '@/lib/site.config'
+import ContactDetails from '@/components/policy/ContactDetails'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -524,23 +525,7 @@ export default function CookiePolicy() {
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             If you have questions about our use of cookies, please contact us:
           </p>
-          <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Email:</strong>{' '}
-              <a href="mailto:privacy@freeforcharity.org" className="text-blue-600 hover:underline">
-                privacy@freeforcharity.org
-              </a>
-            </li>
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Emergency Contact:</strong> Clarke Moyer
-            </li>
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Phone:</strong>{' '}
-              <a href="tel:520-222-8104" className="text-blue-600 hover:underline">
-                520-222-8104
-              </a>
-            </li>
-          </ul>
+          <ContactDetails />
 
           {/* Section 8 */}
           <ol className="list-decimal list-inside pb-[1em]" start={8}>

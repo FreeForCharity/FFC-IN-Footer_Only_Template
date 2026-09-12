@@ -1,18 +1,15 @@
 'use client'
 
 import Script from 'next/script'
+import { GTM_ID } from '@/lib/analytics.config'
 
-// Google Tag Manager ID for THIS site.
+// The container id lives in `src/lib/analytics.config.ts`, NOT here.
 //
-// A fork MUST replace this with its own container before going live, or the
-// charity's visitor analytics are reported into Free For Charity's property.
-// `npm run check:rebrand` flags the template's id for exactly that reason.
-//
-// An EMPTY string is a supported state and means "no container provisioned
-// yet" — every new FFC site starts there, waiting on workflows 505/503. Both
-// components below then render nothing, rather than emitting a snippet that
-// requests `gtm.js?id=` and fails in the browser.
-export const GTM_ID: string = 'GTM-TQ5H8HPR'
+// This module is `'use client'`. A server component that imports a non-component
+// export from a client module gets a client-reference proxy rather than the
+// value, so `GTM_ID.trim()` threw during static export while every unit test
+// passed. Keeping the constant in a plain module means both sides read the same
+// string. Deliberately not re-exported from here, so that trap cannot come back.
 
 /**
  * Both components take an optional `gtmId` that defaults to GTM_ID above.

@@ -12,7 +12,7 @@
  * strings like cookie-banner button labels — are literals here.
  */
 import { siteConfig } from '../src/lib/site.config'
-import { GTM_ID } from '../src/components/google-tag-manager'
+import { GTM_ID } from '../src/lib/analytics.config'
 
 /** Strip the scheme so specs can match with a CSS `href*=` substring selector. */
 function hrefNeedle(url: string): string {

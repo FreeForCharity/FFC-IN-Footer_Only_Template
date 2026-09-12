@@ -1,9 +1,7 @@
 import React from 'react'
 import { renderToString } from 'react-dom/server'
-import GoogleTagManager, {
-  GoogleTagManagerNoScript,
-  GTM_ID,
-} from '../../src/components/google-tag-manager'
+import GoogleTagManager, { GoogleTagManagerNoScript } from '../../src/components/google-tag-manager'
+import { GTM_ID } from '../../src/lib/analytics.config'
 
 // React suppresses <noscript> children in client-side renders (jsdom).
 // We use server-side renderToString to verify the noscript markup.
