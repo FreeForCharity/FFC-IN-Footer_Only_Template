@@ -77,3 +77,42 @@ describe('referenced static assets', () => {
     expect(readdirSync(dir)).toContain(base)
   })
 })
+
+/**
+ * A raw `<a href="/...">` bypasses the GitHub Pages basePath.
+ *
+ * `next/link` applies `basePath` automatically; a plain anchor does not, so a
+ * bare absolute path navigates to the DOMAIN root on a project-path deploy and
+ * 404s. Measured before the fix, with NEXT_PUBLIC_BASE_PATH set:
+ *
+ *   <Link href="/security-acknowledgements">  ->  /FFC-EX-.../security-acknowledgements/
+ *   <a href="/security-acknowledgements">     ->  /security-acknowledgements
+ *
+ * Internal destinations must therefore use `next/link` for routes, or wrap the
+ * path in `sitePath()` for a static file that is not a route.
+ */
+describe('internal links survive a GitHub Pages base path', () => {
+  const offenders: { file: string; href: string }[] = []
+
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        walk(full)
+        continue
+      }
+      if (!/\.(tsx?|jsx?)$/.test(entry.name)) continue
+
+      const source = readFileSync(full, 'utf8')
+      // Raw <a> tags only — <Link> handles basePath itself.
+      for (const anchor of source.matchAll(/<a\s[^>]*?href="(\/[^"]*)"/g)) {
+        offenders.push({ file: full, href: anchor[1] })
+      }
+    }
+  }
+  walk(join(REPO_ROOT, 'src'))
+
+  it('uses next/link or sitePath() for every internal destination', () => {
+    expect(offenders).toEqual([])
+  })
+})

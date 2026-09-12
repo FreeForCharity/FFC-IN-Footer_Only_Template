@@ -36,6 +36,14 @@ export const testConfig = {
     })),
 
   /**
+   * Every label in siteConfig.social, including links disabled with an empty
+   * href. A fork may legitimately disable all of them; the specs use this to
+   * assert a disabled platform renders NO icon, which is the only meaningful
+   * check when `socialLinks` above is empty.
+   */
+  allSocialLabels: siteConfig.social.map((link) => link.label),
+
+  /**
    * Copyright Configuration
    * Used in: tests/copyright.spec.ts
    */

@@ -31,7 +31,13 @@ test.describe('Footer Social Links', () => {
   test('should display active social media links', async ({ page }) => {
     await page.goto('/')
 
-    expect(testConfig.socialLinks.length).toBeGreaterThan(0)
+    // A fork may disable every social link (an empty href is the documented
+    // "off" state in SiteConfig), and that is a correct configuration, not a
+    // failure. Requiring at least one made such a fork fail here.
+    test.skip(
+      testConfig.socialLinks.length === 0,
+      'No social links are enabled for this site; the disabled-icon case is asserted below.'
+    )
 
     for (const social of testConfig.socialLinks) {
       const link = page.locator(`footer a[href*="${social.url}"]`)
@@ -43,11 +49,20 @@ test.describe('Footer Social Links', () => {
   test('should render exactly the configured social icons', async ({ page }) => {
     await page.goto('/')
 
-    // Count links by the aria-labels the configuration declares, so an extra
-    // hardcoded icon in the footer fails just as loudly as a missing one.
-    const selector = testConfig.socialLinks
-      .map((social) => `footer a[aria-label="${social.ariaLabel}"]`)
+    // Every label the config declares, enabled or not. Checking the full set
+    // means a disabled platform that still renders an icon fails here, and it
+    // keeps the selector non-empty when nothing is enabled — joining an empty
+    // list produced '', which is not a valid selector.
+    const selector = testConfig.allSocialLabels
+      .map((label) => `footer a[aria-label="${label}"]`)
       .join(', ')
+
+    if (selector === '') {
+      // No social platforms configured at all: there is nothing to render and
+      // nothing to select.
+      await expect(page.locator('footer a[target="_blank"][aria-label]')).toHaveCount(0)
+      return
+    }
 
     await expect(page.locator(selector)).toHaveCount(testConfig.socialLinks.length)
   })

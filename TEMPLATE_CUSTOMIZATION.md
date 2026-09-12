@@ -55,7 +55,7 @@ charity's name, URL, contact email, social links, etc.
 - **GitHub Pages base path** — chosen automatically by the deploy workflow
   based on whether `public/CNAME` exists. No manual workflow edit required.
 - **GTM container ID** — lives in
-  `src/components/google-tag-manager/index.tsx`. Leaving it as `GTM-TQ5H8HPR`
+  `src/lib/analytics.config.ts`. Leaving it as `GTM-TQ5H8HPR`
   sends your analytics to Free For Charity — replace it early. Setting it to
   the empty string is supported and means "no container yet": both GTM
   components then render nothing, instead of emitting a tag that requests
