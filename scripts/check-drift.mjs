@@ -7,6 +7,8 @@
  *  2. Hardcoded /Images, /Svgs, or /videos paths missing assetPath().
  *  3. Common secret patterns committed under src/ or public/.
  *  4. The template placeholder URL ffcworkingsite1.org left behind after a site rebrands.
+ *  2b. A next/link href wrapped in sitePath(), which applies basePath twice
+ *      and 404s on a project-path deploy.
  *  4b. siteConfig.url naming an origin this deploy is not served on -- the
  *      custom domain without the public/CNAME that would actually serve it.
  *  5. Static security metadata (_headers and security.txt) drifting away from
@@ -222,6 +224,55 @@ async function checkKebabCaseRoutes() {
       errors.push(
         `Route folder "src/app/${entry.name}" is not kebab-case. ` +
           'Rename it to lowercase letters and digits separated by hyphens.'
+      )
+    }
+  }
+}
+
+/**
+ * next/link applies `basePath` itself, so wrapping its href in sitePath()
+ * applies it twice.
+ *
+ * This is not theoretical and it is not loud. FFC-EX-neurospike.org shipped
+ * with `<Link href={sitePath(l.href)}>` in its nav: on the GitHub Pages project
+ * deploy every one of the five nav links resolved to `/<repo>/<repo>/...` and
+ * returned 404, while 348 unit tests, 43 E2E tests, Lighthouse and the link
+ * checker all reported green. They were blind to it because every one of them
+ * runs a build with NEXT_PUBLIC_BASE_PATH unset, where sitePath() is the
+ * identity function and the doubling cannot occur. A test suite that never
+ * exercises the deployed configuration cannot see a bug that only exists in it,
+ * which is why this check is static rather than another test.
+ *
+ * sitePath() remains correct for hrefs Next does NOT process: a raw <a> to a
+ * file in public/, for example.
+ */
+async function checkLinkBasePathDoubling() {
+  const files = await walk(SRC_DIR, (name) => /\.(tsx|jsx)$/.test(name))
+
+  for (const file of files) {
+    const body = await readFile(file, 'utf8')
+    if (!/from ['"]next\/link['"]/.test(body)) continue
+
+    const rel = relative(ROOT, file)
+    // `href={sitePath(...)}` on a JSX element. Restricted to files that import
+    // next/link so a raw <a> in a file with no Link import is not flagged.
+    const pattern = /href=\{\s*sitePath\s*\(/g
+    let match
+    while ((match = pattern.exec(body))) {
+      if (insideComment(body, match.index)) continue
+
+      // A raw <a> is legitimate even in a file that also uses Link, so look
+      // back for the tag this href belongs to and only flag <Link>.
+      const before = body.slice(0, match.index)
+      const tag = before.lastIndexOf('<')
+      if (tag !== -1 && !/^<Link[\s>]/.test(body.slice(tag, tag + 6))) continue
+
+      errors.push(
+        `${rel}:${lineAt(body, match.index)} wraps a next/link href in sitePath(). ` +
+          'next/link already applies basePath, so this applies it twice and the link ' +
+          '404s on a GitHub Pages project deploy. Pass the bare route path instead; ' +
+          'sitePath() is only for hrefs Next does not process, such as a raw <a> to a ' +
+          'file in public/.'
       )
     }
   }
@@ -652,6 +703,7 @@ const siteConfig = await readSiteConfig()
 checkSiteConfigUrl(siteConfig)
 await checkKebabCaseRoutes()
 await checkAssetPathUsage()
+await checkLinkBasePathDoubling()
 await checkSecrets()
 await checkDeployOrigin(siteConfig)
 await checkPlaceholderUrl(siteConfig)

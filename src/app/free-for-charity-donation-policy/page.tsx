@@ -267,7 +267,7 @@ const index = () => {
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             For any questions or further information about our donation policy, please contact us at{' '}
-            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#2ea3f2] break-words">
+            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#0062cc] break-words">
               clarkemoyer@freeforcharity.org
             </a>{' '}
             520-222-8104
