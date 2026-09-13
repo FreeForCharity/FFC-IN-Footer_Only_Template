@@ -1,14 +1,14 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { siteConfig, siteUrl } from '@/lib/site.config'
+import { siteConfig } from '@/lib/site.config'
+import { pageMetadata } from '@/lib/pageMetadata'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Security Acknowledgements',
   description: `Security Acknowledgements for ${siteConfig.name}`,
-  // Own canonical: without it Next inherits the layout's, which points at the home page.
-  alternates: { canonical: siteUrl('/security-acknowledgements') },
-}
+  path: '/security-acknowledgements',
+})
 
 const index = () => {
   return (

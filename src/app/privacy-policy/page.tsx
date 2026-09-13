@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { siteConfig, siteUrl } from '@/lib/site.config'
+import { pageMetadata } from '@/lib/pageMetadata'
 import ContactDetails from '@/components/policy/ContactDetails'
 import SupportingOrgDisclosure from '@/components/policy/SupportingOrgDisclosure'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Privacy Policy',
   description: `Privacy Policy for ${siteConfig.name}`,
-  // Own canonical: without it Next inherits the layout's, which points at the home page.
-  alternates: { canonical: siteUrl('/privacy-policy') },
-}
+  path: '/privacy-policy',
+})
 
 export default function PrivacyPolicy() {
   return (

@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
-import { siteConfig, siteUrl } from '@/lib/site.config'
+import { siteConfig } from '@/lib/site.config'
+import { pageMetadata } from '@/lib/pageMetadata'
 import ContactDetails from '@/components/policy/ContactDetails'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Terms of Service',
   description: `Terms of Service for ${siteConfig.name}`,
-  // Own canonical: without it Next inherits the layout's, which points at the home page.
-  alternates: { canonical: siteUrl('/terms-of-service') },
-}
+  path: '/terms-of-service',
+})
 
 export default function TermsOfService() {
   return (
