@@ -56,10 +56,26 @@ export type SiteConfig = {
    */
   shortDescription: string
   /**
-   * Canonical production URL with no trailing slash.
-   * Used by metadataBase, sitemap, and robots. The drift check verifies that
-   * this is updated whenever public/CNAME points to a custom domain, and
-   * that public/.well-known/security.txt no longer carries the placeholder.
+   * Canonical ORIGIN, with no trailing slash and no path.
+   *
+   * siteUrl() returns `url + sitePath(path)`, and sitePath() supplies the
+   * GitHub Pages base path, so this value carries the origin only and which
+   * origin is correct depends on public/CNAME -- the single signal
+   * .github/workflows/deploy.yml uses to decide the base path:
+   *
+   *  - public/CNAME present -> the custom domain it names, no base path.
+   *  - public/CNAME absent  -> `https://<owner>.github.io`, and sitePath()
+   *                            adds `/<repo>` to reach the project URL.
+   *
+   * Setting a custom domain here before the CNAME exists is silent and ships:
+   * every canonical, the sitemap and security.txt then read
+   * `https://your-domain.org/<repo>/page/`, an address neither host serves,
+   * and a link checker reports the site's own pages as broken. Measured on
+   * FFC-EX-neurospike.org, where 13 of 15 reported broken links were exactly
+   * this. scripts/check-drift.mjs (checkDeployOrigin) now fails on either half
+   * of the cutover being done without the other.
+   *
+   * Used by metadataBase, sitemap, robots and security.txt.
    */
   url: string
   /**

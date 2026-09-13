@@ -1,8 +1,17 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { siteConfig } from '../src/lib/site.config'
+import { githubPagesProjectPath } from './helpers/githubPagesProjectPath'
 
 const root = process.cwd()
+const projectPath = githubPagesProjectPath(root)
+const origin = siteConfig.url.replace(/\/$/, '')
+
+// The same signal .github/workflows/deploy.yml reads: a non-empty public/CNAME
+// means a custom domain with no base path, its absence means the GitHub Pages
+// project path.
+const hasCname = existsSync(join(root, 'public/CNAME'))
+const deployPrefix = hasCname ? '' : projectPath
 
 function readFixture(path: string): string {
   return readFileSync(join(root, path), 'utf8')
@@ -51,25 +60,21 @@ describe('deployable security artifacts', () => {
     expect(payload(rootCopy)).toBe(wellKnownPayload)
     expect(wellKnownPayload).toContain(`Contact: mailto:${siteConfig.contactEmail}`)
     expect(wellKnownPayload).toContain('Preferred-Languages: en')
-    expect(wellKnownPayload).toContain(`Canonical: ${siteConfig.url}/.well-known/security.txt`)
-    expect(wellKnownPayload).toContain(`Canonical: ${siteConfig.url}/security.txt`)
+    // One deploy serves one origin+prefix. deploy.yml derives the base path
+    // from public/CNAME alone, so this reads the same signal: with a CNAME the
+    // custom domain serves the root, without one GitHub Pages serves the
+    // project path. Asserting BOTH variants — which this did — is only
+    // satisfiable by gluing the apex origin to the project path, producing a
+    // URL no host serves.
     expect(wellKnownPayload).toContain(
-      `Canonical: ${siteConfig.url}/FFC-IN-Footer_Only_Template/.well-known/security.txt`
+      `Canonical: ${origin}${deployPrefix}/.well-known/security.txt`
+    )
+    expect(wellKnownPayload).toContain(`Canonical: ${origin}${deployPrefix}/security.txt`)
+    expect(wellKnownPayload).toContain(
+      `Policy: ${origin}${deployPrefix}${siteConfig.vulnerabilityDisclosurePath}`
     )
     expect(wellKnownPayload).toContain(
-      `Canonical: ${siteConfig.url}/FFC-IN-Footer_Only_Template/security.txt`
-    )
-    expect(wellKnownPayload).toContain(
-      `Policy: ${siteConfig.url}${siteConfig.vulnerabilityDisclosurePath}`
-    )
-    expect(wellKnownPayload).toContain(
-      `Policy: ${siteConfig.url}/FFC-IN-Footer_Only_Template${siteConfig.vulnerabilityDisclosurePath}`
-    )
-    expect(wellKnownPayload).toContain(
-      `Acknowledgments: ${siteConfig.url}/security-acknowledgements`
-    )
-    expect(wellKnownPayload).toContain(
-      `Acknowledgments: ${siteConfig.url}/FFC-IN-Footer_Only_Template/security-acknowledgements`
+      `Acknowledgments: ${origin}${deployPrefix}/security-acknowledgements`
     )
 
     const expires = wellKnownPayload.match(/^Expires:\s*(.+)$/m)?.[1]

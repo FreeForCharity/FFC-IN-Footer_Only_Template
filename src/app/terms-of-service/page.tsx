@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { siteUrl } from '@/lib/site.config'
+import { siteConfig, siteUrl } from '@/lib/site.config'
+import ContactDetails from '@/components/policy/ContactDetails'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Free For Charity',
-  description: 'Terms of Service for Free For Charity website',
+  title: 'Terms of Service',
+  description: `Terms of Service for ${siteConfig.name}`,
   // Own canonical: without it Next inherits the layout's, which points at the home page.
   alternates: { canonical: siteUrl('/terms-of-service') },
 }
@@ -12,7 +13,7 @@ export default function TermsOfService() {
   return (
     <main id="main-content" className="pt-[130px] pb-[54px]">
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
-        <div id="aria-font">
+        <div className="aria-font">
           {/* Effective Date */}
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <em>Effective Date: 11-20-2024</em>
@@ -20,7 +21,7 @@ export default function TermsOfService() {
 
           {/* Main Title */}
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
-            Free For Charity Terms of Service
+            {siteConfig.name} Terms of Service
           </h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">&nbsp;</p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">&nbsp;</p>
@@ -32,11 +33,27 @@ export default function TermsOfService() {
             Introduction
           </h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Welcome to Free For Charity! These Terms of Service (“Terms”) govern your access to and
-            use of our website, services, and platforms (collectively, “Services”), provided by Free
-            For Charity (“we,” “us,” or “our”). By accessing or using our Services, you agree to be
-            bound by these Terms. If you do not agree to these Terms, please do not use our
-            Services.
+            Welcome to {siteConfig.name}. These Terms of Service (“Terms”) govern your access to and
+            use of this website and the services offered through it (collectively, “Services”),
+            provided by {siteConfig.name} (“we,” “us,” or “our”). By accessing or using our
+            Services, you agree to be bound by these Terms. If you do not agree to these Terms,
+            please do not use our Services.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            This website is provided through the free website program run by{' '}
+            <a
+              href={siteConfig.supportedBy.url}
+              className="text-[#007bff] underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {siteConfig.supportedBy.name}
+            </a>
+            . {siteConfig.supportedBy.name} supplies the hosting and infrastructure;{' '}
+            {siteConfig.name} remains responsible for this site&apos;s content and for these Terms.{' '}
+            {siteConfig.supportedBy.name}&apos;s own terms govern its separate services and are not
+            incorporated into these Terms. How this arrangement affects your personal data is set
+            out in our Privacy Policy.
           </p>
 
           {/* Eligibility */}
@@ -86,14 +103,14 @@ export default function TermsOfService() {
               Collecting or storing personal data about other users without their consent.
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Using the Services to solicit funds outside the scope of Free For Charity’s mission.
+              Using the Services to solicit funds outside the scope of {siteConfig.name}’s mission.
             </li>
           </ul>
 
           {/* Donations */}
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Donations</h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            All donations made to Free For Charity are voluntary and non-refundable. By making a
+            All donations made to {siteConfig.name} are voluntary and non-refundable. By making a
             donation, you agree to our Donation Policy, which is incorporated by reference into
             these Terms.
           </p>
@@ -101,8 +118,8 @@ export default function TermsOfService() {
           {/* Payments */}
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Payments</h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            All payments made to Free For Charity are voluntary and non-refundable. No refunds will
-            be given due to the nonprofit nature of Free For Charity.
+            All payments made to {siteConfig.name} are voluntary and non-refundable. No refunds will
+            be given due to the nonprofit nature of {siteConfig.name}.
           </p>
 
           {/* Intellectual Property */}
@@ -113,7 +130,7 @@ export default function TermsOfService() {
           <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">Ownership</h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             All content, trademarks, logos, and other intellectual property included in our Services
-            are the property of Free For Charity or its licensors. You agree not to use, reproduce,
+            are the property of {siteConfig.name} or its licensors. You agree not to use, reproduce,
             distribute, or create derivative works based on our intellectual property without our
             express written consent.
           </p>
@@ -140,9 +157,9 @@ export default function TermsOfService() {
           </h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Our Services may contain links to third-party websites or services that are not owned or
-            controlled by Free For Charity. We are not responsible for the content, privacy
+            controlled by {siteConfig.name}. We are not responsible for the content, privacy
             policies, or practices of any third-party websites or services. You acknowledge and
-            agree that Free For Charity shall not be liable for any damages or loss caused by or in
+            agree that {siteConfig.name} shall not be liable for any damages or loss caused by or in
             connection with your use of any third-party websites or services.
           </p>
 
@@ -151,12 +168,11 @@ export default function TermsOfService() {
             Disclaimer of Warranties
           </h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Our Services are provided on an “as is” and “as available” basis. Free For Charity makes
-            no representations or warranties of any kind, express or implied, regarding the use or
-            the results of our Services in terms of accuracy, reliability, or otherwise. Free For
-            Charity disclaims all warranties, express or implied, including, but not limited to,
-            implied warranties of merchantability, fitness for a particular purpose, and
-            non-infringement.
+            Our Services are provided on an “as is” and “as available” basis. {siteConfig.name}{' '}
+            makes no representations or warranties of any kind, express or implied, regarding the
+            use or the results of our Services in terms of accuracy, reliability, or otherwise. We
+            disclaim all warranties, express or implied, including, but not limited to, implied
+            warranties of merchantability, fitness for a particular purpose, and non-infringement.
           </p>
 
           {/* Limitation of Liability */}
@@ -164,7 +180,7 @@ export default function TermsOfService() {
             Limitation of Liability
           </h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            To the fullest extent permitted by law, Free For Charity shall not be liable for any
+            To the fullest extent permitted by law, {siteConfig.name} shall not be liable for any
             indirect, incidental, special, consequential, or punitive damages, or any loss of
             profits or revenues, whether incurred directly or indirectly, or any loss of data, use,
             goodwill, or other intangible losses, resulting from:
@@ -191,7 +207,7 @@ export default function TermsOfService() {
             Indemnification
           </h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            You agree to indemnify, defend, and hold harmless Free For Charity, its officers,
+            You agree to indemnify, defend, and hold harmless {siteConfig.name}, its officers,
             directors, employees, and agents, from and against any and all claims, liabilities,
             damages, losses, and expenses, including reasonable attorneys’ fees, arising out of or
             in any way connected with your access to or use of our Services, or your violation of
@@ -234,20 +250,10 @@ export default function TermsOfService() {
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             If you have any questions about these Terms, please contact us at:
           </p>
-          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Free For Charity
-          </p>
-          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Email:{' '}
-            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
-              clarkemoyer@freeforcharity.org
-            </a>
-          </p>
-          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Phone: 520-222-8104
-          </p>
-          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Thank you for supporting Free For Charity and for complying with these Terms of Service.
+          <ContactDetails />
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500] pt-[10px]">
+            Thank you for supporting {siteConfig.name} and for complying with these Terms of
+            Service.
           </p>
         </div>
       </div>
