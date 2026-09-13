@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
-import { siteConfig, siteUrl } from '@/lib/site.config'
+import { siteConfig } from '@/lib/site.config'
+import { pageMetadata } from '@/lib/pageMetadata'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Donation Policy',
   description: `Donation Policy for ${siteConfig.name}`,
-  // Own canonical: without it Next inherits the layout's, which points at the home page.
-  alternates: { canonical: siteUrl('/donation-policy') },
-}
+  path: '/donation-policy',
+})
 
 export default function DonationPolicy() {
   return (

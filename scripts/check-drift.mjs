@@ -11,6 +11,8 @@
  *      and 404s on a project-path deploy.
  *  4b. siteConfig.url naming an origin this deploy is not served on -- the
  *      custom domain without the public/CNAME that would actually serve it.
+ *  4c. The 1200x630 social card missing, mis-sized, or referenced without
+ *      assetPath() -- see scripts/generate-og-card.mjs.
  *  5. Static security metadata (_headers and security.txt) drifting away from
  *     footer-only runtime origins or src/lib/site.config.ts. Note that
  *     public/_headers is inert on FFC deploys — see checkCspSync.
@@ -699,6 +701,90 @@ async function checkSecurityTxtSync(siteConfig) {
   }
 }
 
+/**
+ * The social card must exist, be the size the metadata claims, and be the
+ * image the metadata actually points at.
+ *
+ * Three separate ways this breaks, all of them silent in a build:
+ *  - the PNG is missing, so every share unfurls with no image at all;
+ *  - the PNG is there but not 1200x630, which under `summary_large_image` is
+ *    letterboxed or demoted to the small card -- the exact defect #23 filed;
+ *  - siteMetadata stops referencing it (or references it without assetPath),
+ *    so the URL loses the GitHub Pages base path and 404s.
+ *
+ * Reads the PNG's IHDR chunk directly: bytes 16..24 of any PNG are the width
+ * and height as big-endian uint32s. No image library, no build step.
+ */
+async function checkSocialCard() {
+  const cardPath = join(PUBLIC_DIR, 'og-card.png')
+
+  let header
+  try {
+    const bytes = await readFile(cardPath)
+    if (bytes.subarray(1, 4).toString('latin1') !== 'PNG') {
+      errors.push('public/og-card.png is not a PNG. Regenerate it with `pnpm run og:card`.')
+      return
+    }
+    header = { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }
+  } catch {
+    errors.push(
+      'public/og-card.png is missing -- every social share will unfurl with no image. ' +
+        'Generate it with `pnpm run og:card`.'
+    )
+    return
+  }
+
+  let metadataSource
+  try {
+    metadataSource = await readFile(join(SRC_DIR, 'lib', 'siteMetadata.ts'), 'utf8')
+  } catch {
+    errors.push('src/lib/siteMetadata.ts is missing; cannot verify the social card reference.')
+    return
+  }
+
+  if (!/assetPath\(\s*'\/og-card\.png'\s*\)/.test(metadataSource)) {
+    errors.push(
+      "src/lib/siteMetadata.ts does not reference assetPath('/og-card.png'). A social card URL " +
+        'written without assetPath() loses the GitHub Pages base path and 404s.'
+    )
+  }
+
+  // Read the dimensions from a window around the card reference rather than
+  // from the file at large: siteMetadata.ts may one day declare another image,
+  // and a guard that silently measured the wrong one would be worse than no
+  // guard. Window, not line anchors -- the declaration's formatting is
+  // prettier's business, not this check's.
+  const reference = metadataSource.indexOf('/og-card.png')
+  const window =
+    reference === -1 ? '' : metadataSource.slice(Math.max(0, reference - 400), reference + 400)
+
+  const declaredWidth = window.match(/width:\s*(\d+)/)
+  const declaredHeight = window.match(/height:\s*(\d+)/)
+  if (!declaredWidth || !declaredHeight) {
+    errors.push(
+      'src/lib/siteMetadata.ts does not declare the social card width and height beside the ' +
+        'og-card.png reference. Crawlers that cannot see the size fall back to the small card.'
+    )
+    return
+  }
+
+  const declared = { width: Number(declaredWidth[1]), height: Number(declaredHeight[1]) }
+  if (header.width !== declared.width || header.height !== declared.height) {
+    errors.push(
+      `public/og-card.png is ${header.width}x${header.height} but src/lib/siteMetadata.ts ` +
+        `declares ${declared.width}x${declared.height}. Crawlers trust the declared size; ` +
+        'regenerate the card with `pnpm run og:card` or correct the declaration.'
+    )
+  }
+
+  if (header.width !== 1200 || header.height !== 630) {
+    errors.push(
+      `public/og-card.png is ${header.width}x${header.height}. Facebook, X and LinkedIn all ` +
+        'document 1200x630 for a large summary card; anything else is letterboxed or demoted.'
+    )
+  }
+}
+
 const siteConfig = await readSiteConfig()
 checkSiteConfigUrl(siteConfig)
 await checkKebabCaseRoutes()
@@ -709,6 +795,7 @@ await checkDeployOrigin(siteConfig)
 await checkPlaceholderUrl(siteConfig)
 await checkCspSync()
 await checkSecurityTxtSync(siteConfig)
+await checkSocialCard()
 
 if (warnings.length) {
   console.warn('\nDrift warnings:')
