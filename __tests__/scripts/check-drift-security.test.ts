@@ -327,6 +327,73 @@ describe('security drift guard', () => {
     expect(result.status).toBe(0)
   })
 
+  // next/link applies basePath itself. Wrapping its href in sitePath() applies
+  // it twice, and every such link 404s on a project-path deploy. This shipped on
+  // FFC-EX-neurospike.org with the whole test suite green, because the suite
+  // builds with no base path — where sitePath() is the identity function and the
+  // doubling cannot happen. Hence a static check rather than another test.
+  const navComponent = (href: string) =>
+    [
+      "import Link from 'next/link'",
+      "import { sitePath } from '@/lib/site.config'",
+      'export default function Nav() {',
+      `  return <Link href={${href}}>Home</Link>`,
+      '}',
+      '',
+    ].join('\n')
+
+  it('fails when a next/link href is wrapped in sitePath()', () => {
+    const dir = makeFixture()
+    fixtures.push(dir)
+    writeFileSync(join(dir, 'src/app/nav.tsx'), navComponent("sitePath('/org-leadership')"))
+
+    const result = runDrift(dir)
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain('wraps a next/link href in sitePath()')
+    expect(result.output).toContain('applies it twice')
+  })
+
+  it('accepts a bare route path on next/link', () => {
+    const dir = makeFixture()
+    fixtures.push(dir)
+    writeFileSync(join(dir, 'src/app/nav.tsx'), navComponent("'/org-leadership'"))
+
+    const result = runDrift(dir)
+
+    expect(result.output).not.toContain('wraps a next/link href')
+    expect(result.status).toBe(0)
+  })
+
+  // A raw <a> to a file in public/ is exactly what sitePath() is for — Next does
+  // not process that href, so the base path must be applied by hand. Flagging it
+  // would push authors toward the bug this guard exists to prevent.
+  it('does not flag a raw <a> href wrapped in sitePath(), even beside a Link import', () => {
+    const dir = makeFixture()
+    fixtures.push(dir)
+    writeFileSync(
+      join(dir, 'src/app/nav.tsx'),
+      [
+        "import Link from 'next/link'",
+        "import { sitePath } from '@/lib/site.config'",
+        'export default function Nav() {',
+        '  return (',
+        '    <div>',
+        '      <Link href="/privacy-policy">Privacy</Link>',
+        "      <a href={sitePath('/.well-known/security.txt')}>security.txt</a>",
+        '    </div>',
+        '  )',
+        '}',
+        '',
+      ].join('\n')
+    )
+
+    const result = runDrift(dir)
+
+    expect(result.output).not.toContain('wraps a next/link href')
+    expect(result.status).toBe(0)
+  })
+
   it('fails when security.txt Expires is regex-shaped but not parseable', () => {
     const dir = makeFixture({
       wellKnown: payload('2027-02-30T00:00:00.000Z'),

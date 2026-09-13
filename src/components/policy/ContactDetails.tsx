@@ -28,14 +28,14 @@ export default function ContactDetails({ heading }: { heading?: string }) {
         </li>
         <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
           <strong>Email:</strong>{' '}
-          <a href={`mailto:${siteConfig.contactEmail}`} className="text-[#007bff] underline">
+          <a href={`mailto:${siteConfig.contactEmail}`} className="text-[#0062cc] underline">
             {siteConfig.contactEmail}
           </a>
         </li>
         {tel && display && (
           <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
             <strong>Phone:</strong>{' '}
-            <a href={`tel:${tel}`} className="text-[#007bff] underline">
+            <a href={`tel:${tel}`} className="text-[#0062cc] underline">
               {display}
             </a>
           </li>
@@ -52,7 +52,7 @@ export default function ContactDetails({ heading }: { heading?: string }) {
             a GitHub Pages project-path deploy it points at the domain root
             rather than at this site.
           */}
-          <a href={siteUrl('/')} className="text-[#007bff] underline">
+          <a href={siteUrl('/')} className="text-[#0062cc] underline">
             {siteUrl('/')}
           </a>
         </li>

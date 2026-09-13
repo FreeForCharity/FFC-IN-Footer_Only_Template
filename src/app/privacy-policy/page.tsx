@@ -38,7 +38,7 @@ export default function PrivacyPolicy() {
               siteUrl(), not siteConfig.url -- see ContactDetails: the origin
               alone drops the GitHub Pages base path and links off this site.
             */}
-            <a href={siteUrl('/')} className="text-[#007bff] underline">
+            <a href={siteUrl('/')} className="text-[#0062cc] underline">
               {siteUrl('/')}
             </a>
             , your privacy is one of our primary concerns. This Privacy Policy sets out what
@@ -184,7 +184,7 @@ export default function PrivacyPolicy() {
                 href="https://privacy.microsoft.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#007bff] underline"
+                className="text-[#0062cc] underline"
               >
                 https://privacy.microsoft.com/
               </a>
@@ -395,7 +395,7 @@ export default function PrivacyPolicy() {
             GDPR.) Everywhere else, including the United States, analytics cookies are set from your
             first pageview, and you can turn them off at any time via the Cookie Preferences link in
             the footer. See our{' '}
-            <Link href="/cookie-policy" className="text-[#007bff] underline">
+            <Link href="/cookie-policy" className="text-[#0062cc] underline">
               Cookie Policy
             </Link>{' '}
             for the full details.
@@ -408,7 +408,7 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights and complaints.</strong> Contact us at{' '}
-            <a href={`mailto:${siteConfig.contactEmail}`} className="text-[#007bff] underline">
+            <a href={`mailto:${siteConfig.contactEmail}`} className="text-[#0062cc] underline">
               {siteConfig.contactEmail}
             </a>{' '}
             to exercise any of these rights; we will respond within the time limits the GDPR sets.
@@ -459,7 +459,7 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights.</strong> Submit a request to{' '}
-            <a href={`mailto:${siteConfig.contactEmail}`} className="text-[#007bff] underline">
+            <a href={`mailto:${siteConfig.contactEmail}`} className="text-[#0062cc] underline">
               {siteConfig.contactEmail}
             </a>
             . We will verify your request using information associated with your interactions with

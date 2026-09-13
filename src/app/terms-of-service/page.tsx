@@ -43,7 +43,7 @@ export default function TermsOfService() {
             This website is provided through the free website program run by{' '}
             <a
               href={siteConfig.supportedBy.url}
-              className="text-[#007bff] underline"
+              className="text-[#0062cc] underline"
               target="_blank"
               rel="noopener noreferrer"
             >
