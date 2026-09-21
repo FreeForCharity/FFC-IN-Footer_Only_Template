@@ -18,7 +18,8 @@
  *
  * All keys present here keep the canonical names and shapes. This template
  * additionally exports a `sitePath()` helper for GitHub Pages basePath
- * handling (not part of the shared shape).
+ * handling and a `canonicalPath()` helper for the `trailingSlash` policy
+ * (neither is part of the shared shape).
  *
  * After editing, run `npm run check:drift` to verify nothing here drifts
  * away from FFC best practices, and `npm run check:rebrand` for a checklist
@@ -55,10 +56,26 @@ export type SiteConfig = {
    */
   shortDescription: string
   /**
-   * Canonical production URL with no trailing slash.
-   * Used by metadataBase, sitemap, and robots. The drift check verifies that
-   * this is updated whenever public/CNAME points to a custom domain, and
-   * that public/.well-known/security.txt no longer carries the placeholder.
+   * Canonical ORIGIN, with no trailing slash and no path.
+   *
+   * siteUrl() returns `url + sitePath(path)`, and sitePath() supplies the
+   * GitHub Pages base path, so this value carries the origin only and which
+   * origin is correct depends on public/CNAME -- the single signal
+   * .github/workflows/deploy.yml uses to decide the base path:
+   *
+   *  - public/CNAME present -> the custom domain it names, no base path.
+   *  - public/CNAME absent  -> `https://<owner>.github.io`, and sitePath()
+   *                            adds `/<repo>` to reach the project URL.
+   *
+   * Setting a custom domain here before the CNAME exists is silent and ships:
+   * every canonical, the sitemap and security.txt then read
+   * `https://your-domain.org/<repo>/page/`, an address neither host serves,
+   * and a link checker reports the site's own pages as broken. Measured on
+   * FFC-EX-neurospike.org, where 13 of 15 reported broken links were exactly
+   * this. scripts/check-drift.mjs (checkDeployOrigin) now fails on either half
+   * of the cutover being done without the other.
+   *
+   * Used by metadataBase, sitemap, robots and security.txt.
    */
   url: string
   /**
@@ -188,6 +205,10 @@ function assertSameOriginPath(path: string): void {
   }
 }
 
+/**
+ * Handles the GitHub Pages basePath ONLY. It deliberately does not touch
+ * trailing slashes — that is `canonicalPath()`'s job.
+ */
 export function sitePath(path = '/'): string {
   assertSameOriginPath(path)
 
@@ -204,10 +225,64 @@ export function sitePath(path = '/'): string {
   return `${basePath}${path}`
 }
 
+/**
+ * Mirrors `trailingSlash` in next.config.ts.
+ *
+ * With `output: 'export'` + `trailingSlash: true` the export writes
+ * `privacy-policy/index.html`, so the URL the site actually serves is
+ * `/privacy-policy/`. The bare `/privacy-policy` form is non-canonical — it
+ * redirects (or 404s, depending on the host), and must never be advertised in
+ * a sitemap or a canonical tag.
+ *
+ * `__tests__/app/sitemap.test.ts` fails if this constant drifts away from the
+ * real value in next.config.ts.
+ */
+export const trailingSlash: boolean = true
+
+/** True when the last path segment looks like a file (e.g. `/sitemap.xml`). */
+function isFilePath(path: string): boolean {
+  return path.slice(path.lastIndexOf('/') + 1).includes('.')
+}
+
+/**
+ * Returns `path` in the shape the deployed site serves it, i.e. with the
+ * trailing slash when `trailingSlash` is on. File paths such as
+ * `/sitemap.xml` are returned untouched — they are served verbatim.
+ */
+export function canonicalPath(path = '/'): string {
+  assertSameOriginPath(path)
+
+  // File paths (robots.txt, sitemap.xml) never take a slash in either mode.
+  if (isFilePath(path)) {
+    return path
+  }
+
+  // Root is '/' in both modes.
+  if (path === '/') {
+    return '/'
+  }
+
+  // Symmetric on purpose. An add-only helper silently does the wrong thing the
+  // day trailingSlash is turned off: an input already written as
+  // '/privacy-policy/' would keep its slash, and the sitemap would advertise a
+  // URL the export no longer publishes — the exact drift this helper exists to
+  // prevent, just in the other direction.
+  if (trailingSlash) {
+    return path.endsWith('/') ? path : `${path}/`
+  }
+
+  return path.replace(/\/+$/, '')
+}
+
+/**
+ * Absolute URL for a same-origin path, in the canonical (served) shape.
+ * Used by the sitemap, canonical tags and robots.txt so all three agree with
+ * what the static export actually publishes.
+ */
 export function siteUrl(path = '/'): string {
   assertSameOriginPath(path)
 
-  return `${siteConfig.url.replace(/\/$/, '')}${sitePath(path)}`
+  return `${siteConfig.url.replace(/\/$/, '')}${sitePath(canonicalPath(path))}`
 }
 
 export function twitterSite(): string | undefined {

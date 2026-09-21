@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { get } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -65,5 +65,83 @@ describe('link check static server', () => {
     const missing = await getText(`${server.url}/missing`)
     expect(missing.status).toBe(404)
     expect(missing.body).toContain('Not found')
+  })
+})
+
+describe('own-origin skip derivation', () => {
+  let fixtures: string[] = []
+
+  afterEach(() => {
+    for (const fixture of fixtures) rmSync(fixture, { recursive: true, force: true })
+    fixtures = []
+  })
+
+  const configSource = (url: string, supportedByUrl = 'https://freeforcharity.org') =>
+    [
+      'export const siteConfig = {',
+      "  name: 'Example Charity',",
+      `  url: '${url}',`,
+      '  supportedBy: {',
+      `    url: '${supportedByUrl}',`,
+      '  },',
+      '}',
+      '',
+    ].join('\n')
+
+  it('derives the skip pattern from the top-level url', async () => {
+    const { ownOriginSkipPattern } = await import('../../scripts/check-links.mjs')
+
+    expect(ownOriginSkipPattern(configSource('https://charity.example'))).toBe(
+      '^https://charity\\.example(/.*)?$'
+    )
+  })
+
+  // The supporting organization's site is a genuinely external link and must
+  // stay checked. A looser `url:` match would pick it up and silently stop
+  // verifying it.
+  it('does not pick up the nested supportedBy url', async () => {
+    const { ownOriginSkipPattern } = await import('../../scripts/check-links.mjs')
+
+    const pattern = ownOriginSkipPattern(configSource('https://charity.example'))
+    expect(pattern).not.toBeNull()
+    expect(new RegExp(pattern as string).test('https://freeforcharity.org/about')).toBe(false)
+    expect(new RegExp(pattern as string).test('https://charity.example/privacy-policy/')).toBe(true)
+  })
+
+  it('returns null rather than a wrong pattern when the url is unparseable', async () => {
+    const { ownOriginSkipPattern } = await import('../../scripts/check-links.mjs')
+
+    expect(ownOriginSkipPattern(configSource('not-a-url'))).toBeNull()
+    expect(ownOriginSkipPattern('export const siteConfig = {}\n')).toBeNull()
+  })
+
+  it('merges the derived pattern into the committed linkinator config', async () => {
+    const { resolveLinkinatorConfig } = await import('../../scripts/check-links.mjs')
+    const dir = mkdtempSync(join(tmpdir(), 'ffc-linkcfg-'))
+    fixtures.push(dir)
+
+    const configPath = join(dir, '.linkinatorrc.json')
+    const siteConfigPath = join(dir, 'site.config.ts')
+    writeFileSync(configPath, JSON.stringify({ skip: ['^mailto:.*'], timeout: 10000 }))
+    writeFileSync(siteConfigPath, configSource('https://charity.example'))
+
+    const resolved = resolveLinkinatorConfig(configPath, siteConfigPath)
+    expect(resolved).not.toBe(configPath)
+
+    const merged = JSON.parse(readFileSync(resolved, 'utf8'))
+    // The committed entries survive; only the derived one is added.
+    expect(merged.skip).toEqual(['^mailto:.*', '^https://charity\\.example(/.*)?$'])
+    expect(merged.timeout).toBe(10000)
+  })
+
+  it('falls back to the committed config when site.config.ts cannot be read', async () => {
+    const { resolveLinkinatorConfig } = await import('../../scripts/check-links.mjs')
+    const dir = mkdtempSync(join(tmpdir(), 'ffc-linkcfg-'))
+    fixtures.push(dir)
+
+    const configPath = join(dir, '.linkinatorrc.json')
+    writeFileSync(configPath, JSON.stringify({ skip: [] }))
+
+    expect(resolveLinkinatorConfig(configPath, join(dir, 'missing.ts'))).toBe(configPath)
   })
 })

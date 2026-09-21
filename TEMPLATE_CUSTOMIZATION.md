@@ -55,18 +55,36 @@ charity's name, URL, contact email, social links, etc.
 - **GitHub Pages base path** — chosen automatically by the deploy workflow
   based on whether `public/CNAME` exists. No manual workflow edit required.
 - **GTM container ID** — lives in
-  `src/components/google-tag-manager/index.tsx`. Leaving it as `GTM-TQ5H8HPR`
-  sends your analytics to Free For Charity — replace it early.
-- **E2E test expectations** — content-specific test values live in
-  [`tests/test.config.ts`](./tests/test.config.ts); update them alongside your
-  content edits.
+  `src/lib/analytics.config.ts`. Leaving it as `GTM-TQ5H8HPR`
+  sends your analytics to Free For Charity — replace it early. Setting it to
+  the empty string is supported and means "no container yet": both GTM
+  components then render nothing, instead of emitting a tag that requests
+  `gtm.js?id=` and fails in the browser.
+- **Phone number** — `siteConfig.phone` may be left as two empty strings if
+  your charity publishes no phone number. The footer then omits the "Call Us
+  Today" block entirely. Do **not** put a placeholder there: it ships as a
+  `tel:` link that looks callable and dials nothing.
+- **Footer quick links** — the list in `src/components/footer/index.tsx` must
+  only contain destinations your site actually serves. Add an entry per section
+  or route you add.
+- **Tests need no edits to survive a rebrand.** Both suites read your values
+  from `src/lib/site.config.ts` and `src/data/team/`, so changing your name,
+  EIN, contact details, socials or roster does not turn them red. The only
+  content-specific test file is
+  [`tests/test.config.ts`](./tests/test.config.ts), and it now derives from
+  `site.config.ts` too.
 
-After editing, **run `npm run check:drift`** to confirm nothing else still
+  If a test does fail after a rebrand, treat it as a real finding rather than
+  something to update: until #146 the suites asserted Free For Charity's own
+  identity literally, so a _correct_ rebrand failed 44 of them and a finished
+  site was indistinguishable from a broken one.
+
+After editing, **run `pnpm run check:drift`** to confirm nothing else still
 references the old placeholder values.
 
-### Are you done rebranding? — `npm run check:rebrand`
+### Are you done rebranding? — `pnpm run check:rebrand`
 
-Run **`npm run check:rebrand`** at any point to get a checklist of every value
+Run **`pnpm run check:rebrand`** at any point to get a checklist of every value
 that still matches the Free For Charity template defaults — charity name, EIN,
 phone, contact email, domain/CNAME, the GTM analytics container, and the sample
 team content. It is a guide, not a gate: it always exits 0 on the template

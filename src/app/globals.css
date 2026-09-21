@@ -44,10 +44,18 @@ body {
 #header {
   font-family: var(--font-open-sans), sans-serif !important;
 }
-#aria-font {
+/*
+ * Class, not id: this hook is applied to the footer and every policy page, so
+ * as an id it put several copies of `aria-font` in one document. IDs must be
+ * unique -- duplicates are invalid markup and break fragment navigation and
+ * accessibility tooling. The `.lato-font` rule below already carried both
+ * spellings for the same reason.
+ */
+.aria-font {
   font-family: var(--font-open-sans), sans-serif !important;
 }
-#lato-font {
+#lato-font,
+.lato-font {
   font-family: var(--font-lato), sans-serif !important;
 }
 #montserrat-font {
