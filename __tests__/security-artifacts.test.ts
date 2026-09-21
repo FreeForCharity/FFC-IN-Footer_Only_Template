@@ -1,8 +1,17 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { siteConfig } from '../src/lib/site.config'
+import { githubPagesProjectPath } from './helpers/githubPagesProjectPath'
 
 const root = process.cwd()
+const projectPath = githubPagesProjectPath(root)
+const origin = siteConfig.url.replace(/\/$/, '')
+
+// The same signal .github/workflows/deploy.yml reads: a non-empty public/CNAME
+// means a custom domain with no base path, its absence means the GitHub Pages
+// project path.
+const hasCname = existsSync(join(root, 'public/CNAME'))
+const deployPrefix = hasCname ? '' : projectPath
 
 function readFixture(path: string): string {
   return readFileSync(join(root, path), 'utf8')
@@ -17,7 +26,13 @@ function payload(body: string): string {
 }
 
 describe('deployable security artifacts', () => {
-  it('ships host-readable security headers with a footer-only CSP', () => {
+  // Names what this asserts and what it does NOT. public/_headers is inert on
+  // FFC deploys (FFC-Cloudflare-Automation#884) — no host in FFC's stack reads
+  // it — so this locks the forward-compatible copy's content for a possible
+  // future Cloudflare Pages deploy. It is not evidence that any of these
+  // headers reach a browser today; that is measured on the wire by
+  // FFC-Cloudflare-Automation#894, not by a file check.
+  it('keeps the forward-compatible _headers copy intact with a footer-only CSP', () => {
     expect(existsSync(join(root, 'public/_headers'))).toBe(true)
 
     const headers = readFixture('public/_headers')
@@ -45,25 +60,21 @@ describe('deployable security artifacts', () => {
     expect(payload(rootCopy)).toBe(wellKnownPayload)
     expect(wellKnownPayload).toContain(`Contact: mailto:${siteConfig.contactEmail}`)
     expect(wellKnownPayload).toContain('Preferred-Languages: en')
-    expect(wellKnownPayload).toContain(`Canonical: ${siteConfig.url}/.well-known/security.txt`)
-    expect(wellKnownPayload).toContain(`Canonical: ${siteConfig.url}/security.txt`)
+    // One deploy serves one origin+prefix. deploy.yml derives the base path
+    // from public/CNAME alone, so this reads the same signal: with a CNAME the
+    // custom domain serves the root, without one GitHub Pages serves the
+    // project path. Asserting BOTH variants — which this did — is only
+    // satisfiable by gluing the apex origin to the project path, producing a
+    // URL no host serves.
     expect(wellKnownPayload).toContain(
-      `Canonical: ${siteConfig.url}/FFC-IN-Footer_Only_Template/.well-known/security.txt`
+      `Canonical: ${origin}${deployPrefix}/.well-known/security.txt`
+    )
+    expect(wellKnownPayload).toContain(`Canonical: ${origin}${deployPrefix}/security.txt`)
+    expect(wellKnownPayload).toContain(
+      `Policy: ${origin}${deployPrefix}${siteConfig.vulnerabilityDisclosurePath}`
     )
     expect(wellKnownPayload).toContain(
-      `Canonical: ${siteConfig.url}/FFC-IN-Footer_Only_Template/security.txt`
-    )
-    expect(wellKnownPayload).toContain(
-      `Policy: ${siteConfig.url}${siteConfig.vulnerabilityDisclosurePath}`
-    )
-    expect(wellKnownPayload).toContain(
-      `Policy: ${siteConfig.url}/FFC-IN-Footer_Only_Template${siteConfig.vulnerabilityDisclosurePath}`
-    )
-    expect(wellKnownPayload).toContain(
-      `Acknowledgments: ${siteConfig.url}/security-acknowledgements`
-    )
-    expect(wellKnownPayload).toContain(
-      `Acknowledgments: ${siteConfig.url}/FFC-IN-Footer_Only_Template/security-acknowledgements`
+      `Acknowledgments: ${origin}${deployPrefix}/security-acknowledgements`
     )
 
     const expires = wellKnownPayload.match(/^Expires:\s*(.+)$/m)?.[1]

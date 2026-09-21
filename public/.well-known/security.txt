@@ -5,18 +5,18 @@
 # Expires must be a future RFC 3339 datetime. The included GitHub Action opens
 # an issue when the date gets close.
 #
-# Project-site Canonical lines include the GitHub Pages base path used when the
-# template is served without a custom domain. Root Canonical lines cover custom
-# domains. The drift checker enforces matching payloads.
+# The Canonical URLs below describe the ONE origin a deploy serves, because
+# .github/workflows/deploy.yml derives the GitHub Pages base path from a single
+# signal: with no public/CNAME the site is served at the project path, with one
+# it is served at the custom domain's root. Listing both variants is not
+# belt-and-braces -- it produces `https://custom.example/<repo>/security.txt`,
+# an address no host serves. scripts/check-drift.mjs reads the same signal and
+# fails if these lines and public/CNAME get out of step.
 
 Contact: mailto:clarkemoyer@freeforcharity.org
 Expires: 2027-12-31T00:00:00.000Z
 Preferred-Languages: en
-Canonical: https://ffcworkingsite1.org/.well-known/security.txt
-Canonical: https://ffcworkingsite1.org/security.txt
 Canonical: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/.well-known/security.txt
 Canonical: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/security.txt
-Policy: https://ffcworkingsite1.org/vulnerability-disclosure-policy
 Policy: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/vulnerability-disclosure-policy
-Acknowledgments: https://ffcworkingsite1.org/security-acknowledgements
 Acknowledgments: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/security-acknowledgements

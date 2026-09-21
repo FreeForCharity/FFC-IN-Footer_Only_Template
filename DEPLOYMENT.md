@@ -24,10 +24,10 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 
 ### Technology Stack
 
-- **Framework**: Next.js 16.2.9 with static export
+- **Framework**: Next.js 16.2.10 with static export
 - **Hosting**: GitHub Pages
 - **CI/CD**: GitHub Actions
-- **Node.js**: Version >=20.9.0
+- **Node.js**: Version >=24.0.0
 
 ---
 
@@ -82,13 +82,13 @@ The deployment workflow runs automatically when:
 Runs on all pull requests and pushes to main:
 
 1. **Checkout code**: Retrieves the latest code from the repository
-2. **Setup Node.js**: Installs Node.js 20.x
-3. **Install dependencies**: Runs `npm ci` for a clean installation
+2. **Setup Node.js**: Installs Node.js 24.x
+3. **Install dependencies**: Runs `pnpm install --frozen-lockfile` for a clean installation
 4. **Check formatting**: Runs Prettier format check
 5. **Run linting**: Executes ESLint to catch code issues
 6. **Run unit tests**: Executes Jest tests to verify code quality
 7. **Install Playwright**: Sets up E2E testing environment
-8. **Build site**: Runs `next build` with appropriate environment variables
+8. **Build site**: Runs `next build` without `NEXT_PUBLIC_BASE_PATH` (E2E tests need a base-path-free build)
 9. **Run E2E tests**: Validates the built site with Playwright tests
 
 #### Deploy Workflow Steps (`.github/workflows/deploy.yml`)
@@ -100,11 +100,11 @@ Triggered automatically after the CI workflow completes successfully on push to 
 The actual steps performed by the deploy workflow are:
 
 1. **Checkout code**: Retrieves the tested code from the repository
-2. **Setup Node.js**: Installs Node.js 20.x
+2. **Setup Node.js**: Installs Node.js 24.x
 3. **Setup Pages**: Configures GitHub Pages settings
 4. **Restore Next.js cache**: Restores build cache for faster builds
-5. **Install dependencies**: Runs `npm ci` for a clean installation
-6. **Build site**: Runs `next build` with basePath for GitHub Pages
+5. **Install dependencies**: Runs `pnpm install --frozen-lockfile` for a clean installation
+6. **Build site**: Runs `next build` with basePath computed automatically (empty when `public/CNAME` exists, otherwise `/<repo-name>`)
 7. **Upload artifact**: Packages the `./out` directory
 8. **Deploy to GitHub Pages**: Publishes the site to GitHub Pages (separate job)
 
@@ -132,7 +132,7 @@ While automated deployment is recommended, you can also deploy manually if neede
 
 ### Prerequisites
 
-- Node.js 20.x installed
+- Node.js 24.x installed
 - GitHub CLI (`gh`) or GitHub Personal Access Token
 - Write access to the repository
 
@@ -148,27 +148,27 @@ While automated deployment is recommended, you can also deploy manually if neede
 2. **Install dependencies**:
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Run tests** to ensure everything works:
 
    ```bash
-   npm run lint
-   npm test
-   npm run test:e2e
+   pnpm run lint
+   pnpm test
+   pnpm run test:e2e
    ```
 
 4. **Build the site** with the correct base path:
 
    ```bash
-   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template npm run build
+   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template pnpm run build
    ```
 
 5. **Verify the build**:
 
    ```bash
-   npm run preview
+   pnpm run preview
    # Visit http://localhost:3000 to test
    ```
 
@@ -183,8 +183,8 @@ While automated deployment is recommended, you can also deploy manually if neede
 If deploying to a custom domain (no basePath needed):
 
 ```bash
-npm run build
-npm run preview
+pnpm run build
+pnpm run preview
 ```
 
 The site will be built without a base path, making all assets available at the root.
@@ -250,7 +250,7 @@ Environment variables are set in the workflow file:
 
 ```yaml
 - name: Build with Next.js
-  run: npm run build
+  run: pnpm run build
   env:
     NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template
 ```
@@ -263,7 +263,12 @@ For local development, create a `.env.local` file:
 # Optional: Set basePath for testing GitHub Pages locally
 NEXT_PUBLIC_BASE_PATH=
 
-# Optional: Analytics IDs (only loaded with user consent)
+# Optional: Analytics IDs.
+#
+# These may or may not be read here: analytics wiring differs between FFC
+# sites, and on many of them the IDs are set in code instead. Check how this
+# repo actually wires analytics before relying on these variables, or on any
+# description of when a tag loads and what consent gates.
 NEXT_PUBLIC_GA_MEASUREMENT_ID=
 NEXT_PUBLIC_META_PIXEL_ID=
 NEXT_PUBLIC_CLARITY_PROJECT_ID=
@@ -312,9 +317,9 @@ NEXT_PUBLIC_CLARITY_PROJECT_ID=
 
 1. Run locally to reproduce:
    ```bash
-   npm run lint
-   npm test
-   npm run build
+   pnpm run lint
+   pnpm test
+   pnpm run build
    ```
 2. Fix any errors reported
 3. Commit and push fixes
@@ -365,10 +370,10 @@ To test the built site locally before deploying:
 
 ```bash
 # Build with GitHub Pages configuration
-NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template npm run build
+NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template pnpm run build
 
 # Serve the built site
-npm run preview
+pnpm run preview
 
 # Open http://localhost:3000/FFC_Single_Page_Template in your browser
 ```
@@ -437,9 +442,9 @@ For critical issues requiring immediate rollback:
 
 Before merging to main (which triggers deployment):
 
-- [ ] All tests pass locally (`npm test` and `npm run test:e2e`)
-- [ ] Linting passes (`npm run lint`)
-- [ ] Build succeeds (`npm run build`)
+- [ ] All tests pass locally (`pnpm test` and `pnpm run test:e2e`)
+- [ ] Linting passes (`pnpm run lint`)
+- [ ] Build succeeds (`pnpm run build`)
 - [ ] Manual testing completed on localhost
 - [ ] Screenshots taken for UI changes
 - [ ] Documentation updated

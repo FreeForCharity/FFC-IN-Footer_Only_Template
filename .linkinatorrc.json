@@ -1,9 +1,10 @@
 {
   "skip": [
+    "^https://ffcworkingsite1\\.org/.*",
     "^https://github.com/(?!FreeForCharity/FFC_Single_Page_Template).*",
-    "^https://www.linkedin.com/.*",
-    "^https://twitter.com/.*",
-    "^https://www.facebook.com/.*",
+    "^https://([a-z0-9-]+\\.)?linkedin\\.com/.*",
+    "^https://([a-z0-9-]+\\.)?twitter\\.com/.*",
+    "^https://([a-z0-9-]+\\.)?facebook\\.com/.*",
     "^https://forms.monday.com/.*",
     "^https://www\\.zeffy\\.com/privacy/?$",
     "^mailto:.*",
