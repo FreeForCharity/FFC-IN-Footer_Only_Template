@@ -19,7 +19,7 @@
  * the CWD a developer invokes it from.
  *
  * Ported from FFC-IN-FFC_Single_Page_Template scripts/rebrand-check.mjs and
- * adapted to the footer-only template (GTM ID lives in the GTM component, the
+ * adapted to the footer-only template (GTM ID lives in src/lib/analytics.config.ts, the
  * only sample content is the team data, contact email default differs).
  */
 import { readdir, readFile } from 'node:fs/promises'
@@ -108,11 +108,11 @@ async function checkSiteConfig() {
   }
 }
 
-// --- Analytics (src/components/google-tag-manager/index.tsx) ------------------
+// --- Analytics (src/lib/analytics.config.ts) ---------------------------------
 // The GTM container ID is FFC's REAL container — leaving it sends the fork's
 // analytics to Free For Charity. Flag it loudly.
 async function checkAnalyticsConfig() {
-  const rel = 'src/components/google-tag-manager/index.tsx'
+  const rel = 'src/lib/analytics.config.ts'
   const cfg = await readText(rel)
   if (cfg === null) return
   if (cfg.includes('GTM-TQ5H8HPR')) {
@@ -168,8 +168,28 @@ async function checkSampleContent() {
   }
 }
 
+// --- Donation policy "Use of Donations" ---------------------------------------
+// The template ships Free For Charity's OWN list of what donations fund (free
+// domains, hosting, volunteer coordination). That is accurate for FFC and wrong
+// for every adopter, and nothing else notices: the page carries no FFC name or
+// contact details, so the identity checks pass while the page still describes
+// another organization's programs to this charity's donors.
+async function checkDonationUse() {
+  const rel = 'src/app/donation-policy/page.tsx'
+  const body = await readText(rel)
+  if (body === null) return
+  if (body.includes('Free domain registration and hosting services')) {
+    flag(
+      'Donation policy',
+      '"Use of Donations" still lists Free For Charity\u2019s services \u2014 replace it with what YOUR donations fund',
+      rel
+    )
+  }
+}
+
 await checkSiteConfig()
 await checkAnalyticsConfig()
+await checkDonationUse()
 await checkDeployment()
 await checkSampleContent()
 

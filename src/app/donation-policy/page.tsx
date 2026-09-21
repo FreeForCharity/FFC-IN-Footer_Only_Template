@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
-import { siteUrl } from '@/lib/site.config'
+import { siteConfig } from '@/lib/site.config'
+import { pageMetadata } from '@/lib/pageMetadata'
 
-export const metadata: Metadata = {
-  title: 'Donation Policy | Free For Charity',
-  description: 'Donation Policy for Free For Charity website',
-  // Own canonical: without it Next inherits the layout's, which points at the home page.
-  alternates: { canonical: siteUrl('/donation-policy') },
-}
+export const metadata: Metadata = pageMetadata({
+  title: 'Donation Policy',
+  description: `Donation Policy for ${siteConfig.name}`,
+  path: '/donation-policy',
+})
 
 export default function DonationPolicy() {
   return (
@@ -73,10 +73,7 @@ export default function DonationPolicy() {
           <p>For questions about donations or this policy, please contact us at:</p>
           <p>
             Email:{' '}
-            <a
-              href="mailto:clarkemoyer@freeforcharity.org"
-              className="text-primary hover:underline"
-            >
+            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-primary underline">
               clarkemoyer@freeforcharity.org
             </a>
             <br />

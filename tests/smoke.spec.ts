@@ -46,15 +46,15 @@ const footerPolicyLinks = [
   // The charity's own donation policy. Matched with exact names below so this
   // does not also match "Free For Charity Donation Policy".
   { name: 'Donation Policy', pathSuffix: '/donation-policy' },
-  { name: 'Free For Charity Privacy Policy', pathSuffix: '/privacy-policy' },
-  { name: 'Free For Charity Cookie Policy', pathSuffix: '/cookie-policy' },
-  { name: 'Free For Charity Terms of Service', pathSuffix: '/terms-of-service' },
+  { name: `${testConfig.site.name} Privacy Policy`, pathSuffix: '/privacy-policy' },
+  { name: `${testConfig.site.name} Cookie Policy`, pathSuffix: '/cookie-policy' },
+  { name: `${testConfig.site.name} Terms of Service`, pathSuffix: '/terms-of-service' },
   {
-    name: 'Free For Charity Vulnerability Disclosure Policy',
+    name: `${testConfig.site.name} Vulnerability Disclosure Policy`,
     pathSuffix: '/vulnerability-disclosure-policy',
   },
   {
-    name: 'Free For Charity Security Acknowledgement',
+    name: `${testConfig.site.name} Security Acknowledgement`,
     pathSuffix: '/security-acknowledgements',
   },
 ]
@@ -85,7 +85,9 @@ test.describe('Post-deploy smoke tests', () => {
     await expect(footer.getByRole('heading', { name: 'Contact Us' })).toBeVisible()
 
     // Policy section heading
-    await expect(footer.getByRole('heading', { name: 'Free For Charity Policy' })).toBeVisible()
+    await expect(
+      footer.getByRole('heading', { name: `${testConfig.site.name} Policy` })
+    ).toBeVisible()
   })
 
   test('footer contains policy links with correct paths', async ({ page }) => {

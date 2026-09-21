@@ -1,22 +1,23 @@
 import type { Metadata } from 'next'
-import { siteUrl } from '@/lib/site.config'
+import { siteConfig } from '@/lib/site.config'
+import ContactDetails from '@/components/policy/ContactDetails'
 import Link from 'next/link'
+import { pageMetadata } from '@/lib/pageMetadata'
 
-export const metadata: Metadata = {
-  title: 'Cookie Policy | Free For Charity',
-  description: 'Cookie Policy for Free For Charity website',
-  // Own canonical: without it Next inherits the layout's, which points at the home page.
-  alternates: { canonical: siteUrl('/cookie-policy') },
-}
+export const metadata: Metadata = pageMetadata({
+  title: 'Cookie Policy',
+  description: `Cookie Policy for ${siteConfig.name}`,
+  path: '/cookie-policy',
+})
 
 // Update this date when the policy changes
-const LAST_UPDATED = 'December 7, 2025'
+const LAST_UPDATED = 'August 30, 2026'
 
 export default function CookiePolicy() {
   return (
     <main id="main-content" className="pt-[140px] pb-[54px]">
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
-        <div id="aria-font">
+        <div className="aria-font">
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             <strong>Cookie Policy</strong>
           </h1>
@@ -56,10 +57,12 @@ export default function CookiePolicy() {
               Remember your cookie consent preferences
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Understand how you use our website (with your consent)
+              Understand how you use our website (under the regional consent model described in
+              section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Analyze website traffic and user behavior (with your consent)
+              Analyze website traffic and user behavior (under the regional consent model described
+              in section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               Improve our website and user experience
@@ -152,7 +155,7 @@ export default function CookiePolicy() {
                 href="https://privacy.microsoft.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://privacy.microsoft.com/
               </a>
@@ -163,7 +166,7 @@ export default function CookiePolicy() {
                 href="https://legal.hubspot.com/privacy-policy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://legal.hubspot.com/privacy-policy
               </a>
@@ -200,7 +203,7 @@ export default function CookiePolicy() {
                 href="https://www.zeffy.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://www.zeffy.com/privacy
               </a>
@@ -209,13 +212,38 @@ export default function CookiePolicy() {
 
           {/* 3.3 Analytics Cookies */}
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500] mt-[1em]">
-            <strong>3.3 Analytics Cookies (Requires Consent)</strong>
+            <strong>3.3 Analytics Cookies</strong>
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             These cookies help us understand how visitors interact with our website by collecting
             and reporting information anonymously. We use this information to improve our website
             and user experience.
           </p>
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+            <p className="text-sm text-[#333] mb-2">
+              <strong>When we ask permission first</strong>
+            </p>
+            <p className="text-sm text-[#666] mb-2">
+              If you are in the European Economic Area, the United Kingdom, or Switzerland, Google
+              Analytics sets <strong>no cookies and collects no identifiers</strong> until you
+              accept. It still counts your visit in an aggregate, cookie-free way so we know how
+              many people used the site — that measurement cannot be tied back to you or to your
+              next visit.
+            </p>
+            <p className="text-sm text-[#666] mb-2">
+              Everywhere else, Google Analytics cookies are set from your first visit. You can turn
+              them off at any time using the Cookie Preferences link in our footer, and we will
+              delete the cookies listed below when you do. Which of these defaults applies to you is
+              determined by Google from your IP address at the time of your visit; IP geolocation is
+              approximate.
+            </p>
+            <p className="text-sm text-[#666]">
+              <strong>Microsoft Clarity is different.</strong> It records how visitors move through
+              pages, so it runs <strong>only if you explicitly accept</strong> analytics cookies —
+              everywhere in the world, not just in Europe. Declining, or simply not answering the
+              banner, keeps it off.
+            </p>
+          </div>
 
           {/* Google Analytics */}
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
@@ -259,7 +287,7 @@ export default function CookiePolicy() {
                 href="https://policies.google.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://policies.google.com/privacy
               </a>
@@ -302,7 +330,7 @@ export default function CookiePolicy() {
                 href="https://privacy.microsoft.com/en-us/privacystatement"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://privacy.microsoft.com/privacystatement
               </a>
@@ -355,7 +383,7 @@ export default function CookiePolicy() {
                 href="https://www.facebook.com/privacy/policy/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://www.facebook.com/privacy/policy/
               </a>
@@ -435,7 +463,7 @@ export default function CookiePolicy() {
                 href="https://tools.google.com/dlpage/gaoptout"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 Google Analytics Opt-out Browser Add-on
               </a>
@@ -446,7 +474,7 @@ export default function CookiePolicy() {
                 href="https://www.facebook.com/settings/?tab=ads"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 Facebook Ad Settings
               </a>
@@ -457,15 +485,19 @@ export default function CookiePolicy() {
           <ol className="list-decimal list-inside pb-[1em]" start={5}>
             <li>
               <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Do Not Track Signals</strong>
+                <strong>Do Not Track and Global Privacy Control</strong>
               </h2>
             </li>
           </ol>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Some browsers have a &quot;Do Not Track&quot; feature that lets you tell websites that
-            you do not want to have your online activities tracked. At this time, we do not respond
-            to browser &quot;Do Not Track&quot; signals. However, you can control cookies through
-            our cookie consent banner.
+            We do not sell or share personal information as defined by the CCPA/CPRA, so there is
+            nothing for a Global Privacy Control or Do Not Track signal to opt out of, and this site
+            does not read those browser signals. In the EEA, the UK, and Switzerland, analytics and
+            marketing cookies are off until you opt in through the consent banner. Everywhere else,
+            analytics cookies are set from your first visit under Google Consent Mode; you can turn
+            them off at any time via the Cookie Preferences link in the footer, and we delete the
+            cookies this site set when you do. Session recording (Microsoft Clarity) and marketing
+            tags (Meta Pixel) load only after your explicit opt-in, everywhere in the world.
           </p>
 
           {/* Section 6 */}
@@ -493,23 +525,7 @@ export default function CookiePolicy() {
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             If you have questions about our use of cookies, please contact us:
           </p>
-          <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Email:</strong>{' '}
-              <a href="mailto:privacy@freeforcharity.org" className="text-blue-600 hover:underline">
-                privacy@freeforcharity.org
-              </a>
-            </li>
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Emergency Contact:</strong> Clarke Moyer
-            </li>
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Phone:</strong>{' '}
-              <a href="tel:520-222-8104" className="text-blue-600 hover:underline">
-                520-222-8104
-              </a>
-            </li>
-          </ul>
+          <ContactDetails />
 
           {/* Section 8 */}
           <ol className="list-decimal list-inside pb-[1em]" start={8}>
@@ -521,7 +537,7 @@ export default function CookiePolicy() {
           </ol>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             For more information about how we handle your personal data, please see our{' '}
-            <Link href="/privacy-policy" className="text-blue-600 hover:underline">
+            <Link href="/privacy-policy" className="text-blue-600 underline">
               Privacy Policy
             </Link>
             .
