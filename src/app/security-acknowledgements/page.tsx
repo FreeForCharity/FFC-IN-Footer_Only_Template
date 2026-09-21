@@ -1,11 +1,14 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { siteConfig } from '@/lib/site.config'
+import { pageMetadata } from '@/lib/pageMetadata'
 
-export const metadata: Metadata = {
-  title: 'Security Acknowledgements | Free For Charity',
-  description: 'Security Acknowledgements for Free For Charity website',
-}
+export const metadata: Metadata = pageMetadata({
+  title: 'Security Acknowledgements',
+  description: `Security Acknowledgements for ${siteConfig.name}`,
+  path: '/security-acknowledgements',
+})
 
 const index = () => {
   return (
@@ -16,7 +19,7 @@ const index = () => {
             Security Acknowledgements
           </h2>
           <p className="mb-[20px] pb-[10px] text-[14px] font-[500] leading-[25px] text-[#666]">
-            Free For Charity would like to extend our sincere gratitude to the following security
+            {siteConfig.name} would like to extend our sincere gratitude to the following security
             researchers for their invaluable contributions in helping us keep our platform safe. By
             responsibly disclosing vulnerabilities, they have played a crucial role in protecting
             our users and our data.

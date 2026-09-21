@@ -30,8 +30,8 @@ Both paths converge on the same validation gate that unlocks the domain step.
 ```bash
 git clone https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template.git
 cd FFC-IN-Footer_Only_Template
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000)
@@ -131,23 +131,23 @@ Charities can fork this template, replace the content with their own organizatio
 
 ### Commands
 
-| Command            | Purpose                   |
-| ------------------ | ------------------------- |
-| `npm run dev`      | Start development server  |
-| `npm run format`   | Format code with Prettier |
-| `npm run lint`     | Run ESLint                |
-| `npm test`         | Run Jest unit tests       |
-| `npm run build`    | Production static build   |
-| `npm run test:e2e` | Run Playwright E2E tests  |
+| Command             | Purpose                   |
+| ------------------- | ------------------------- |
+| `pnpm run dev`      | Start development server  |
+| `pnpm run format`   | Format code with Prettier |
+| `pnpm run lint`     | Run ESLint                |
+| `pnpm test`         | Run Jest unit tests       |
+| `pnpm run build`    | Production static build   |
+| `pnpm run test:e2e` | Run Playwright E2E tests  |
 
 ### Pre-Commit Checklist
 
 ```bash
-npm run format
-npm run lint
-npm test
-npm run build
-npm run test:e2e
+pnpm run format
+pnpm run lint
+pnpm test
+pnpm run build
+pnpm run test:e2e
 ```
 
 ### Testing
@@ -181,7 +181,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 - **Policy content**: Update policy page content in `src/app/*/page.tsx`
 - **Analytics**: Set your GTM ID in `src/components/google-tag-manager/index.tsx`
 - **Branding**: Replace logos in `public/` and update color scheme in `globals.css`
-- **Verify completeness**: Run `npm run check:rebrand` for a checklist of FFC template defaults you still need to replace (the permanent "Supported by Free For Charity" attribution is excluded — it stays)
+- **Verify completeness**: Run `pnpm run check:rebrand` for a checklist of FFC template defaults you still need to replace (the permanent "Supported by Free For Charity" attribution is excluded — it stays)
 
 ## Documentation
 
