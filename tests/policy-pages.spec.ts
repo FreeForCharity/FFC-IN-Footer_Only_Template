@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { testConfig } from './test.config'
 
 /**
  * Policy page smoke tests
@@ -24,14 +25,17 @@ const policyPages = [
 // With trailingSlash enabled, Next.js Link renders hrefs with trailing slashes.
 const footerPolicyLinks = [
   { name: 'Free For Charity Donation Policy', href: '/free-for-charity-donation-policy/' },
-  { name: 'Free For Charity Privacy Policy', href: '/privacy-policy/' },
-  { name: 'Free For Charity Cookie Policy', href: '/cookie-policy/' },
-  { name: 'Free For Charity Terms of Service', href: '/terms-of-service/' },
+  // The charity's own donation policy. Matched with exact names below so this
+  // does not also match "Free For Charity Donation Policy".
+  { name: 'Donation Policy', href: '/donation-policy/' },
+  { name: `${testConfig.site.name} Privacy Policy`, href: '/privacy-policy/' },
+  { name: `${testConfig.site.name} Cookie Policy`, href: '/cookie-policy/' },
+  { name: `${testConfig.site.name} Terms of Service`, href: '/terms-of-service/' },
   {
-    name: 'Free For Charity Vulnerability Disclosure Policy',
+    name: `${testConfig.site.name} Vulnerability Disclosure Policy`,
     href: '/vulnerability-disclosure-policy/',
   },
-  { name: 'Free For Charity Security Acknowledgement', href: '/security-acknowledgements/' },
+  { name: `${testConfig.site.name} Security Acknowledgement`, href: '/security-acknowledgements/' },
 ]
 
 test.describe('Policy pages', () => {
@@ -50,7 +54,9 @@ test.describe('Policy pages', () => {
     const footer = page.locator('footer')
 
     for (const { name, href } of footerPolicyLinks) {
-      const link = footer.getByRole('link', { name })
+      // exact: true — "Donation Policy" is a substring of "Free For Charity
+      // Donation Policy", so substring matching would hit both links.
+      const link = footer.getByRole('link', { name, exact: true })
       await expect(link).toBeVisible()
       await expect(link).toHaveAttribute('href', href)
     }

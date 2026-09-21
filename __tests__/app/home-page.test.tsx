@@ -5,17 +5,16 @@ import { render, screen } from '@testing-library/react'
 jest.mock('../../src/components/ui/TeamMemberCard', () => {
   return function MockTeamMemberCard({
     name,
-    title,
+    role,
   }: {
     name: string
-    title: string
-    imageUrl: string
-    linkedinUrl: string
+    role: string
+    linkedinUrl?: string
   }) {
     return (
       <div data-testid="team-member-card">
         <span>{name}</span>
-        <span>{title}</span>
+        <span>{role}</span>
       </div>
     )
   }

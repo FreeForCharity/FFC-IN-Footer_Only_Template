@@ -31,6 +31,11 @@ describe('CookieConsent component', () => {
   beforeEach(() => {
     localStorageMock.clear()
     window.dataLayer = []
+    window.gtag = jest.fn()
+  })
+
+  afterEach(() => {
+    delete window.gtag
   })
 
   it('should show cookie banner on first visit', async () => {
@@ -393,6 +398,134 @@ describe('CookieConsent component', () => {
     localStorageMock.setItem('cookie-consent', JSON.stringify({ foo: 'bar' }))
     render(<CookieConsent />)
     expect(screen.queryByText(/cookies/i) || screen.queryByText('Accept All')).toBeTruthy()
+  })
+
+  it('should push a Google Consent Mode update on accept', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Accept All')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Accept All'))
+
+    expect(window.gtag).toHaveBeenCalledWith(
+      'consent',
+      'update',
+      expect.objectContaining({
+        analytics_storage: 'granted',
+        ad_storage: 'granted',
+      })
+    )
+  })
+
+  it('should push a denied Google Consent Mode update on decline', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Decline All')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Decline All'))
+
+    expect(window.gtag).toHaveBeenCalledWith(
+      'consent',
+      'update',
+      expect.objectContaining({
+        analytics_storage: 'denied',
+        ad_storage: 'denied',
+      })
+    )
+  })
+
+  it('should push a Google Consent Mode update when restoring a stored choice on load', async () => {
+    localStorageMock.setItem(
+      'cookie-consent',
+      JSON.stringify({
+        necessary: true,
+        functional: true,
+        analytics: true,
+        marketing: false,
+      })
+    )
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(window.gtag).toHaveBeenCalledWith(
+        'consent',
+        'update',
+        expect.objectContaining({
+          analytics_storage: 'granted',
+          ad_storage: 'denied',
+        })
+      )
+    })
+  })
+
+  it('should not inject Clarity or Meta Pixel scripts with placeholder ids even on accept', async () => {
+    render(<CookieConsent />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Accept All')).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    fireEvent.click(screen.getByText('Accept All'))
+
+    // The shipped placeholder ids keep every direct loader inert.
+    expect(document.querySelector('script[src*="clarity.ms"]')).toBeNull()
+    expect(document.querySelector('script[src*="fbevents.js"]')).toBeNull()
+    expect(document.querySelector('script[src*="googletagmanager.com/gtag"]')).toBeNull()
+  })
+
+  it('should expire tracking cookies across host-only and dotted-domain scopes on decline', async () => {
+    // Cookies set with a leading-dot Domain attribute (GA4's default for
+    // _ga) can only be deleted by a write carrying that same attribute —
+    // record every cookie write to verify all scopes are attempted.
+    const writes: string[] = []
+    const cookieDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie')!
+    Object.defineProperty(document, 'cookie', {
+      configurable: true,
+      get: () => cookieDescriptor.get!.call(document),
+      set: (value: string) => {
+        writes.push(value)
+        cookieDescriptor.set!.call(document, value)
+      },
+    })
+
+    try {
+      render(<CookieConsent />)
+
+      await waitFor(
+        () => {
+          expect(screen.getByText('Decline All')).toBeInTheDocument()
+        },
+        { timeout: 2000 }
+      )
+
+      fireEvent.click(screen.getByText('Decline All'))
+
+      // jsdom runs on localhost — a single-label host, where a Domain
+      // attribute is invalid — so label-walking produces no domain
+      // candidates and only the host-only expiry is written. (Multi-label
+      // hostnames are covered in CookieConsent.cookie-scopes.test.tsx.)
+      for (const name of ['_ga', '_gid', '_fbp', 'fr', '_clck', '_clsk']) {
+        const expiries = writes.filter((w) => w.startsWith(`${name}=`) && w.includes('01 Jan 1970'))
+        expect(expiries.some((w) => !w.includes('domain='))).toBe(true)
+        expect(expiries.some((w) => w.includes('domain='))).toBe(false)
+      }
+    } finally {
+      Reflect.deleteProperty(document, 'cookie')
+    }
   })
 
   it('should push denied consent to dataLayer on decline', async () => {

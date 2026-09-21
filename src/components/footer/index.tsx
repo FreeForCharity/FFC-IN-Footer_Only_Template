@@ -11,6 +11,10 @@ import type { LucideIcon } from 'lucide-react'
 import { assetPath } from '@/lib/assetPath'
 import { siteConfig } from '@/lib/site.config'
 
+// Maps a social link's label (as defined in siteConfig.social) to an icon.
+// Unknown labels fall back to a generic link icon (Link2) so a charity
+// that adds a new social network — Bluesky, Mastodon, YouTube, etc. — gets a
+// sensible placeholder instead of a misleading GitHub mark.
 const socialIconByLabel: Record<string, IconType | LucideIcon> = {
   Facebook: FaFacebookF,
   'X (Twitter)': FaXTwitter,
@@ -23,8 +27,6 @@ const socialIconByLabel: Record<string, IconType | LucideIcon> = {
 const Footer: React.FC = () => {
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
   const socialLinks = siteConfig.social.filter((social) => social.href)
-  const quickLinks = siteConfig.quickLinks.filter((link) => link.href)
-  const policyLinks = siteConfig.policyLinks.filter((link) => link.href)
 
   return (
     <footer className="bg-black text-white">
@@ -35,20 +37,22 @@ const Footer: React.FC = () => {
 
           <div className="space-y-4">
             <a
-              href={siteConfig.guideStar.profileHref}
-              aria-label={siteConfig.guideStar.profileAriaLabel}
+              href={siteConfig.guidestar.profileUrl}
+              aria-label={`View ${siteConfig.name} GuideStar Profile`}
             >
-              <img src={assetPath('/Svgs/footerImage.svg')} alt={siteConfig.guideStar.sealAlt} />
+              <img
+                src={assetPath('/Svgs/footerImage.svg')}
+                alt="GuideStar Platinum Seal of Transparency"
+              />
             </a>
             <Link
-              href={siteConfig.guideStar.sharedProfileHref}
+              href={siteConfig.guidestar.directProfileUrl}
               className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
                 border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
-                transition-all duration-300 hover:border-transparent"
-              id="aria-font"
+                transition-all duration-300 hover:border-transparent aria-font"
             >
               <span className="text-[17px] font-medium leading-tight sm:text-[18px] md:text-[20px] transition-transform duration-300 group-hover:-translate-x-1">
-                {siteConfig.guideStar.sharedProfileLabel}
+                Direct GuideStar Profile Link
               </span>
 
               <ArrowRight
@@ -70,32 +74,105 @@ const Footer: React.FC = () => {
           <h3 className="text-[28px] text-white">Quick Links</h3>
 
           <ul className="space-y-2 text-sm" id="lato-font">
-            {quickLinks.map((link) => (
-              <li key={link.label}>
-                <Link
-                  href={link.href}
-                  target={link.href.startsWith('http') ? '_blank' : undefined}
-                  className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {[
+              // Adopters: add an entry here for each section or route your own
+              // site serves.
+              //
+              // Only destinations this template ACTUALLY renders are listed.
+              // Until #146 these were eight conventional anchors borrowed from
+              // the Single Page template — /#hero, /#mission, /#programs,
+              // /#events, /#donate, /#volunteer, /#faq — and a footer-only site
+              // has none of those sections, so seven of the eight links did
+              // nothing on the template's own deployment and on every fork that
+              // had not yet added the sections. A link that silently goes
+              // nowhere is worse than an absent one: it looks navigable, and a
+              // screen reader announces it as a working link.
+              //
+              // `__tests__/components/Footer.test.tsx` resolves every entry
+              // below against the sitemap routes, and every fragment against
+              // the ids the home page really renders, so a dead link added here
+              // fails the suite instead of shipping.
+              { name: 'Home', href: '/' },
+              { name: 'Team', href: '/#team' },
+              // FFC footer standard: every supported charity site links back
+              // to the supporting org's hub. Always rendered — keep this
+              // entry when customizing a fork.
+              { name: 'Supported Charity Login', href: siteConfig.supportedBy.hubUrl },
+            ].map((link) => {
+              const isExternal = link.href.startsWith('http')
+              return (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    target={isExternal ? '_blank' : undefined}
+                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                    className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
 
           <div className="space-y-3">
-            <h4 className="text-[28px] text-white">{siteConfig.policyHeading}</h4>
+            <h4 className="text-[28px] text-white">{siteConfig.name} Policy</h4>
             <ul className="space-y-1 text-sm" id="lato-font">
-              {policyLinks.map((link) => (
-                <li key={link.label}>
+              {[
+                {
+                  // Hardcoded on purpose: this page documents FFC's OWN
+                  // donation policy, so the label must keep FFC's name even
+                  // after a fork rebrands siteConfig.name. The adjacent
+                  // '/donation-policy' entry is the charity's own policy.
+                  name: 'Free For Charity Donation Policy',
+                  href: '/free-for-charity-donation-policy',
+                },
+                {
+                  name: 'Donation Policy',
+                  href: '/donation-policy',
+                },
+                {
+                  name: `${siteConfig.name} Privacy Policy`,
+                  href: '/privacy-policy',
+                },
+                {
+                  name: `${siteConfig.name} Cookie Policy`,
+                  href: '/cookie-policy',
+                },
+                {
+                  name: `${siteConfig.name} Terms of Service`,
+                  href: '/terms-of-service',
+                },
+                {
+                  name: `${siteConfig.name} Vulnerability Disclosure Policy`,
+                  href: '/vulnerability-disclosure-policy',
+                },
+                {
+                  name: `${siteConfig.name} Security Acknowledgement`,
+                  href: '/security-acknowledgements',
+                },
+              ].map((link) => (
+                <li key={link.name}>
                   <Link
                     href={link.href}
                     className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
                   >
-                    {link.label}
+                    {link.name}
                   </Link>
                 </li>
               ))}
+              <li>
+                {/* Persistent consent re-entry point (withdrawing consent must
+                    stay as easy as giving it): reopens the preferences modal
+                    the cookie-consent banner registers on window. */}
+                <button
+                  type="button"
+                  onClick={() => window.openCookiePreferences?.()}
+                  className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
+                >
+                  Cookie Preferences
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -111,41 +188,49 @@ const Footer: React.FC = () => {
                 <p className="font-[500] text-[22px]">E-mail</p>
                 <a
                   href={`mailto:${siteConfig.contactEmail}`}
-                  className="font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all"
-                  id="aria-font"
+                  className="aria-font font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all"
                 >
                   {siteConfig.contactEmail}
                 </a>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <Phone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-[500] text-[22px]">{siteConfig.phone.label}</p>
-                <a
-                  href={siteConfig.phone.href}
-                  className="font-[500] text-[16px] hover:text-cyan-400 transition-colors"
-                  id="aria-font"
-                >
-                  {siteConfig.phone.display}
-                </a>
+            {/*
+              Rendered only when a number is actually configured. A charity with
+              no published phone number leaves siteConfig.phone empty, and an
+              empty `tel:` link is worse than an absent one: it still looks
+              callable to a sighted user and is still announced as a phone link
+              by a screen reader, but dials nothing. Before this guard the only
+              way to express "no phone" was a placeholder string, which shipped
+              as `tel:PENDING` on a live charity site.
+            */}
+            {siteConfig.phone.tel.trim() && siteConfig.phone.display.trim() && (
+              <div className="flex items-start gap-3">
+                <Phone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-[500] text-[22px]">Call Us Today</p>
+                  <a
+                    href={`tel:${siteConfig.phone.tel.trim()}`}
+                    className="aria-font font-[500] text-[16px] hover:text-cyan-400 transition-colors"
+                  >
+                    {siteConfig.phone.display}
+                  </a>
+                </div>
               </div>
-            </div>
+            )}
 
             {siteConfig.addresses.map((address) => (
               <a
                 key={address.label}
-                href={address.mapHref}
+                href={address.mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={address.mapAriaLabel}
                 className="flex items-start gap-3 hover:opacity-80 transition-opacity"
               >
                 <MapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-[500] text-[22px]">{address.label}</p>
-                  <p className="font-[500] text-[16px]" id="aria-font">
+                  <p className="aria-font font-[500] text-[16px]">
                     {address.lines.map((line, index) => (
                       <React.Fragment key={line}>
                         {line}
@@ -153,6 +238,10 @@ const Footer: React.FC = () => {
                       </React.Fragment>
                     ))}
                   </p>
+                  {/* The accessible name must contain the visible text
+                      (WCAG 2.5.3 label-in-name), so instead of an aria-label
+                      that replaces it, append screen-reader-only context. */}
+                  <span className="sr-only">(opens in Google Maps)</span>
                 </div>
               </a>
             ))}
@@ -179,19 +268,30 @@ const Footer: React.FC = () => {
       </div>
 
       {/* Bottom Bar */}
-      <div
-        className="mt-12 py-6 px-4 border-t border-gray-800 text-center text-[18px] font-[500] w-full"
-        id="aria-font"
-      >
+      <div className="aria-font mt-12 py-6 px-4 border-t border-gray-800 text-center text-[18px] font-[500] w-full">
         <p>
-          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit | A
-          project of{' '}
+          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit
+          {/* FFC footer standard: the "Supported by Free For Charity" attribution
+              below is the permanent part to KEEP when customizing this template
+              (the surrounding copyright text above is placeholder). */}
+          {' | Supported by '}
           <Link
-            href={siteConfig.project.href}
+            href={siteConfig.supportedBy.url}
             className="underline text-[#2EA3F2] hover:text-[#2EA3F2] transition-colors"
           >
-            {siteConfig.project.displayHref}
+            {siteConfig.supportedBy.name}
           </Link>
+          {siteConfig.parentOrg && (
+            <>
+              {' | A project of '}
+              <Link
+                href={siteConfig.parentOrg.url}
+                className="underline text-[#2EA3F2] hover:text-[#2EA3F2] transition-colors"
+              >
+                {siteConfig.parentOrg.name}
+              </Link>
+            </>
+          )}
         </p>
       </div>
     </footer>
