@@ -25,8 +25,9 @@ export default function DonationPolicy() {
             Tax Deductibility
           </h2>
           <p>
-            Free For Charity is a qualified 501(c)(3) nonprofit organization (EIN: 46-2471893).
-            Donations are tax-deductible to the full extent allowed by law.
+            {siteConfig.name} is a qualified 501(c)(3) nonprofit organization{' '}
+            {`(EIN: ${siteConfig.ein}).`} Donations are tax-deductible to the full extent allowed by
+            law.
           </p>
 
           <h2 className="font-[var(--font-faustina)] text-[32px] leading-[40px] mt-8 mb-4">
@@ -73,11 +74,16 @@ export default function DonationPolicy() {
           <p>For questions about donations or this policy, please contact us at:</p>
           <p>
             Email:{' '}
-            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-primary underline">
-              clarkemoyer@freeforcharity.org
+            <a href={`mailto:${siteConfig.contactEmail}`} className="text-primary underline">
+              {siteConfig.contactEmail}
             </a>
-            <br />
-            Phone: (520) 222-8104
+            {/* Only a configured number is shown, matching the footer's phone guard. */}
+            {siteConfig.phone.tel.trim() && siteConfig.phone.display.trim() && (
+              <>
+                <br />
+                Phone: {siteConfig.phone.display}
+              </>
+            )}
           </p>
         </div>
       </div>

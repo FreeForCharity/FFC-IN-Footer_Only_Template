@@ -71,6 +71,31 @@ describe('Policy page rendering', () => {
     expect(screen.getByText(new RegExp(siteConfig.ein))).toBeInTheDocument()
   })
 
+  // Pins the rendered sentence: this charity's name and EIN, formatted
+  // "(EIN: <ein>)." — guards against a reformat splitting the parenthetical.
+  it('Donation Policy states the EIN in one clean parenthetical', () => {
+    const { container } = render(<DonationPolicyPage />)
+    expect(container.textContent).toContain(
+      `${siteConfig.name} is a qualified 501(c)(3) nonprofit organization (EIN: ${siteConfig.ein}).`
+    )
+  })
+
+  // Same guard as the footer: a number shows only when both parts are set.
+  it.each([
+    ['both empty', { display: '', tel: '' }],
+    ['display only', { display: '(555) 123-4567', tel: '' }],
+    ['tel only', { display: '', tel: '5551234567' }],
+  ])('Donation Policy shows no phone line when %s', (_label, phone) => {
+    const original = { ...siteConfig.phone }
+    try {
+      siteConfig.phone = { ...phone }
+      const { container } = render(<DonationPolicyPage />)
+      expect(container.textContent).not.toContain('Phone:')
+    } finally {
+      siteConfig.phone = original
+    }
+  })
+
   it('Donation Policy contains expected sections', () => {
     render(<DonationPolicyPage />)
     expect(screen.getByText('Tax Deductibility')).toBeInTheDocument()
