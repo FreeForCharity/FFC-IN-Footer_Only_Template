@@ -59,6 +59,23 @@ describe('Footer component', () => {
     )
   })
 
+  // Pre-501(c)(3) charities have no Candid profile yet; provisioning leaves
+  // both URLs empty, and the footer must then render no dead Candid links.
+  it('renders no Candid links when the profile URLs are empty', () => {
+    const original = { ...siteConfig.guidestar }
+    try {
+      siteConfig.guidestar = { profileUrl: '', directProfileUrl: '  ' }
+      render(<Footer />)
+      expect(
+        screen.queryByLabelText(`View ${siteConfig.name} GuideStar Profile`)
+      ).not.toBeInTheDocument()
+      expect(screen.queryByText('Direct GuideStar Profile Link')).not.toBeInTheDocument()
+      expect(screen.getByText(new RegExp(siteConfig.ein))).toBeInTheDocument()
+    } finally {
+      siteConfig.guidestar = original
+    }
+  })
+
   it('should have email contact link', () => {
     render(<Footer />)
     const emailLink = screen.getByText(siteConfig.contactEmail).closest('a')
