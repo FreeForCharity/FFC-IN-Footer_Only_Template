@@ -25,8 +25,9 @@ export default function DonationPolicy() {
             Tax Deductibility
           </h2>
           <p>
-            {siteConfig.name} is a qualified 501(c)(3) nonprofit organization (EIN: {siteConfig.ein}
-            ). Donations are tax-deductible to the full extent allowed by law.
+            {siteConfig.name} is a qualified 501(c)(3) nonprofit organization{' '}
+            {`(EIN: ${siteConfig.ein}).`} Donations are tax-deductible to the full extent allowed by
+            law.
           </p>
 
           <h2 className="font-[var(--font-faustina)] text-[32px] leading-[40px] mt-8 mb-4">
@@ -77,7 +78,7 @@ export default function DonationPolicy() {
               {siteConfig.contactEmail}
             </a>
             {/* Only a configured number is shown, matching the footer's phone guard. */}
-            {siteConfig.phone.display.trim() && (
+            {siteConfig.phone.tel.trim() && siteConfig.phone.display.trim() && (
               <>
                 <br />
                 Phone: {siteConfig.phone.display}

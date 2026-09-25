@@ -281,6 +281,26 @@ describe('Footer component', () => {
     })
   })
 
+  // RFC 6068: '?', '#', '&' and '%' in the address would end it early and let
+  // a malformed contactEmail inject headers ahead of the subject.
+  it('percent-encodes URI-reserved characters in the fallback address', () => {
+    const originalEmail = siteConfig.contactEmail
+    const originalUrl = siteConfig.donationUrl
+    try {
+      siteConfig.contactEmail = 'give?bcc=x@example.org#frag'
+      siteConfig.donationUrl = ''
+      render(<Footer />)
+      const href = within(screen.getByText('Quick Links').parentElement!.querySelector('ul')!)
+        .getByRole('link', { name: 'Donate' })
+        .getAttribute('href')!
+      expect(href.startsWith('mailto:give%3Fbcc=x@example.org%23frag?subject=')).toBe(true)
+      expect(href.match(/\?/g)).toHaveLength(1)
+    } finally {
+      siteConfig.contactEmail = originalEmail
+      siteConfig.donationUrl = originalUrl
+    }
+  })
+
   it('always renders the FFC hub login link', () => {
     render(<Footer />)
     // FFC footer standard: always rendered, points at siteConfig.supportedBy.hubUrl.

@@ -325,7 +325,11 @@ export function cardDescription(): string {
 function linkOrEmail(url: string, subject: string): string {
   const trimmed = url.trim()
   if (/^https:\/\/\S+$/i.test(trimmed)) return trimmed
-  return `mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent(subject)}`
+  // Percent-encode the characters that would end or corrupt the address part
+  // of a mailto: URI (RFC 6068), so a malformed contactEmail cannot inject
+  // extra headers ahead of the subject.
+  const address = siteConfig.contactEmail.trim().replace(/[%?#&\s]/g, encodeURIComponent)
+  return `mailto:${address}?subject=${encodeURIComponent(subject)}`
 }
 
 /** Footer Donate link: `donationUrl`, else an email to the charity. */
