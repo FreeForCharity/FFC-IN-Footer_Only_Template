@@ -43,37 +43,30 @@ const Footer: React.FC = () => {
           <h3 className="text-[28px] text-white">Endorsements</h3>
 
           <div className="space-y-4">
-            {/* Candid links render only when configured: a charity without IRS
-                recognition has no public profile yet, and an empty href would
-                look like a working link while going nowhere. */}
-            {siteConfig.guidestar.profileUrl.trim() && (
-              <a
-                href={siteConfig.guidestar.profileUrl}
-                aria-label={`View ${siteConfig.name} GuideStar Profile`}
-              >
-                <img
-                  src={assetPath('/Svgs/footerImage.svg')}
-                  alt="GuideStar Platinum Seal of Transparency"
-                />
-              </a>
-            )}
-            {siteConfig.guidestar.directProfileUrl.trim() && (
-              <Link
-                href={siteConfig.guidestar.directProfileUrl}
-                className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
-                  border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
-                  transition-all duration-300 hover:border-transparent aria-font"
-              >
-                <span className="text-[17px] font-medium leading-tight sm:text-[18px] md:text-[20px] transition-transform duration-300 group-hover:-translate-x-1">
-                  Direct GuideStar Profile Link
-                </span>
+            <a
+              href={siteConfig.guidestar.profileUrl}
+              aria-label={`View ${siteConfig.name} GuideStar Profile`}
+            >
+              <img
+                src={assetPath('/Svgs/footerImage.svg')}
+                alt="GuideStar Platinum Seal of Transparency"
+              />
+            </a>
+            <Link
+              href={siteConfig.guidestar.directProfileUrl}
+              className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
+                border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
+                transition-all duration-300 hover:border-transparent aria-font"
+            >
+              <span className="text-[17px] font-medium leading-tight sm:text-[18px] md:text-[20px] transition-transform duration-300 group-hover:-translate-x-1">
+                Direct GuideStar Profile Link
+              </span>
 
-                <ArrowRight
-                  className="h-8 w-8 translate-x-2 opacity-0 text-[#2ea3f2] transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
-                  strokeWidth={2}
-                />
-              </Link>
-            )}
+              <ArrowRight
+                className="h-8 w-8 translate-x-2 opacity-0 text-[#2ea3f2] transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+                strokeWidth={2}
+              />
+            </Link>
 
             <p>
               <span className="font-[500] text-[22px]">
