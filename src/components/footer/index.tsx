@@ -9,7 +9,7 @@ import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
 import type { LucideIcon } from 'lucide-react'
 import { assetPath } from '@/lib/assetPath'
-import { siteConfig } from '@/lib/site.config'
+import { donateHref, siteConfig, volunteerHref } from '@/lib/site.config'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
 // Unknown labels fall back to a generic link icon (Link2) so a charity
@@ -30,6 +30,13 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="bg-black text-white">
+      {/* Mission line: the footer renders on every page, so even a footer-only
+          site states who the charity is and what it does everywhere. */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-12 text-center">
+        <p className="text-[28px] font-[500]">{siteConfig.name}</p>
+        <p className="aria-font text-[18px] mt-2">{siteConfig.mission}</p>
+      </div>
+
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 py-12 px-4 md:px-6 lg:px-8">
         {/* Column 1: Endorsements */}
         <div className="space-y-6 px-4 sm:px-0">
@@ -94,6 +101,11 @@ const Footer: React.FC = () => {
               // fails the suite instead of shipping.
               { name: 'Home', href: '/' },
               { name: 'Team', href: '/#team' },
+              // Giving and volunteering pathways. Each is a single link, not a
+              // page section: the configured URL, or an email to the charity
+              // when none is set (see donateHref / volunteerHref).
+              { name: 'Donate', href: donateHref() },
+              { name: 'Volunteer', href: volunteerHref() },
               // FFC footer standard: every supported charity site links back
               // to the supporting org's hub. Always rendered — keep this
               // entry when customizing a fork.

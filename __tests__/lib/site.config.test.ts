@@ -31,7 +31,7 @@ describe('siteConfig contract', () => {
   // suite that contradicts it makes a correct rebrand indistinguishable from a
   // broken one.
   it('exposes the full site identity shape used by runtime consumers', () => {
-    for (const key of ['name', 'tagline', 'description', 'shortDescription'] as const) {
+    for (const key of ['name', 'tagline', 'mission', 'description', 'shortDescription'] as const) {
       expect(typeof siteConfig[key]).toBe('string')
       expect(siteConfig[key].trim().length).toBeGreaterThan(0)
     }
@@ -50,6 +50,11 @@ describe('siteConfig contract', () => {
     expect(siteConfig.keywords.length).toBeGreaterThan(0)
     for (const keyword of siteConfig.keywords) {
       expect(keyword.trim().length).toBeGreaterThan(0)
+    }
+
+    // Empty falls back to emailing the charity; anything else must be https.
+    for (const url of [siteConfig.donationUrl, siteConfig.volunteerUrl]) {
+      if (url !== '') expect(url).toMatch(/^https:\/\//)
     }
 
     for (const link of siteConfig.social) {

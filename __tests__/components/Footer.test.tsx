@@ -207,6 +207,12 @@ describe('Footer component', () => {
 
     for (const link of links) {
       const href = link.getAttribute('href')!
+      // The Donate / Volunteer fallbacks email the charity. A mailto is not a
+      // route, but it must at least address the configured contact email.
+      if (href.startsWith('mailto:')) {
+        expect(href.startsWith(`mailto:${siteConfig.contactEmail}?subject=`)).toBe(true)
+        continue
+      }
       if (href.startsWith('http')) {
         expect(href).toMatch(/^https:\/\//)
         expect(link).toHaveAttribute('target', '_blank')
@@ -226,6 +232,53 @@ describe('Footer component', () => {
       expect(normalized).toBe('/')
       expect(homeIds).toContain(fragment)
     }
+  })
+
+  it('states the charity name and one-sentence mission on every page', () => {
+    render(<Footer />)
+    const footer = screen.getByRole('contentinfo')
+    expect(within(footer).getByText(siteConfig.mission)).toBeInTheDocument()
+    expect(siteConfig.mission.trim().length).toBeGreaterThan(0)
+  })
+
+  // Donate and Volunteer are always rendered: a configured https page when
+  // there is one, otherwise an email to the charity. Exercised by varying the
+  // config so both branches are tested whatever this fork ships.
+  describe.each([
+    ['Donate', 'donationUrl'],
+    ['Volunteer', 'volunteerUrl'],
+  ] as const)('the %s quick link', (label, key) => {
+    const original = siteConfig[key]
+    afterEach(() => {
+      siteConfig[key] = original
+    })
+
+    const linkFor = () =>
+      within(screen.getByText('Quick Links').parentElement!.querySelector('ul')!).getByRole(
+        'link',
+        { name: label }
+      )
+
+    it('points at the configured https page, opening in a new tab', () => {
+      siteConfig[key] = 'https://example.org/give-or-help'
+      render(<Footer />)
+      expect(linkFor()).toHaveAttribute('href', 'https://example.org/give-or-help')
+      expect(linkFor()).toHaveAttribute('target', '_blank')
+      expect(linkFor()).toHaveAttribute('rel', 'noopener noreferrer')
+    })
+
+    it.each([
+      ['empty', ''],
+      ['whitespace', '   '],
+      ['not https', 'http://example.org/give'],
+      ['a script URL', 'javascript:alert(1)'],
+    ])('falls back to emailing the charity when the URL is %s', (_case, value) => {
+      siteConfig[key] = value
+      render(<Footer />)
+      const href = linkFor().getAttribute('href')!
+      expect(href.startsWith(`mailto:${siteConfig.contactEmail}?subject=`)).toBe(true)
+      expect(linkFor()).not.toHaveAttribute('target')
+    })
   })
 
   it('always renders the FFC hub login link', () => {
@@ -267,7 +320,9 @@ describe('Footer component', () => {
     // These values are intentionally literal — the standard forbids a fork from
     // removing or repointing them.
     expect(copyright).toHaveTextContent('Supported by Free For Charity')
-    const link = screen.getByText('Free For Charity')
+    // Scoped to the copyright bar: the footer's mission line also shows the
+    // charity name, which on FFC's own site is "Free For Charity" too.
+    const link = within(copyright).getByText('Free For Charity')
     expect(link.closest('a')).toHaveAttribute('href', 'https://freeforcharity.org')
   })
 

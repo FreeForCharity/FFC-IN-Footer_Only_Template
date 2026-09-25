@@ -47,6 +47,24 @@ export type SiteConfig = {
   name: string
   /** Short tagline used in the default title template. */
   tagline: string
+  /**
+   * One-sentence mission statement, shown under the charity name at the top
+   * of the footer. The footer renders on every page, so this guarantees that
+   * even a footer-only site states what the charity does everywhere.
+   */
+  mission: string
+  /**
+   * Absolute https URL of the charity's donation page (Zeffy, PayPal, a page
+   * on this site, ...). Empty string falls back to a `mailto:` to
+   * `contactEmail`, so the footer's Donate link always leads somewhere real.
+   * See `donateHref()`.
+   */
+  donationUrl: string
+  /**
+   * Absolute https URL of the charity's volunteer sign-up page. Empty string
+   * falls back to a `mailto:` to `contactEmail`. See `volunteerHref()`.
+   */
+  volunteerUrl: string
   /** Plain-language description used for the <meta description> tag. */
   description: string
   /**
@@ -129,6 +147,11 @@ export type SiteConfig = {
 export const siteConfig: SiteConfig = {
   name: 'Free For Charity',
   tagline: 'Reduce Costs, Increase Impact',
+  mission:
+    'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues.',
+  // Empty = the footer's Donate / Volunteer links email contactEmail instead.
+  donationUrl: '',
+  volunteerUrl: '',
   description:
     'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues—putting more resources back into their missions.',
   shortDescription:
@@ -292,4 +315,25 @@ export function twitterSite(): string | undefined {
 
 export function cardDescription(): string {
   return siteConfig.shortDescription.trim() || siteConfig.description
+}
+
+/**
+ * A configured https URL, or a `mailto:` to `contactEmail` with `subject`.
+ * Anything that is not an https URL (including a `javascript:` value) falls
+ * back to the email, so a bad config can never ship a dangerous or dead link.
+ */
+function linkOrEmail(url: string, subject: string): string {
+  const trimmed = url.trim()
+  if (/^https:\/\/\S+$/i.test(trimmed)) return trimmed
+  return `mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent(subject)}`
+}
+
+/** Footer Donate link: `donationUrl`, else an email to the charity. */
+export function donateHref(): string {
+  return linkOrEmail(siteConfig.donationUrl, `Donating to ${siteConfig.name}`)
+}
+
+/** Footer Volunteer link: `volunteerUrl`, else an email to the charity. */
+export function volunteerHref(): string {
+  return linkOrEmail(siteConfig.volunteerUrl, `Volunteering with ${siteConfig.name}`)
 }
