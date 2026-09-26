@@ -1,6 +1,7 @@
 import {
   canonicalPath,
   cardDescription,
+  mailtoHref,
   siteConfig,
   sitePath,
   siteUrl,
@@ -155,5 +156,27 @@ describe('siteConfig contract', () => {
 
     expect(cardDescription()).toBe(siteConfig.shortDescription.trim() || siteConfig.description)
     expect(cardDescription().trim().length).toBeGreaterThan(0)
+  })
+})
+
+describe('mailtoHref', () => {
+  const original = siteConfig.contactEmail
+  afterEach(() => {
+    siteConfig.contactEmail = original
+  })
+
+  it('encodes characters that would add a recipient or a header', () => {
+    siteConfig.contactEmail = 'a@b.example,c@d.example?bcc=e@f.example'
+    expect(mailtoHref()).toBe('mailto:a@b.example%2Cc@d.example%3Fbcc=e@f.example')
+  })
+
+  it('removes whitespace inside the address instead of encoding it', () => {
+    siteConfig.contactEmail = ' hello @pantry.\nexample '
+    expect(mailtoHref()).toBe('mailto:hello@pantry.example')
+  })
+
+  it('appends an encoded subject', () => {
+    siteConfig.contactEmail = 'hello@pantry.example'
+    expect(mailtoHref('Hi & bye')).toBe('mailto:hello@pantry.example?subject=Hi%20%26%20bye')
   })
 })
