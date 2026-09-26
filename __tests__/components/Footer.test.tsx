@@ -301,6 +301,29 @@ describe('Footer component', () => {
     }
   })
 
+  it('renders the tax-status clause only when one is configured', () => {
+    const original = siteConfig.taxStatusLabel
+    try {
+      siteConfig.taxStatusLabel = ''
+      render(<Footer />)
+      expect(screen.getByRole('contentinfo').textContent).not.toMatch(/501c3/)
+    } finally {
+      siteConfig.taxStatusLabel = original
+    }
+  })
+
+  it('percent-encodes a comma so a malformed contactEmail cannot add a recipient', () => {
+    const original = siteConfig.contactEmail
+    try {
+      siteConfig.contactEmail = 'a@example.org,evil@example.com'
+      render(<Footer />)
+      const contact = screen.getByText('a@example.org,evil@example.com').closest('a')!
+      expect(contact.getAttribute('href')).toBe('mailto:a@example.org%2Cevil@example.com')
+    } finally {
+      siteConfig.contactEmail = original
+    }
+  })
+
   it('always renders the FFC hub login link', () => {
     render(<Footer />)
     // FFC footer standard: always rendered, points at siteConfig.supportedBy.hubUrl.

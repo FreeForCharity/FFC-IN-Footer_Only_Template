@@ -1,5 +1,5 @@
 import React from 'react'
-import { siteConfig, siteUrl } from '@/lib/site.config'
+import { mailtoHref, siteConfig, siteUrl } from '@/lib/site.config'
 
 /**
  * The organization's own contact details, for use in policy pages.
@@ -28,7 +28,7 @@ export default function ContactDetails({ heading }: { heading?: string }) {
         </li>
         <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
           <strong>Email:</strong>{' '}
-          <a href={`mailto:${siteConfig.contactEmail}`} className="text-[#0062cc] underline">
+          <a href={mailtoHref()} className="text-[#0062cc] underline">
             {siteConfig.contactEmail}
           </a>
         </li>

@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react'
 import Link from 'next/link'
-import { siteConfig } from '@/lib/site.config'
+import { mailtoHref, siteConfig } from '@/lib/site.config'
 
 // Route-segment error boundary. Next.js renders this instead of its own
 // unstyled default when a render below the root layout throws, so visitors
@@ -70,7 +70,7 @@ export default function Error({
               </Link>{' '}
               contact route, or email{' '}
               <a
-                href={`mailto:${siteConfig.contactEmail}`}
+                href={mailtoHref()}
                 className="text-[#005BB7] font-[700] underline decoration-dotted hover:decoration-solid transition-all"
               >
                 {siteConfig.contactEmail}

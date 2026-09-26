@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { siteConfig, siteUrl } from '@/lib/site.config'
+import { mailtoHref, siteConfig, siteUrl } from '@/lib/site.config'
 import { pageMetadata } from '@/lib/pageMetadata'
 import ContactDetails from '@/components/policy/ContactDetails'
 import SupportingOrgDisclosure from '@/components/policy/SupportingOrgDisclosure'
@@ -408,7 +408,7 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights and complaints.</strong> Contact us at{' '}
-            <a href={`mailto:${siteConfig.contactEmail}`} className="text-[#0062cc] underline">
+            <a href={mailtoHref()} className="text-[#0062cc] underline">
               {siteConfig.contactEmail}
             </a>{' '}
             to exercise any of these rights; we will respond within the time limits the GDPR sets.
@@ -459,7 +459,7 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights.</strong> Submit a request to{' '}
-            <a href={`mailto:${siteConfig.contactEmail}`} className="text-[#0062cc] underline">
+            <a href={mailtoHref()} className="text-[#0062cc] underline">
               {siteConfig.contactEmail}
             </a>
             . We will verify your request using information associated with your interactions with

@@ -51,7 +51,7 @@ export const testConfig = {
    * Used in: tests/copyright.spec.ts
    */
   copyright: {
-    text: `All Rights Are Reserved by ${siteConfig.name} a US 501c3 Non Profit`,
+    text: `All Rights Are Reserved by ${siteConfig.name}${siteConfig.taxStatusLabel.trim() ? ` ${siteConfig.taxStatusLabel.trim()}` : ''}`,
     searchText: 'All Rights Are Reserved',
     // The permanent "Supported by Free For Charity" attribution (FFC footer
     // standard). Deliberately LITERAL, not read from siteConfig.supportedBy:
