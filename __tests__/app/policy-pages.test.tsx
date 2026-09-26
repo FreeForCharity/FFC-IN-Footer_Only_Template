@@ -73,10 +73,14 @@ describe('Policy page rendering', () => {
 
   // Pins the rendered sentence: this charity's name and EIN, formatted
   // "(EIN: <ein>)." — guards against a reformat splitting the parenthetical.
+  // Reads whichever sentence this site's configured tax status calls for, so a
+  // correctly provisioned pre-501(c)(3) charity does not fail its own CI.
   it('Donation Policy states the EIN in one clean parenthetical', () => {
     const { container } = render(<DonationPolicyPage />)
     expect(container.textContent).toContain(
-      `${siteConfig.name} is a qualified 501(c)(3) nonprofit organization (EIN: ${siteConfig.ein}).`
+      siteConfig.taxStatusLabel.trim()
+        ? `${siteConfig.name} is a qualified 501(c)(3) nonprofit organization (EIN: ${siteConfig.ein}).`
+        : `${siteConfig.name} (EIN: ${siteConfig.ein}) has not yet received IRS recognition`
     )
   })
 
