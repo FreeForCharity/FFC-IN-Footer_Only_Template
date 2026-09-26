@@ -327,22 +327,24 @@ export function cardDescription(): string {
 }
 
 /**
- * A configured https URL, or a `mailto:` to `contactEmail` with `subject`.
- * Anything that is not an https URL (including a `javascript:` value) falls
- * back to the email, so a bad config can never ship a dangerous or dead link.
- */
-/**
- * `mailto:` link to `contactEmail`, optionally with a subject. Every mailto on
- * the site goes through here. The characters that would end or corrupt the
- * address part of a mailto: URI (RFC 6068) are percent-encoded -- `?` and `#`
- * end it, `&` and `%` corrupt it, and `,` separates recipients -- so a
- * malformed contactEmail can never add a recipient or inject a header.
+ * `mailto:` link to `contactEmail`, optionally with a subject. Every mailto
+ * built from `siteConfig.contactEmail` goes through here (the Free For Charity
+ * donation policy page links FFC's own address directly, by design). The
+ * characters that would end or corrupt the address part of a mailto: URI
+ * (RFC 6068) are percent-encoded -- `?` and `#` end it, `&` and `%` corrupt
+ * it, and `,` separates recipients -- so a malformed contactEmail can never
+ * add a recipient or inject a header.
  */
 export function mailtoHref(subject?: string): string {
   const address = siteConfig.contactEmail.trim().replace(/[%?#&,\s]/g, encodeURIComponent)
   return subject ? `mailto:${address}?subject=${encodeURIComponent(subject)}` : `mailto:${address}`
 }
 
+/**
+ * A configured https URL, or a `mailto:` to `contactEmail` with `subject`.
+ * Anything that is not an https URL (including a `javascript:` value) falls
+ * back to the email, so a bad config can never ship a dangerous or dead link.
+ */
 function linkOrEmail(url: string, subject: string): string {
   const trimmed = url.trim()
   if (/^https:\/\/\S+$/i.test(trimmed)) return trimmed
