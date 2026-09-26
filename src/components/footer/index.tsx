@@ -9,7 +9,7 @@ import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
 import type { LucideIcon } from 'lucide-react'
 import { assetPath } from '@/lib/assetPath'
-import { donateHref, siteConfig, volunteerHref } from '@/lib/site.config'
+import { donateHref, mailtoHref, siteConfig, volunteerHref } from '@/lib/site.config'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
 // Unknown labels fall back to a generic link icon (Link2) so a charity
@@ -27,6 +27,8 @@ const socialIconByLabel: Record<string, IconType | LucideIcon> = {
 const Footer: React.FC = () => {
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
   const socialLinks = siteConfig.social.filter((social) => social.href)
+  // A legal claim: rendered only when the organization actually holds it.
+  const taxStatusLabel = siteConfig.taxStatusLabel.trim()
 
   return (
     <footer className="bg-black text-white">
@@ -199,7 +201,7 @@ const Footer: React.FC = () => {
               <div>
                 <p className="font-[500] text-[22px]">E-mail</p>
                 <a
-                  href={`mailto:${siteConfig.contactEmail}`}
+                  href={mailtoHref()}
                   className="aria-font font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all"
                 >
                   {siteConfig.contactEmail}
@@ -282,7 +284,8 @@ const Footer: React.FC = () => {
       {/* Bottom Bar */}
       <div className="aria-font mt-12 py-6 px-4 border-t border-gray-800 text-center text-[18px] font-[500] w-full">
         <p>
-          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit
+          © {currentYear} All Rights Are Reserved by {siteConfig.name}
+          {taxStatusLabel ? ` ${taxStatusLabel}` : ''}
           {/* FFC footer standard: the "Supported by Free For Charity" attribution
               below is the permanent part to KEEP when customizing this template
               (the surrounding copyright text above is placeholder). */}

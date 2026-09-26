@@ -1,4 +1,5 @@
 import React from 'react'
+import { siteConfig } from '../../src/lib/site.config'
 import { render, screen } from '@testing-library/react'
 
 import TheFreeForCharityTeam from '../../src/components/home-page/TheFreeForCharityTeam'
@@ -11,7 +12,7 @@ describe('TheFreeForCharityTeam component', () => {
 
   it('should display the team heading', () => {
     render(<TheFreeForCharityTeam />)
-    expect(screen.getByText('The Free For Charity Team')).toBeInTheDocument()
+    expect(screen.getByText(`The ${siteConfig.name} Team`)).toBeInTheDocument()
   })
 
   it('should render a card per member with initials monograms and no photos', () => {

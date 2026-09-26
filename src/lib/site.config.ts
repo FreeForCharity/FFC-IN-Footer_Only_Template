@@ -128,6 +128,14 @@ export type SiteConfig = {
   /** GuideStar / Candid transparency profile links shown in the footer. */
   guidestar: { profileUrl: string; directProfileUrl: string }
   /**
+   * Tax-status clause appended to the footer copyright line, e.g.
+   * 'a US 501c3 Non Profit'. It is a legal claim, so it must be true: an
+   * organization without IRS 501(c)(3) recognition sets it to '' and both the
+   * footer clause and the donation policy's tax-deductibility sentence are
+   * then left out. Same key and shape as the Single Page template.
+   */
+  taxStatusLabel: string
+  /**
    * Permanent attribution to the supporting organization (FFC). Drives the
    * always-rendered "Supported by" clause in the footer bottom bar and the
    * "Supported Charity Login" quick link (`hubUrl`). This is part of the FFC
@@ -193,6 +201,7 @@ export const siteConfig: SiteConfig = {
         'https://www.google.com/maps/place/Free+For+Charity/@40.7768455,-77.8963305,17z/data=!3m1!4b1!4m6!3m5!1s0x89cea944b44a2e01:0x6fc2d6bf09e00a0f!8m2!3d40.7768415!4d-77.8937556!16s%2Fg%2F11vzvbl2d7?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D',
     },
   ],
+  taxStatusLabel: 'a US 501c3 Non Profit',
   guidestar: {
     profileUrl: 'https://www.guidestar.org/profile/46-2471893',
     directProfileUrl:
@@ -322,14 +331,22 @@ export function cardDescription(): string {
  * Anything that is not an https URL (including a `javascript:` value) falls
  * back to the email, so a bad config can never ship a dangerous or dead link.
  */
+/**
+ * `mailto:` link to `contactEmail`, optionally with a subject. Every mailto on
+ * the site goes through here. The characters that would end or corrupt the
+ * address part of a mailto: URI (RFC 6068) are percent-encoded -- `?` and `#`
+ * end it, `&` and `%` corrupt it, and `,` separates recipients -- so a
+ * malformed contactEmail can never add a recipient or inject a header.
+ */
+export function mailtoHref(subject?: string): string {
+  const address = siteConfig.contactEmail.trim().replace(/[%?#&,\s]/g, encodeURIComponent)
+  return subject ? `mailto:${address}?subject=${encodeURIComponent(subject)}` : `mailto:${address}`
+}
+
 function linkOrEmail(url: string, subject: string): string {
   const trimmed = url.trim()
   if (/^https:\/\/\S+$/i.test(trimmed)) return trimmed
-  // Percent-encode the characters that would end or corrupt the address part
-  // of a mailto: URI (RFC 6068), so a malformed contactEmail cannot inject
-  // extra headers ahead of the subject.
-  const address = siteConfig.contactEmail.trim().replace(/[%?#&\s]/g, encodeURIComponent)
-  return `mailto:${address}?subject=${encodeURIComponent(subject)}`
+  return mailtoHref(subject)
 }
 
 /** Footer Donate link: `donationUrl`, else an email to the charity. */

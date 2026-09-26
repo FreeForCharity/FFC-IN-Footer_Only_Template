@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { siteConfig } from '@/lib/site.config'
+import { mailtoHref, siteConfig } from '@/lib/site.config'
 import { pageMetadata } from '@/lib/pageMetadata'
 
 export const metadata: Metadata = pageMetadata({
@@ -24,25 +24,29 @@ export default function DonationPolicy() {
           <h2 className="font-[var(--font-faustina)] text-[32px] leading-[40px] mt-8 mb-4">
             Tax Deductibility
           </h2>
-          <p>
-            {siteConfig.name} is a qualified 501(c)(3) nonprofit organization{' '}
-            {`(EIN: ${siteConfig.ein}).`} Donations are tax-deductible to the full extent allowed by
-            law.
-          </p>
+          {/* A legal claim, made only when siteConfig.taxStatusLabel says the
+              organization holds IRS 501(c)(3) recognition. */}
+          {siteConfig.taxStatusLabel.trim() ? (
+            <p>
+              {siteConfig.name} is a qualified 501(c)(3) nonprofit organization{' '}
+              {`(EIN: ${siteConfig.ein}).`} Donations are tax-deductible to the full extent allowed
+              by law.
+            </p>
+          ) : (
+            <p>
+              {siteConfig.name} {`(EIN: ${siteConfig.ein})`} has not yet received IRS recognition as
+              a 501(c)(3) organization, so donations may not be tax-deductible. Please consult a tax
+              advisor before claiming a deduction.
+            </p>
+          )}
 
           <h2 className="font-[var(--font-faustina)] text-[32px] leading-[40px] mt-8 mb-4">
             Use of Donations
           </h2>
           <p>
-            Donations support our mission to reduce costs and increase revenues for nonprofits by
-            providing:
+            Donations support {siteConfig.name}&apos;s mission and the administrative costs
+            necessary to carry it out: {siteConfig.mission}
           </p>
-          <ul>
-            <li>Free domain registration and hosting services</li>
-            <li>Technology consultation and support</li>
-            <li>Volunteer coordination and training</li>
-            <li>Administrative costs necessary to operate our programs</li>
-          </ul>
 
           <h2 className="font-[var(--font-faustina)] text-[32px] leading-[40px] mt-8 mb-4">
             Donation Processing
@@ -74,7 +78,7 @@ export default function DonationPolicy() {
           <p>For questions about donations or this policy, please contact us at:</p>
           <p>
             Email:{' '}
-            <a href={`mailto:${siteConfig.contactEmail}`} className="text-primary underline">
+            <a href={mailtoHref()} className="text-primary underline">
               {siteConfig.contactEmail}
             </a>
             {/* Only a configured number is shown, matching the footer's phone guard. */}

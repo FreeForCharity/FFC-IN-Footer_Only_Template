@@ -80,6 +80,31 @@ describe('Policy page rendering', () => {
     )
   })
 
+  // The tax-deductibility sentence is a legal claim: a pre-501(c)(3)
+  // organization (empty taxStatusLabel) must not make it.
+  it('Donation Policy claims deductibility only with a tax status', () => {
+    const original = siteConfig.taxStatusLabel
+    try {
+      siteConfig.taxStatusLabel = ''
+      const { container, unmount } = render(<DonationPolicyPage />)
+      expect(container.textContent).not.toContain('qualified 501(c)(3)')
+      expect(container.textContent).not.toContain('Donations are tax-deductible')
+      expect(container.textContent).toContain('may not be tax-deductible')
+      unmount()
+      siteConfig.taxStatusLabel = 'a US 501c3 Non Profit'
+      const { container: recognized } = render(<DonationPolicyPage />)
+      expect(recognized.textContent).toContain('Donations are tax-deductible')
+    } finally {
+      siteConfig.taxStatusLabel = original
+    }
+  })
+
+  it("Donation Policy describes this organization's mission, not FFC's services", () => {
+    const { container } = render(<DonationPolicyPage />)
+    expect(container.textContent).toContain(siteConfig.mission)
+    expect(container.textContent).not.toContain('Free domain registration and hosting services')
+  })
+
   // Same guard as the footer: a number shows only when both parts are set.
   it.each([
     ['both empty', { display: '', tel: '' }],
