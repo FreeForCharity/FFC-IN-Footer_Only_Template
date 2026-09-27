@@ -648,12 +648,13 @@ describe('self-hosted fonts drift guard', () => {
   })
 
   it.each([
-    '@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); } // self-host this',
-    '@font-face { src: url(https://fonts.gstatic.com/s/lato/v24/x.woff2); }',
-  ])('fails on an unquoted Google Fonts url() in SCSS: %s', (line) => {
-    const { status, output } = runDrift(fixtureWith('src/app/fonts.scss', `${line}\n`))
+    ['@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); } // self-host this', 1],
+    ['@font-face { src: url(https://fonts.gstatic.com/s/lato/v24/x.woff2); }', 1],
+    ['@font-face {\n  src: url(\n    //fonts.gstatic.com/s/lato/v24/x.woff2\n  );\n}', 3],
+  ])('fails on an unquoted Google Fonts url() in SCSS: %s', (scss, line) => {
+    const { status, output } = runDrift(fixtureWith('src/app/fonts.scss', `${scss}\n`))
     expect(status).toBe(1)
-    expect(output).toContain('src/app/fonts.scss:1 references a Google Fonts host')
+    expect(output).toContain(`src/app/fonts.scss:${line} references a Google Fonts host`)
   })
 
   it('does not read a /* inside a string as a block comment', () => {
