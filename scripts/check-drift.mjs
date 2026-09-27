@@ -6,6 +6,8 @@
  *  1. Top-level route folders under src/app/ that are not kebab-case.
  *  2. Hardcoded /Images, /Svgs, or /videos paths missing assetPath().
  *  3. Common secret patterns committed under src/ or public/.
+ *  3b. next/font/google or a Google Fonts host under src/ -- fonts are
+ *      self-hosted with next/font/local so builds never contact Google.
  *  4. The template placeholder URL ffcworkingsite1.org left behind after a site rebrands.
  *  2b. A next/link href wrapped in sitePath(), which applies basePath twice
  *      and 404s on a project-path deploy.
@@ -343,6 +345,38 @@ async function checkSecrets() {
         `Possible ${pattern.name} committed in ${relative(ROOT, file)}. ` +
           'Move it to a gitignored .env file or GitHub Secrets and rotate the credential.'
       )
+    }
+  }
+}
+
+/**
+ * Fonts must be self-hosted. `next/font/google` downloads from Google during
+ * `next build`, which intermittently failed the build (#163) and makes every
+ * build depend on an external service; a Google Fonts URL in CSS or markup
+ * makes every page view depend on one. src/lib/fonts.ts loads the committed
+ * woff2 files under src/fonts/ with next/font/local instead. Comments are
+ * skipped so the reason can be written down next to the code.
+ */
+async function checkSelfHostedFonts() {
+  const files = await walk(SRC_DIR, (name) => /\.(tsx?|jsx?|mjs|cjs|css|scss)$/.test(name))
+  const forbidden = [
+    { re: /next\/font\/google/g, what: 'imports next/font/google' },
+    { re: /fonts\.(?:googleapis|gstatic)\.com/g, what: 'references a Google Fonts host' },
+  ]
+
+  for (const file of files) {
+    const rel = relative(ROOT, file)
+    const body = await readFile(file, 'utf8')
+    for (const { re, what } of forbidden) {
+      re.lastIndex = 0
+      let match
+      while ((match = re.exec(body))) {
+        if (insideComment(body, match.index)) continue
+        errors.push(
+          `${rel}:${lineAt(body, match.index)} ${what}. Fonts must be self-hosted: add the woff2 ` +
+            'under src/fonts/<family>/ and load it with next/font/local in src/lib/fonts.ts.'
+        )
+      }
     }
   }
 }
@@ -791,6 +825,7 @@ await checkKebabCaseRoutes()
 await checkAssetPathUsage()
 await checkLinkBasePathDoubling()
 await checkSecrets()
+await checkSelfHostedFonts()
 await checkDeployOrigin(siteConfig)
 await checkPlaceholderUrl(siteConfig)
 await checkCspSync()

@@ -1,4 +1,4 @@
-/* Fonts are now loaded via next/font in layout.tsx for optimal performance */
+/* Fonts are self-hosted via next/font/local (src/lib/fonts.ts) and applied in layout.tsx */
 @import 'tailwindcss';
 
 :root {

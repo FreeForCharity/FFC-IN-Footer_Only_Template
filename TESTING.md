@@ -677,8 +677,8 @@ pnpm audit
 
 ### Issue: Build fails
 
-**Cause**: Google Fonts network access (per project instructions)  
-**Solution**: Temporarily comment out font imports in layout.tsx
+**Cause**: Historically, `next/font/google` fetching from Google at build time.  
+**Solution**: Fonts are now self-hosted with `next/font/local` (`src/lib/fonts.ts`), so builds need no font network access. If a build fails on a font, check the woff2 path in `src/lib/fonts.ts` exists under `src/fonts/`.
 
 ### Issue: Content not showing
 
