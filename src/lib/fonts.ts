@@ -13,9 +13,9 @@
 // from @fontsource-variable/<family> covering a weight range - the same single
 // file per family the Google loader served. Lato, Cantata One and Fauna One have
 // no variable build, so they load one `<family>-latin-<weight>-normal.woff2` per
-// weight from @fontsource/<family>. Every file is preloaded, so a file per
-// weight for the variable families (25 files instead of 9) cost Lighthouse
-// performance.
+// weight from @fontsource/<family>. Every file is preloaded, so loading the
+// variable families one file per weight (25 files instead of 9) lowered the
+// Lighthouse performance score.
 //
 // Export names and CSS variable names are unchanged from the Google version, so
 // src/app/layout.tsx and src/app/globals.css need no edits.

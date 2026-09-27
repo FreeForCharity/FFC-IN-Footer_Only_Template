@@ -83,13 +83,29 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 describe('lib/fonts', () => {
+  // Same policy as check:drift's checkSelfHostedFonts: a mention inside a
+  // comment is allowed, so the reason can be written next to the code.
+  const inComment = (code: string, at: number) => {
+    const lineStart = code.lastIndexOf('\n', at - 1) + 1
+    if (code.slice(lineStart, at).includes('//')) return true
+    return code.lastIndexOf('/*', at) > code.lastIndexOf('*/', at)
+  }
+  const usesGoogleLoader = (code: string) =>
+    [...code.matchAll(/next\/font\/google/g)].some((m) => !inComment(code, m.index ?? 0))
+
   it('never uses next/font/google anywhere under src/', () => {
     const offenders = walk(SRC_DIR)
       .filter((file) => /\.(tsx?|jsx?|mjs|cjs|css|scss)$/.test(file))
-      .filter((file) => fs.readFileSync(file, 'utf8').includes('next/font/google'))
+      .filter((file) => usesGoogleLoader(fs.readFileSync(file, 'utf8')))
       .map((file) => path.relative(SRC_DIR, file))
 
     expect(offenders).toEqual([])
+  })
+
+  it('ignores next/font/google named only in a comment', () => {
+    expect(usesGoogleLoader("import { Lato } from 'next/font/google'")).toBe(true)
+    expect(usesGoogleLoader("// was: import { Lato } from 'next/font/google'")).toBe(false)
+    expect(usesGoogleLoader('/*\n * next/font/google fetched at build time\n */')).toBe(false)
   })
 
   it('imports only next/font/local', () => {
