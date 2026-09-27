@@ -39,6 +39,22 @@ import { join } from 'node:path'
  * Hence the `expect(code).toBe(0)`: if a future check is added and this
  * fixture no longer satisfies it, the test goes red and asks to be updated,
  * rather than silently reverting to a test of nothing.
+ *
+ * WHICH HALF OF THE FIX THIS ACTUALLY COVERS, measured rather than assumed.
+ * The fix has two parts -- releasing unread bodies, and exiting explicitly
+ * once both streams flush. Mutation testing separates them:
+ *
+ *   revert scripts/smoke-check.mjs entirely      -> DETECTED
+ *   remove ONLY the explicit exit, keep release  -> DETECTED
+ *   remove ONLY the release, keep explicit exit  -> NOT detected
+ *
+ * So the explicit exit is what closes the hang, and the body release is
+ * defence in depth this fixture cannot observe: `process.exit()` tears the
+ * process down whether or not a socket is still held. The release is kept
+ * because it makes the process exit cleanly rather than being forced out
+ * with streams in flight, and because a later refactor that drops the
+ * forced exit would otherwise silently reopen the hang -- but it is NOT
+ * covered here, and saying so is better than a comment implying it is.
  */
 const SCRIPT = join(process.cwd(), 'scripts', 'smoke-check.mjs')
 
