@@ -73,6 +73,86 @@ function isSemanticallyValidRfc3339(raw) {
   return !Number.isNaN(new Date(raw).getTime())
 }
 
+/**
+ * Every response handed back by fetchWithRetry, so the ones nobody read can
+ * be released before the process tries to exit.
+ *
+ * An unread `fetch` body whose payload does not fit in the socket buffer
+ * holds its socket OPEN and REF'D, so node's event loop never drains and the
+ * process never exits -- AFTER every check has already passed and the summary
+ * has already printed. The all-pass path had no `process.exit` at all; the
+ * failure path did, which is why only SUCCESSFUL runs hung.
+ *
+ * Observed twice on 2026-09-27 in FreeForCharity/FFC-EX-neurospike.org, a
+ * site built from this template (runs 36348572740 and 36348828360):
+ *
+ *     20:35:56  41/41 checks passed
+ *     20:41:08  ##[error]The action 'Post-deploy smoke check' has timed out
+ *                         after 5 minutes.
+ *
+ * Both deploys had SUCCEEDED and both sites were live and correct; the job's
+ * red was this alone, and each failure opened a "Production deployment
+ * failed" incident issue for a deployment that had not failed. A check that
+ * fails on success is worse than one that fails at random: it teaches
+ * everyone to ignore it, which costs you the real failure later.
+ *
+ * It does not reproduce everywhere -- against the same URL from a different
+ * network the script exits in 8 seconds -- because whether the socket lingers
+ * depends on the server's keep-alive and the size of the unread payload.
+ * That is what made it read as a flake. The trigger there was an app icon
+ * growing from 101 KB to 340 KB.
+ */
+const openResponses = new Set()
+
+/**
+ * Cancels one response body, best effort.
+ *
+ * try/catch rather than `.catch()`: the latter only handles a REJECTED
+ * promise, and a synchronous throw from `cancel()` (a locked or detached
+ * stream) escapes before there is a promise to attach to -- turning cleanup
+ * after a PASSING run into a crash.
+ */
+async function releaseBody(res) {
+  if (!res || !res.body || res.bodyUsed) return
+
+  try {
+    await res.body.cancel()
+  } catch {
+    // A body already consumed, or a socket the peer has closed, must never
+    // turn a passing run red during cleanup.
+  }
+}
+
+/** Cancels the body of every response nobody read. */
+async function releaseUnreadBodies() {
+  for (const res of openResponses) {
+    await releaseBody(res)
+  }
+  openResponses.clear()
+}
+
+/**
+ * Exits once BOTH streams have actually flushed.
+ *
+ * Writing to a PIPE -- which is what a CI runner gives this process -- is
+ * asynchronous, so a bare `process.exit()` can truncate output. Both streams
+ * matter and stdout alone is the wrong half to wait for: the per-check lines
+ * go to stdout, but the `Failures:` summary and the crash stack go to STDERR,
+ * and those are what someone reads when a run goes red.
+ */
+function exitWhenFlushed(code) {
+  process.exitCode = code
+
+  let pending = 2
+  const done = () => {
+    pending -= 1
+    if (pending === 0) process.exit(code)
+  }
+
+  process.stdout.write('', done)
+  process.stderr.write('', done)
+}
+
 async function fetchWithRetry(path, options = {}) {
   const retry404 = options.retry404 !== false
   const url = `${BASE}${path}`
@@ -91,9 +171,14 @@ async function fetchWithRetry(path, options = {}) {
       // Callers can disable 404 retry for expected fallback probes.
       if (res.status >= 500 || res.status === 429 || (retry404 && res.status === 404)) {
         lastErr = `HTTP ${res.status}`
+        // Released here rather than tracked: this response is being thrown
+        // away and nobody will ever read it. A 5xx or a propagation 404 still
+        // carries an HTML error body.
+        await releaseBody(res)
         await sleep(RETRY_DELAY_MS)
         continue
       }
+      openResponses.add(res)
       return res
     } catch (err) {
       clearTimeout(timer)
@@ -321,11 +406,19 @@ async function smoke() {
   if (failed.length) {
     console.error('\nFailures:')
     for (const r of failed) console.error(`  - ${r.name}${r.detail ? ` (${r.detail})` : ''}`)
-    process.exit(1)
   }
+
+  // Before returning, not in a `finally` around the caller: the exit code is
+  // decided here and cleanup must happen while it is still safe to await.
+  await releaseUnreadBodies()
+
+  return failed.length ? 1 : 0
 }
 
-smoke().catch((err) => {
-  console.error('\nSmoke check crashed:', err && err.stack ? err.stack : err)
-  process.exit(1)
-})
+smoke()
+  .then(exitWhenFlushed)
+  .catch(async (err) => {
+    console.error('\nSmoke check crashed:', err && err.stack ? err.stack : err)
+    await releaseUnreadBodies()
+    exitWhenFlushed(1)
+  })
