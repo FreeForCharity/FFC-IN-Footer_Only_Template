@@ -350,8 +350,8 @@ async function checkSecrets() {
 }
 
 // True when `prefix` (a line's text up to a match) has opened a `//` comment
-// outside any quoted string. `x = 1 // c` and `x=1//c` have; `'//fonts...'`
-// and a `https://` inside a string have not.
+// outside any quoted string. `x = 1 // c` and `x=1//c` have; `'//fonts...'`,
+// a `https://` inside a string and an unquoted SCSS `url(//...)` have not.
 function opensLineComment(prefix) {
   let quote = null
   for (let i = 0; i < prefix.length; i++) {
@@ -360,7 +360,11 @@ function opensLineComment(prefix) {
       if (ch === '\\') i++
       else if (ch === quote) quote = null
     } else if (ch === '"' || ch === "'" || ch === '`') quote = ch
-    else if (ch === '/' && prefix[i + 1] === '/') return true
+    else if (ch === '/' && prefix[i + 1] === '/') {
+      // An unquoted `url(//host/...)` in SCSS is a protocol-relative URL.
+      if (/url\(\s*$/i.test(prefix.slice(0, i))) i++
+      else return true
+    }
   }
   return false
 }
