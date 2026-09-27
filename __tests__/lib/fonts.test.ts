@@ -26,7 +26,9 @@ const expectedFonts: Array<{ name: string; variable: string; weights: string[] }
 /** The body of `export const <name> = localFont({ ... })`, or null. */
 function fontBlock(name: string): string | null {
   const match = fontsSource.match(
-    new RegExp(`export const ${name} = localFont\\(\\{([\\s\\S]*?)\\n\\}\\)`)
+    new RegExp(
+      `export\\s+const\\s+${name}\\s*=\\s*localFont\\(\\s*\\{([\\s\\S]*?)\\n\\s*\\}\\s*\\)`
+    )
   )
   return match ? match[1] : null
 }
