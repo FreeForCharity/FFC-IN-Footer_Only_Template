@@ -349,37 +349,42 @@ async function checkSecrets() {
   }
 }
 
-// True when `prefix` (a line's text up to a match) has opened a `//` comment
-// outside any quoted string. `x = 1 // c` and `x=1//c` have; `'//fonts...'`,
-// a `https://` inside a string and anything inside an SCSS `url(...)` have not.
-function opensLineComment(prefix) {
-  let quote = null
-  for (let i = 0; i < prefix.length; i++) {
-    const ch = prefix[i]
-    if (quote) {
-      if (ch === '\\') i++
-      else if (ch === quote) quote = null
-    } else if (ch === '"' || ch === "'" || ch === '`') quote = ch
-    // Everything inside a CSS/SCSS `url(...)` is the URL, quoted or not, so
-    // `url(//host/...)` and `url(https://host/...)` are not comments.
-    else if (/^url\(/i.test(prefix.slice(i, i + 4))) {
-      quote = ')'
-      i += 3
-    } else if (ch === '/' && prefix[i + 1] === '/') return true
+// Where the comments are in `body`, from one left-to-right scan that also
+// tracks strings and CSS `url(...)`: a `//` or `/*` inside a string or url() is
+// not a comment, and a quote inside a comment is not a string. Plain CSS has no
+// `//` comments. '...' and "..." strings end at a line break, as in JS, so a
+// stray apostrophe in JSX text cannot swallow the rest of the file. Regex
+// literals are not modelled.
+function commentSpans(body, isCss) {
+  const spans = []
+  let i = 0
+  while (i < body.length) {
+    const ch = body[i]
+    if (ch === '"' || ch === "'" || ch === '`') {
+      i++
+      while (i < body.length && body[i] !== ch && (ch === '`' || body[i] !== '\n')) {
+        i += body[i] === '\\' ? 2 : 1
+      }
+      i++
+    } else if (/^url\(/i.test(body.slice(i, i + 4))) {
+      const end = body.indexOf(')', i)
+      i = end === -1 ? body.length : end + 1
+    } else if (ch === '/' && body[i + 1] === '*') {
+      const end = body.indexOf('*/', i + 2)
+      const stop = end === -1 ? body.length : end + 2
+      spans.push([i, stop])
+      i = stop
+    } else if (!isCss && ch === '/' && body[i + 1] === '/') {
+      const end = body.indexOf('\n', i)
+      const stop = end === -1 ? body.length : end
+      spans.push([i, stop])
+      i = stop
+    } else i++
   }
-  return false
+  return spans
 }
 
-// Comment test for the Google-fonts rule. Plain CSS has no `//` comments, so a
-// protocol-relative `url(//fonts.gstatic.com/...)` is never one; elsewhere a
-// `//` counts only outside a quoted string (see opensLineComment).
-function insideFontComment(body, index, isCss) {
-  if (!isCss) {
-    const lineStart = body.lastIndexOf('\n', index - 1) + 1
-    if (opensLineComment(body.slice(lineStart, index))) return true
-  }
-  return body.lastIndexOf('/*', index) > body.lastIndexOf('*/', index)
-}
+const inSpans = (spans, index) => spans.some(([start, stop]) => index >= start && index < stop)
 
 /**
  * Fonts must be self-hosted. `next/font/google` downloads from Google during
@@ -400,11 +405,12 @@ async function checkSelfHostedFonts() {
     const rel = relative(ROOT, file)
     const isCss = /\.css$/i.test(rel)
     const body = await readFile(file, 'utf8')
+    const spans = commentSpans(body, isCss)
     for (const { re, what } of forbidden) {
       re.lastIndex = 0
       let match
       while ((match = re.exec(body))) {
-        if (insideFontComment(body, match.index, isCss)) continue
+        if (inSpans(spans, match.index)) continue
         errors.push(
           `${rel}:${lineAt(body, match.index)} ${what}. Fonts must be self-hosted: add the woff2 ` +
             'under src/fonts/<family>/ and load it with next/font/local in src/lib/fonts.ts.'

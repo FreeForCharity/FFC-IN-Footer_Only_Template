@@ -656,6 +656,17 @@ describe('self-hosted fonts drift guard', () => {
     expect(output).toContain('src/app/fonts.scss:1 references a Google Fonts host')
   })
 
+  it('does not read a /* inside a string as a block comment', () => {
+    const { status, output } = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "const s = '/*'\nexport const f = import('next/font/google')\n"
+      )
+    )
+    expect(status).toBe(1)
+    expect(output).toContain('src/lib/fonts.ts:2 imports next/font/google')
+  })
+
   it('still ignores a Google Fonts host named in an SCSS // comment', () => {
     const { status, output } = runDrift(
       fixtureWith('src/app/fonts.scss', '$x: 1; // was fonts.googleapis.com\n')
