@@ -626,4 +626,70 @@ describe('self-hosted fonts drift guard', () => {
     expect(status).toBe(1)
     expect(output).toContain('src/app/globals.css:1 references a Google Fonts host')
   })
+
+  it('fails on a protocol-relative Google Fonts URL, which is not a comment', () => {
+    const css = runDrift(
+      fixtureWith(
+        'src/app/globals.css',
+        '@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); }\n'
+      )
+    )
+    expect(css.status).toBe(1)
+    expect(css.output).toContain('src/app/globals.css:1 references a Google Fonts host')
+
+    const tsx = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "export const href = '//fonts.googleapis.com/css2?family=Lato'\n"
+      )
+    )
+    expect(tsx.status).toBe(1)
+    expect(tsx.output).toContain('src/lib/fonts.ts:1 references a Google Fonts host')
+  })
+
+  it.each([
+    ['@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); } // self-host this', 1],
+    ['@font-face { src: url(https://fonts.gstatic.com/s/lato/v24/x.woff2); }', 1],
+    ['@font-face {\n  src: url(\n    //fonts.gstatic.com/s/lato/v24/x.woff2\n  );\n}', 3],
+  ])('fails on an unquoted Google Fonts url() in SCSS: %s', (scss, line) => {
+    const { status, output } = runDrift(fixtureWith('src/app/fonts.scss', `${scss}\n`))
+    expect(status).toBe(1)
+    expect(output).toContain(`src/app/fonts.scss:${line} references a Google Fonts host`)
+  })
+
+  it('does not read a /* inside a string as a block comment', () => {
+    const { status, output } = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "const s = '/*'\nexport const f = import('next/font/google')\n"
+      )
+    )
+    expect(status).toBe(1)
+    expect(output).toContain('src/lib/fonts.ts:2 imports next/font/google')
+  })
+
+  it('still ignores a Google Fonts host named in an SCSS // comment', () => {
+    const { status, output } = runDrift(
+      fixtureWith('src/app/fonts.scss', '$x: 1; // was fonts.googleapis.com\n')
+    )
+    expect(output).not.toContain('Fonts must be self-hosted')
+    expect(status).toBe(0)
+  })
+
+  it('treats // as a comment only outside a string, even straight after code', () => {
+    const commented = runDrift(
+      fixtureWith('src/lib/fonts.ts', 'export const x = 1// was fonts.googleapis.com\n')
+    )
+    expect(commented.output).not.toContain('Fonts must be self-hosted')
+    expect(commented.status).toBe(0)
+
+    const masked = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "const cdn = '//cdn.example'; export const f = import('next/font/google')\n"
+      )
+    )
+    expect(masked.status).toBe(1)
+    expect(masked.output).toContain('src/lib/fonts.ts:1 imports next/font/google')
+  })
 })

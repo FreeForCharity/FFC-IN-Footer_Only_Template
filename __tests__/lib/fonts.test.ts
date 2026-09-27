@@ -85,12 +85,34 @@ function walk(dir: string, out: string[] = []): string[] {
 describe('lib/fonts', () => {
   // Same policy as check:drift's checkSelfHostedFonts: a mention inside a
   // comment is allowed, so the reason can be written next to the code.
-  const inComment = (code: string, at: number) => {
-    const lineStart = code.lastIndexOf('\n', at - 1) + 1
-    // `//` after a colon is a URL (https://...), not a comment, as in check:drift.
-    if (/(^|[^:])\/\//.test(code.slice(lineStart, at))) return true
-    return code.lastIndexOf('/*', at) > code.lastIndexOf('*/', at)
+  // Same scan as check:drift's commentSpans: one pass that tracks strings and
+  // url(...), so a `//` or `/*` inside a string is not a comment. '...' and
+  // "..." strings end at a line break, as in JS.
+  const commentSpans = (body: string) => {
+    const spans: Array<[number, number]> = []
+    let i = 0
+    while (i < body.length) {
+      const ch = body[i]
+      if (ch === '"' || ch === "'" || ch === '`') {
+        i++
+        while (i < body.length && body[i] !== ch && (ch === '`' || body[i] !== '\n')) {
+          i += body[i] === '\\' ? 2 : 1
+        }
+        i++
+      } else if (/^url\(/i.test(body.slice(i, i + 4))) {
+        const end = body.indexOf(')', i)
+        i = end === -1 ? body.length : end + 1
+      } else if (ch === '/' && (body[i + 1] === '*' || body[i + 1] === '/')) {
+        const end = body[i + 1] === '*' ? body.indexOf('*/', i + 2) : body.indexOf('\n', i)
+        const stop = end === -1 ? body.length : body[i + 1] === '*' ? end + 2 : end
+        spans.push([i, stop])
+        i = stop
+      } else i++
+    }
+    return spans
   }
+  const inComment = (code: string, at: number) =>
+    commentSpans(code).some(([start, stop]) => at >= start && at < stop)
   const usesGoogleLoader = (code: string) =>
     [...code.matchAll(/next\/font\/google/g)].some((m) => !inComment(code, m.index ?? 0))
 
@@ -107,6 +129,9 @@ describe('lib/fonts', () => {
     expect(usesGoogleLoader("import { Lato } from 'next/font/google'")).toBe(true)
     expect(usesGoogleLoader("const u = 'https://x.example'; import('next/font/google')")).toBe(true)
     expect(usesGoogleLoader("// was: import { Lato } from 'next/font/google'")).toBe(false)
+    expect(usesGoogleLoader("const u = '//cdn.example'; import('next/font/google')")).toBe(true)
+    expect(usesGoogleLoader("const x = 1// import('next/font/google')")).toBe(false)
+    expect(usesGoogleLoader("const s = '/*'; import('next/font/google')")).toBe(true)
     expect(usesGoogleLoader('/*\n * next/font/google fetched at build time\n */')).toBe(false)
   })
 

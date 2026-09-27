@@ -349,6 +349,43 @@ async function checkSecrets() {
   }
 }
 
+// Where the comments are in `body`, from one left-to-right scan that also
+// tracks strings and CSS `url(...)`: a `//` or `/*` inside a string or url() is
+// not a comment, and a quote inside a comment is not a string. Plain CSS has no
+// `//` comments. '...' and "..." strings end at a line break, as in JS, so a
+// stray apostrophe in JSX text cannot swallow the rest of the file. Regex
+// literals are not modelled.
+function commentSpans(body, isCss) {
+  const spans = []
+  let i = 0
+  while (i < body.length) {
+    const ch = body[i]
+    if (ch === '"' || ch === "'" || ch === '`') {
+      i++
+      while (i < body.length && body[i] !== ch && (ch === '`' || body[i] !== '\n')) {
+        i += body[i] === '\\' ? 2 : 1
+      }
+      i++
+    } else if (/^url\(/i.test(body.slice(i, i + 4))) {
+      const end = body.indexOf(')', i)
+      i = end === -1 ? body.length : end + 1
+    } else if (ch === '/' && body[i + 1] === '*') {
+      const end = body.indexOf('*/', i + 2)
+      const stop = end === -1 ? body.length : end + 2
+      spans.push([i, stop])
+      i = stop
+    } else if (!isCss && ch === '/' && body[i + 1] === '/') {
+      const end = body.indexOf('\n', i)
+      const stop = end === -1 ? body.length : end
+      spans.push([i, stop])
+      i = stop
+    } else i++
+  }
+  return spans
+}
+
+const inSpans = (spans, index) => spans.some(([start, stop]) => index >= start && index < stop)
+
 /**
  * Fonts must be self-hosted. `next/font/google` downloads from Google during
  * `next build`, which intermittently failed the build (#163) and makes every
@@ -366,12 +403,14 @@ async function checkSelfHostedFonts() {
 
   for (const file of files) {
     const rel = relative(ROOT, file)
+    const isCss = /\.css$/i.test(rel)
     const body = await readFile(file, 'utf8')
+    const spans = commentSpans(body, isCss)
     for (const { re, what } of forbidden) {
       re.lastIndex = 0
       let match
       while ((match = re.exec(body))) {
-        if (insideComment(body, match.index)) continue
+        if (inSpans(spans, match.index)) continue
         errors.push(
           `${rel}:${lineAt(body, match.index)} ${what}. Fonts must be self-hosted: add the woff2 ` +
             'under src/fonts/<family>/ and load it with next/font/local in src/lib/fonts.ts.'
