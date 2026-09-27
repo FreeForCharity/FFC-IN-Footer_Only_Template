@@ -12,16 +12,56 @@ const SRC_DIR = path.join(__dirname, '../../src')
 const FONTS_TS = path.join(SRC_DIR, 'lib/fonts.ts')
 const fontsSource = fs.readFileSync(FONTS_TS, 'utf8')
 
-const expectedFonts: Array<{ name: string; variable: string; weights: string[] }> = [
-  { name: 'openSans', variable: '--font-open-sans', weights: ['400', '500', '600', '700', '800'] },
-  { name: 'lato', variable: '--font-lato', weights: ['400', '700'] },
-  { name: 'raleway', variable: '--font-raleway', weights: ['400', '500', '600', '700'] },
-  { name: 'faustina', variable: '--font-faustina', weights: ['400', '500', '600', '700'] },
-  { name: 'cantataOne', variable: '--font-cantata-one', weights: ['400'] },
-  { name: 'faunaOne', variable: '--font-fauna-one', weights: ['400'] },
-  { name: 'montserrat', variable: '--font-montserrat', weights: ['400', '500', '600', '700'] },
-  { name: 'cinzel', variable: '--font-cinzel', weights: ['400', '500', '600', '700'] },
+// `weights` are the weights the Google definition loaded; `sources` are the
+// `weight` values fonts.ts declares. A range ('300 800') is one variable woff2
+// covering every weight in it, which is how the Google loader served these
+// families: one file per weight would preload 25 files instead of 9.
+const expectedFonts: Array<{
+  name: string
+  variable: string
+  weights: string[]
+  sources: string[]
+}> = [
+  {
+    name: 'openSans',
+    variable: '--font-open-sans',
+    weights: ['400', '500', '600', '700', '800'],
+    sources: ['300 800'],
+  },
+  { name: 'lato', variable: '--font-lato', weights: ['400', '700'], sources: ['400', '700'] },
+  {
+    name: 'raleway',
+    variable: '--font-raleway',
+    weights: ['400', '500', '600', '700'],
+    sources: ['100 900'],
+  },
+  {
+    name: 'faustina',
+    variable: '--font-faustina',
+    weights: ['400', '500', '600', '700'],
+    sources: ['300 800'],
+  },
+  { name: 'cantataOne', variable: '--font-cantata-one', weights: ['400'], sources: ['400'] },
+  { name: 'faunaOne', variable: '--font-fauna-one', weights: ['400'], sources: ['400'] },
+  {
+    name: 'montserrat',
+    variable: '--font-montserrat',
+    weights: ['400', '500', '600', '700'],
+    sources: ['100 900'],
+  },
+  {
+    name: 'cinzel',
+    variable: '--font-cinzel',
+    weights: ['400', '500', '600', '700'],
+    sources: ['400 900'],
+  },
 ]
+
+/** True when a declared `weight` ('400' or '300 800') covers weight `w`. */
+function covers(weight: string, w: string): boolean {
+  const [lo, hi = lo] = weight.split(' ').map(Number)
+  return Number(w) >= lo && Number(w) <= hi
+}
 
 /** The body of `export const <name> = localFont({ ... })`, or null. */
 function fontBlock(name: string): string | null {
@@ -68,19 +108,21 @@ describe('lib/fonts', () => {
 
   it.each(expectedFonts)(
     '$name keeps its CSS variable, swap display and weights',
-    ({ name, variable, weights }) => {
+    ({ name, variable, weights, sources }) => {
       const block = fontBlock(name)!
       expect(block).toContain(`variable: '${variable}'`)
       expect(block).toMatch(/display:\s*'swap'/)
 
-      const declared = [...block.matchAll(/weight:\s*'(\d+)'/g)].map((m) => m[1])
-      expect(declared).toEqual(weights)
+      const declared = [...block.matchAll(/weight:\s*'([\d ]+)'/g)].map((m) => m[1])
+      expect(declared).toEqual(sources)
+      const missing = weights.filter((w) => !declared.some((d) => covers(d, w)))
+      expect(missing).toEqual([])
     }
   )
 
   it('points every src path at a real woff2 file on disk', () => {
     const paths = [...fontsSource.matchAll(/path:\s*'([^']+)'/g)].map((m) => m[1])
-    const expectedCount = expectedFonts.reduce((n, f) => n + f.weights.length, 0)
+    const expectedCount = expectedFonts.reduce((n, f) => n + f.sources.length, 0)
     expect(paths).toHaveLength(expectedCount)
 
     for (const rel of paths) {

@@ -7,9 +7,15 @@
 // comes back.
 //
 // The files are the latin-subset, normal-style woff2 builds from the
-// @fontsource/<family> packages (v5.3.0), each shipped with its SIL Open Font
-// License in src/fonts/<family>/LICENSE. To add a weight, copy the matching
-// `<family>-latin-<weight>-normal.woff2` from that package and list it below.
+// @fontsource packages (v5.3.0), each shipped with its SIL Open Font License in
+// src/fonts/<family>/LICENSE. Families with a variable build (Open Sans,
+// Raleway, Faustina, Montserrat, Cinzel) load ONE `<family>-latin-wght-normal.woff2`
+// from @fontsource-variable/<family> covering a weight range - the same single
+// file per family the Google loader served. Lato, Cantata One and Fauna One have
+// no variable build, so they load one `<family>-latin-<weight>-normal.woff2` per
+// weight from @fontsource/<family>. Every file is preloaded, so a file per
+// weight for the variable families (25 files instead of 9) cost Lighthouse
+// performance.
 //
 // Export names and CSS variable names are unchanged from the Google version, so
 // src/app/layout.tsx and src/app/globals.css need no edits.
@@ -20,11 +26,11 @@ import localFont from 'next/font/local'
 
 export const openSans = localFont({
   src: [
-    { path: '../fonts/open-sans/open-sans-latin-400-normal.woff2', weight: '400', style: 'normal' },
-    { path: '../fonts/open-sans/open-sans-latin-500-normal.woff2', weight: '500', style: 'normal' },
-    { path: '../fonts/open-sans/open-sans-latin-600-normal.woff2', weight: '600', style: 'normal' },
-    { path: '../fonts/open-sans/open-sans-latin-700-normal.woff2', weight: '700', style: 'normal' },
-    { path: '../fonts/open-sans/open-sans-latin-800-normal.woff2', weight: '800', style: 'normal' },
+    {
+      path: '../fonts/open-sans/open-sans-latin-wght-normal.woff2',
+      weight: '300 800',
+      style: 'normal',
+    },
   ],
   display: 'swap',
   variable: '--font-open-sans',
@@ -45,10 +51,11 @@ export const lato = localFont({
 
 export const raleway = localFont({
   src: [
-    { path: '../fonts/raleway/raleway-latin-400-normal.woff2', weight: '400', style: 'normal' },
-    { path: '../fonts/raleway/raleway-latin-500-normal.woff2', weight: '500', style: 'normal' },
-    { path: '../fonts/raleway/raleway-latin-600-normal.woff2', weight: '600', style: 'normal' },
-    { path: '../fonts/raleway/raleway-latin-700-normal.woff2', weight: '700', style: 'normal' },
+    {
+      path: '../fonts/raleway/raleway-latin-wght-normal.woff2',
+      weight: '100 900',
+      style: 'normal',
+    },
   ],
   display: 'swap',
   variable: '--font-raleway',
@@ -58,10 +65,11 @@ export const raleway = localFont({
 
 export const faustina = localFont({
   src: [
-    { path: '../fonts/faustina/faustina-latin-400-normal.woff2', weight: '400', style: 'normal' },
-    { path: '../fonts/faustina/faustina-latin-500-normal.woff2', weight: '500', style: 'normal' },
-    { path: '../fonts/faustina/faustina-latin-600-normal.woff2', weight: '600', style: 'normal' },
-    { path: '../fonts/faustina/faustina-latin-700-normal.woff2', weight: '700', style: 'normal' },
+    {
+      path: '../fonts/faustina/faustina-latin-wght-normal.woff2',
+      weight: '300 800',
+      style: 'normal',
+    },
   ],
   display: 'swap',
   variable: '--font-faustina',
@@ -96,23 +104,8 @@ export const faunaOne = localFont({
 export const montserrat = localFont({
   src: [
     {
-      path: '../fonts/montserrat/montserrat-latin-400-normal.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/montserrat/montserrat-latin-500-normal.woff2',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/montserrat/montserrat-latin-600-normal.woff2',
-      weight: '600',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/montserrat/montserrat-latin-700-normal.woff2',
-      weight: '700',
+      path: '../fonts/montserrat/montserrat-latin-wght-normal.woff2',
+      weight: '100 900',
       style: 'normal',
     },
   ],
@@ -124,10 +117,7 @@ export const montserrat = localFont({
 
 export const cinzel = localFont({
   src: [
-    { path: '../fonts/cinzel/cinzel-latin-400-normal.woff2', weight: '400', style: 'normal' },
-    { path: '../fonts/cinzel/cinzel-latin-500-normal.woff2', weight: '500', style: 'normal' },
-    { path: '../fonts/cinzel/cinzel-latin-600-normal.woff2', weight: '600', style: 'normal' },
-    { path: '../fonts/cinzel/cinzel-latin-700-normal.woff2', weight: '700', style: 'normal' },
+    { path: '../fonts/cinzel/cinzel-latin-wght-normal.woff2', weight: '400 900', style: 'normal' },
   ],
   display: 'swap',
   variable: '--font-cinzel',
