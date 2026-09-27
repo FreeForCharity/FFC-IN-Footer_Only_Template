@@ -349,6 +349,19 @@ async function checkSecrets() {
   }
 }
 
+// Comment test for checkSelfHostedFonts. Stricter than insideComment() about
+// `//` so a protocol-relative URL is not mistaken for a comment: plain CSS has
+// no `//` comments at all (`url(//fonts.gstatic.com/...)`), and elsewhere `//`
+// opens a comment only at the start of a line or after whitespace, never
+// straight after a quote or paren (`'//fonts.gstatic.com/...'`).
+function insideFontComment(body, index, isCss) {
+  if (!isCss) {
+    const lineStart = body.lastIndexOf('\n', index - 1) + 1
+    if (/(^|\s)\/\//.test(body.slice(lineStart, index))) return true
+  }
+  return body.lastIndexOf('/*', index) > body.lastIndexOf('*/', index)
+}
+
 /**
  * Fonts must be self-hosted. `next/font/google` downloads from Google during
  * `next build`, which intermittently failed the build (#163) and makes every
@@ -366,12 +379,13 @@ async function checkSelfHostedFonts() {
 
   for (const file of files) {
     const rel = relative(ROOT, file)
+    const isCss = /\.css$/i.test(rel)
     const body = await readFile(file, 'utf8')
     for (const { re, what } of forbidden) {
       re.lastIndex = 0
       let match
       while ((match = re.exec(body))) {
-        if (insideComment(body, match.index)) continue
+        if (insideFontComment(body, match.index, isCss)) continue
         errors.push(
           `${rel}:${lineAt(body, match.index)} ${what}. Fonts must be self-hosted: add the woff2 ` +
             'under src/fonts/<family>/ and load it with next/font/local in src/lib/fonts.ts.'

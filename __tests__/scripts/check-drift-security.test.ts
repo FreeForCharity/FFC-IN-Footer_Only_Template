@@ -626,4 +626,24 @@ describe('self-hosted fonts drift guard', () => {
     expect(status).toBe(1)
     expect(output).toContain('src/app/globals.css:1 references a Google Fonts host')
   })
+
+  it('fails on a protocol-relative Google Fonts URL, which is not a comment', () => {
+    const css = runDrift(
+      fixtureWith(
+        'src/app/globals.css',
+        '@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); }\n'
+      )
+    )
+    expect(css.status).toBe(1)
+    expect(css.output).toContain('src/app/globals.css:1 references a Google Fonts host')
+
+    const tsx = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "export const href = '//fonts.googleapis.com/css2?family=Lato'\n"
+      )
+    )
+    expect(tsx.status).toBe(1)
+    expect(tsx.output).toContain('src/lib/fonts.ts:1 references a Google Fonts host')
+  })
 })
