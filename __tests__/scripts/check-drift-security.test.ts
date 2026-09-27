@@ -647,15 +647,21 @@ describe('self-hosted fonts drift guard', () => {
     expect(tsx.output).toContain('src/lib/fonts.ts:1 references a Google Fonts host')
   })
 
-  it('fails on an unquoted protocol-relative url() in SCSS', () => {
-    const { status, output } = runDrift(
-      fixtureWith(
-        'src/app/fonts.scss',
-        '@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); } // self-host this\n'
-      )
-    )
+  it.each([
+    '@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); } // self-host this',
+    '@font-face { src: url(https://fonts.gstatic.com/s/lato/v24/x.woff2); }',
+  ])('fails on an unquoted Google Fonts url() in SCSS: %s', (line) => {
+    const { status, output } = runDrift(fixtureWith('src/app/fonts.scss', `${line}\n`))
     expect(status).toBe(1)
     expect(output).toContain('src/app/fonts.scss:1 references a Google Fonts host')
+  })
+
+  it('still ignores a Google Fonts host named in an SCSS // comment', () => {
+    const { status, output } = runDrift(
+      fixtureWith('src/app/fonts.scss', '$x: 1; // was fonts.googleapis.com\n')
+    )
+    expect(output).not.toContain('Fonts must be self-hosted')
+    expect(status).toBe(0)
   })
 
   it('treats // as a comment only outside a string, even straight after code', () => {
