@@ -568,3 +568,62 @@ describe('social card guard', () => {
     expect(output).not.toContain('declares 600x315')
   })
 })
+
+// Fonts are self-hosted (#163): next/font/google fetches from Google during
+// `next build`, and a Google Fonts URL makes every page view depend on Google.
+describe('self-hosted fonts drift guard', () => {
+  let fixtures: string[] = []
+
+  afterEach(() => {
+    for (const fixture of fixtures) rmSync(fixture, { recursive: true, force: true })
+    fixtures = []
+  })
+
+  function fixtureWith(relPath: string, body: string) {
+    const dir = makeFixture()
+    fixtures.push(dir)
+    writeFileSync(join(dir, relPath), body)
+    return dir
+  }
+
+  it('accepts next/font/local, and the reason written in a comment', () => {
+    const { status, output } = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        [
+          '// Not next/font/google: that fetches from fonts.googleapis.com at build time.',
+          "import localFont from 'next/font/local'",
+          "export const lato = localFont({ src: '../fonts/lato/lato.woff2', variable: '--font-lato' })",
+          '',
+        ].join('\n')
+      )
+    )
+
+    expect(output).not.toContain('Fonts must be self-hosted')
+    expect(status).toBe(0)
+  })
+
+  it('fails when src/ imports next/font/google', () => {
+    const { status, output } = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "import { Lato } from 'next/font/google'\nexport const lato = Lato({ weight: '400' })\n"
+      )
+    )
+
+    expect(status).toBe(1)
+    expect(output).toContain('src/lib/fonts.ts:1 imports next/font/google')
+  })
+
+  it('fails when CSS pulls a stylesheet from a Google Fonts host', () => {
+    const { status, output } = runDrift(
+      fixtureWith(
+        'src/app/globals.css',
+        "@import url('https://fonts.googleapis.com/css2?family=Lato&display=swap');\n"
+      )
+    )
+
+    expect(status).toBe(1)
+    expect(output).toContain('src/app/globals.css:1 references a Google Fonts host')
+  })
+})

@@ -156,7 +156,7 @@ The `NEXT_PUBLIC_BASE_PATH` environment variable controls the `basePath` in `nex
 ## Known Issues
 
 - **ESLint `img` warnings:** Some ESLint rules flag `<img>` tags in favor of `next/image`. For static exports, `<img>` with `assetPath()` is the correct approach. These warnings are expected.
-- **Google Fonts:** Font loading may fail on restricted networks. The site should degrade gracefully with system fonts.
+- **Fonts are self-hosted:** `src/lib/fonts.ts` loads every family with `next/font/local` from the woff2 files in `src/fonts/<family>/` (each with its OFL `LICENSE`), so builds never contact Google. Do not reintroduce `next/font/google` -- `pnpm run check:drift` and `__tests__/lib/fonts.test.ts` both fail on it.
 - **Static export limitations:** Dynamic features like API routes, middleware, and ISR are not available. All pages must be statically renderable at build time.
 
 ---

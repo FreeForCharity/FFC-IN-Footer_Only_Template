@@ -652,7 +652,7 @@ Files to update:
 
 **Color scheme**: Edit `src/app/globals.css` and Tailwind configuration
 
-**Fonts**: Update font imports in `src/app/layout.tsx` (if using Google Fonts)
+**Fonts**: Fonts are self-hosted. Add the woff2 files under `src/fonts/<family>/` (with the font's license) and declare them with `next/font/local` in `src/lib/fonts.ts`. Do not use `next/font/google`.
 
 ### 4. Update Team and Content
 
