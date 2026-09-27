@@ -87,7 +87,8 @@ describe('lib/fonts', () => {
   // comment is allowed, so the reason can be written next to the code.
   const inComment = (code: string, at: number) => {
     const lineStart = code.lastIndexOf('\n', at - 1) + 1
-    if (code.slice(lineStart, at).includes('//')) return true
+    // `//` after a colon is a URL (https://...), not a comment, as in check:drift.
+    if (/(^|[^:])\/\//.test(code.slice(lineStart, at))) return true
     return code.lastIndexOf('/*', at) > code.lastIndexOf('*/', at)
   }
   const usesGoogleLoader = (code: string) =>
@@ -104,6 +105,7 @@ describe('lib/fonts', () => {
 
   it('ignores next/font/google named only in a comment', () => {
     expect(usesGoogleLoader("import { Lato } from 'next/font/google'")).toBe(true)
+    expect(usesGoogleLoader("const u = 'https://x.example'; import('next/font/google')")).toBe(true)
     expect(usesGoogleLoader("// was: import { Lato } from 'next/font/google'")).toBe(false)
     expect(usesGoogleLoader('/*\n * next/font/google fetched at build time\n */')).toBe(false)
   })
