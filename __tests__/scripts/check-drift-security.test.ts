@@ -646,4 +646,21 @@ describe('self-hosted fonts drift guard', () => {
     expect(tsx.status).toBe(1)
     expect(tsx.output).toContain('src/lib/fonts.ts:1 references a Google Fonts host')
   })
+
+  it('treats // as a comment only outside a string, even straight after code', () => {
+    const commented = runDrift(
+      fixtureWith('src/lib/fonts.ts', 'export const x = 1// was fonts.googleapis.com\n')
+    )
+    expect(commented.output).not.toContain('Fonts must be self-hosted')
+    expect(commented.status).toBe(0)
+
+    const masked = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "const cdn = '//cdn.example'; export const f = import('next/font/google')\n"
+      )
+    )
+    expect(masked.status).toBe(1)
+    expect(masked.output).toContain('src/lib/fonts.ts:1 imports next/font/google')
+  })
 })

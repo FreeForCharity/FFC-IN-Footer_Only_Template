@@ -85,10 +85,23 @@ function walk(dir: string, out: string[] = []): string[] {
 describe('lib/fonts', () => {
   // Same policy as check:drift's checkSelfHostedFonts: a mention inside a
   // comment is allowed, so the reason can be written next to the code.
+  // Same test as check:drift's opensLineComment: a `//` counts only outside a
+  // quoted string, so `https://...` and `'//cdn...'` are not comments.
+  const opensLineComment = (prefix: string) => {
+    let quote: string | null = null
+    for (let i = 0; i < prefix.length; i++) {
+      const ch = prefix[i]
+      if (quote) {
+        if (ch === '\\') i++
+        else if (ch === quote) quote = null
+      } else if (ch === '"' || ch === "'" || ch === '`') quote = ch
+      else if (ch === '/' && prefix[i + 1] === '/') return true
+    }
+    return false
+  }
   const inComment = (code: string, at: number) => {
     const lineStart = code.lastIndexOf('\n', at - 1) + 1
-    // `//` after a colon is a URL (https://...), not a comment, as in check:drift.
-    if (/(^|[^:])\/\//.test(code.slice(lineStart, at))) return true
+    if (opensLineComment(code.slice(lineStart, at))) return true
     return code.lastIndexOf('/*', at) > code.lastIndexOf('*/', at)
   }
   const usesGoogleLoader = (code: string) =>
@@ -107,6 +120,8 @@ describe('lib/fonts', () => {
     expect(usesGoogleLoader("import { Lato } from 'next/font/google'")).toBe(true)
     expect(usesGoogleLoader("const u = 'https://x.example'; import('next/font/google')")).toBe(true)
     expect(usesGoogleLoader("// was: import { Lato } from 'next/font/google'")).toBe(false)
+    expect(usesGoogleLoader("const u = '//cdn.example'; import('next/font/google')")).toBe(true)
+    expect(usesGoogleLoader("const x = 1// import('next/font/google')")).toBe(false)
     expect(usesGoogleLoader('/*\n * next/font/google fetched at build time\n */')).toBe(false)
   })
 

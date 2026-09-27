@@ -349,15 +349,29 @@ async function checkSecrets() {
   }
 }
 
-// Comment test for checkSelfHostedFonts. Stricter than insideComment() about
-// `//` so a protocol-relative URL is not mistaken for a comment: plain CSS has
-// no `//` comments at all (`url(//fonts.gstatic.com/...)`), and elsewhere `//`
-// opens a comment only at the start of a line or after whitespace, never
-// straight after a quote or paren (`'//fonts.gstatic.com/...'`).
+// True when `prefix` (a line's text up to a match) has opened a `//` comment
+// outside any quoted string. `x = 1 // c` and `x=1//c` have; `'//fonts...'`
+// and a `https://` inside a string have not.
+function opensLineComment(prefix) {
+  let quote = null
+  for (let i = 0; i < prefix.length; i++) {
+    const ch = prefix[i]
+    if (quote) {
+      if (ch === '\\') i++
+      else if (ch === quote) quote = null
+    } else if (ch === '"' || ch === "'" || ch === '`') quote = ch
+    else if (ch === '/' && prefix[i + 1] === '/') return true
+  }
+  return false
+}
+
+// Comment test for the Google-fonts rule. Plain CSS has no `//` comments, so a
+// protocol-relative `url(//fonts.gstatic.com/...)` is never one; elsewhere a
+// `//` counts only outside a quoted string (see opensLineComment).
 function insideFontComment(body, index, isCss) {
   if (!isCss) {
     const lineStart = body.lastIndexOf('\n', index - 1) + 1
-    if (/(^|\s)\/\//.test(body.slice(lineStart, index))) return true
+    if (opensLineComment(body.slice(lineStart, index))) return true
   }
   return body.lastIndexOf('/*', index) > body.lastIndexOf('*/', index)
 }
