@@ -36,6 +36,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import React from 'react'
 import { ImageResponse } from 'next/og.js'
+import { isPng } from './png-signature.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const OUTPUT = path.join(ROOT, 'public', 'og-card.png')
@@ -151,7 +152,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   })
   const bytes = Buffer.from(await response.arrayBuffer())
 
-  if (bytes.subarray(1, 4).toString('latin1') !== 'PNG') {
+  // The full 8-byte signature, not the `PNG` inside it: three ASCII letters
+  // occur by accident in plenty of binary data, and this guard exists to stop
+  // a non-PNG being written into public/, where it would next be noticed in a
+  // browser rather than here. See scripts/png-signature.mjs.
+  if (!isPng(bytes)) {
     throw new Error('ImageResponse did not return a PNG')
   }
 
