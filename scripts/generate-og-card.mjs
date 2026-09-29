@@ -33,7 +33,7 @@
  */
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import React from 'react'
 import { ImageResponse } from 'next/og.js'
 import { isPng } from './png-signature.mjs'
@@ -82,6 +82,16 @@ export function cardPalette(backgroundHex) {
 }
 
 const el = React.createElement
+
+/**
+ * The card's bottom line. The EIN part is left out while the EIN is empty (it
+ * is awaiting the charity, see siteConfig.pending), rather than baking a
+ * dangling "EIN " into the committed PNG.
+ */
+export function cardFootnote(siteConfig) {
+  const ein = String(siteConfig.ein ?? '').trim()
+  return `Supported by ${siteConfig.supportedBy.name}${ein ? ` · EIN ${ein}` : ''}`
+}
 
 export function cardElement(siteConfig, description) {
   const palette = cardPalette(siteConfig.themeColor)
@@ -132,18 +142,38 @@ export function cardElement(siteConfig, description) {
     el(
       'div',
       { style: { display: 'flex', fontSize: 24, color: palette.footnote } },
-      `Supported by ${siteConfig.supportedBy.name} · EIN ${siteConfig.ein}`
+      cardFootnote(siteConfig)
     )
   )
 }
 
+/**
+ * True when `moduleUrl` (an `import.meta.url`) is the script node was started
+ * with (`scriptPath`, i.e. `process.argv[1]`).
+ *
+ * Compared as file URLs built by pathToFileURL(), never by gluing `file://`
+ * onto the path: on Windows argv[1] is `C:\...\generate-og-card.mjs` while
+ * import.meta.url is `file:///C:/.../generate-og-card.mjs`, so the glued form
+ * never matched and `pnpm run og:card` exited 0 having written nothing.
+ * Windows paths are case-insensitive, so the comparison is too there.
+ */
+export function isMainModule(moduleUrl, scriptPath, platform = process.platform) {
+  if (!scriptPath) return false
+  const scriptUrl = pathToFileURL(path.resolve(scriptPath)).href
+  return platform === 'win32'
+    ? scriptUrl.toLowerCase() === String(moduleUrl).toLowerCase()
+    : scriptUrl === moduleUrl
+}
+
 // Guarded so the exports above can be imported by a test without rendering.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url, process.argv[1])) {
   // Imported from the TypeScript source rather than duplicated: the card must
   // say what the site says, and a second copy of the brand strings is exactly
   // how the two drift apart.
+  // A file URL, not a bare path: on Windows import() reads `C:\...` as a URL
+  // with the scheme `c:` and rejects it.
   const { siteConfig, cardDescription } = await import(
-    path.join(ROOT, 'src', 'lib', 'site.config.ts')
+    pathToFileURL(path.join(ROOT, 'src', 'lib', 'site.config.ts')).href
   )
 
   const response = new ImageResponse(cardElement(siteConfig, cardDescription()), {

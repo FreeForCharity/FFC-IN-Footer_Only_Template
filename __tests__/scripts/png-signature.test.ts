@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 /**
  * ESM module, so this runs it through node the way the other script tests do
@@ -13,7 +14,7 @@ function evaluate(expression: string): unknown {
     [
       '--input-type=module',
       '-e',
-      `const m = await import(${JSON.stringify(script)});\nprocess.stdout.write(JSON.stringify(${expression}))`,
+      `const m = await import(${JSON.stringify(pathToFileURL(script).href)});\nprocess.stdout.write(JSON.stringify(${expression}))`,
     ],
     { cwd: process.cwd(), encoding: 'utf8' }
   )

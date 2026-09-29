@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { readFileSync, readdirSync } from 'node:fs'
 
 /**
@@ -72,8 +72,10 @@ describe('referenced static assets', () => {
     // existsSync alone is case-insensitive on macOS and Windows, where most of
     // this work happens. Compare against the directory listing so a case
     // mismatch fails everywhere, not only on Linux.
-    const dir = onDisk.slice(0, onDisk.lastIndexOf('/'))
-    const base = onDisk.slice(onDisk.lastIndexOf('/') + 1)
+    // dirname/basename, not a split on '/': join() returns backslashes on
+    // Windows, where a '/' split cut the last character off every path.
+    const dir = dirname(onDisk)
+    const base = basename(onDisk)
     expect(readdirSync(dir)).toContain(base)
   })
 })
