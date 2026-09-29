@@ -9,7 +9,21 @@ import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
 import type { LucideIcon } from 'lucide-react'
 import { assetPath } from '@/lib/assetPath'
-import { donateHref, mailtoHref, siteConfig, volunteerHref } from '@/lib/site.config'
+import {
+  PENDING_TEXT,
+  donateHref,
+  isPending,
+  mailtoHref,
+  siteConfig,
+  volunteerHref,
+} from '@/lib/site.config'
+
+// Visible stand-in for a footer-standard field the charity has not supplied
+// yet (see PendingField in site.config.ts). Plain text, never a link: a gap
+// in the standard should read as a call to action, not as a working control.
+function PendingNote() {
+  return <span className="block italic text-[15px] text-gray-300">{PENDING_TEXT}</span>
+}
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
 // Unknown labels fall back to a generic link icon (Link2) so a charity
@@ -45,35 +59,49 @@ const Footer: React.FC = () => {
           <h3 className="text-[28px] text-white">Endorsements</h3>
 
           <div className="space-y-4">
-            <a
-              href={siteConfig.guidestar.profileUrl}
-              aria-label={`View ${siteConfig.name} GuideStar Profile`}
-            >
-              <img
-                src={assetPath('/Svgs/footerImage.svg')}
-                alt="GuideStar Platinum Seal of Transparency"
-              />
-            </a>
-            <Link
-              href={siteConfig.guidestar.directProfileUrl}
-              className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
-                border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
-                transition-all duration-300 hover:border-transparent aria-font"
-            >
-              <span className="text-[17px] font-medium leading-tight sm:text-[18px] md:text-[20px] transition-transform duration-300 group-hover:-translate-x-1">
-                Direct GuideStar Profile Link
-              </span>
+            {/* The seal and the direct link are transparency claims: each renders
+              only when its own GuideStar URL is configured, so a charity with no
+              profile shows neither rather than linking to someone else's. */}
+            {siteConfig.guidestar.profileUrl.trim() && (
+              <a
+                href={siteConfig.guidestar.profileUrl}
+                aria-label={`View ${siteConfig.name} GuideStar Profile`}
+              >
+                <img
+                  src={assetPath('/Svgs/footerImage.svg')}
+                  alt="GuideStar Platinum Seal of Transparency"
+                />
+              </a>
+            )}
+            {isPending('guidestar') && (
+              <div>
+                <p className="font-[500] text-[22px]">GuideStar / Candid Profile</p>
+                <PendingNote />
+              </div>
+            )}
+            {siteConfig.guidestar.directProfileUrl.trim() && (
+              <Link
+                href={siteConfig.guidestar.directProfileUrl}
+                className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
+                  border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
+                  transition-all duration-300 hover:border-transparent aria-font"
+              >
+                <span className="text-[17px] font-medium leading-tight sm:text-[18px] md:text-[20px] transition-transform duration-300 group-hover:-translate-x-1">
+                  Direct GuideStar Profile Link
+                </span>
 
-              <ArrowRight
-                className="h-8 w-8 translate-x-2 opacity-0 text-[#2ea3f2] transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
-                strokeWidth={2}
-              />
-            </Link>
+                <ArrowRight
+                  className="h-8 w-8 translate-x-2 opacity-0 text-[#2ea3f2] transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+                  strokeWidth={2}
+                />
+              </Link>
+            )}
 
             <p>
               <span className="font-[500] text-[22px]">
-                {siteConfig.name} EIN: {siteConfig.ein}
+                {siteConfig.name} EIN: {isPending('ein') ? null : siteConfig.ein}
               </span>
+              {isPending('ein') && <PendingNote />}
             </p>
           </div>
         </div>
@@ -106,8 +134,8 @@ const Footer: React.FC = () => {
               // Giving and volunteering pathways. Each is a single link, not a
               // page section: the configured URL, or an email to the charity
               // when none is set (see donateHref / volunteerHref).
-              { name: 'Donate', href: donateHref() },
-              { name: 'Volunteer', href: volunteerHref() },
+              { name: 'Donate', href: donateHref(), pending: isPending('donationUrl') },
+              { name: 'Volunteer', href: volunteerHref(), pending: isPending('volunteerUrl') },
               // FFC footer standard: every supported charity site links back
               // to the supporting org's hub. Always rendered — keep this
               // entry when customizing a fork.
@@ -124,6 +152,7 @@ const Footer: React.FC = () => {
                   >
                     {link.name}
                   </Link>
+                  {'pending' in link && link.pending && <PendingNote />}
                 </li>
               )
             })}
@@ -200,12 +229,16 @@ const Footer: React.FC = () => {
               <Mail className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-[500] text-[22px]">E-mail</p>
-                <a
-                  href={mailtoHref()}
-                  className="aria-font font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all"
-                >
-                  {siteConfig.contactEmail}
-                </a>
+                {isPending('email') ? (
+                  <PendingNote />
+                ) : (
+                  <a
+                    href={mailtoHref()}
+                    className="aria-font font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all"
+                  >
+                    {siteConfig.contactEmail}
+                  </a>
+                )}
               </div>
             </div>
 
@@ -218,6 +251,16 @@ const Footer: React.FC = () => {
               way to express "no phone" was a placeholder string, which shipped
               as `tel:PENDING` on a live charity site.
             */}
+            {isPending('phone') && (
+              <div className="flex items-start gap-3">
+                <Phone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-[500] text-[22px]">Call Us Today</p>
+                  <PendingNote />
+                </div>
+              </div>
+            )}
+
             {siteConfig.phone.tel.trim() && siteConfig.phone.display.trim() && (
               <div className="flex items-start gap-3">
                 <Phone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -229,6 +272,16 @@ const Footer: React.FC = () => {
                   >
                     {siteConfig.phone.display}
                   </a>
+                </div>
+              </div>
+            )}
+
+            {isPending('address') && (
+              <div className="flex items-start gap-3">
+                <MapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-[500] text-[22px]">Address</p>
+                  <PendingNote />
                 </div>
               </div>
             )}
@@ -260,6 +313,12 @@ const Footer: React.FC = () => {
               </a>
             ))}
 
+            {isPending('social') && (
+              <div className="pt-4">
+                <p className="font-[500] text-[22px]">Social Media</p>
+                <PendingNote />
+              </div>
+            )}
             <div className="flex gap-3 pt-4">
               {socialLinks.map(({ href, label }) => {
                 const Icon = socialIconByLabel[label] ?? Link2

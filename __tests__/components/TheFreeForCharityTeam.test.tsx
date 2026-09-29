@@ -1,5 +1,5 @@
 import React from 'react'
-import { siteConfig } from '../../src/lib/site.config'
+import { PENDING_TEXT, siteConfig } from '../../src/lib/site.config'
 import { render, screen } from '@testing-library/react'
 
 import TheFreeForCharityTeam from '../../src/components/home-page/TheFreeForCharityTeam'
@@ -51,5 +51,31 @@ describe('TheFreeForCharityTeam with an empty roster', () => {
       const { container } = render(<EmptyTeam />)
       expect(container.firstChild).toBeNull()
     })
+  })
+
+  // A team the charity has not supplied yet (listed in siteConfig.pending) is
+  // shown as a visible, non-link "awaiting information" placeholder instead of
+  // silently disappearing.
+  it('renders the section with a placeholder when the team is pending', () => {
+    jest.isolateModules(() => {
+      jest.doMock('@/data/team', () => ({ team: [] }))
+      // Same module instance the component imports inside this isolated registry.
+      const config = require('../../src/lib/site.config')
+      config.siteConfig.pending = ['team']
+      const PendingTeam = require('../../src/components/home-page/TheFreeForCharityTeam').default
+      const { container } = render(<PendingTeam />)
+
+      expect(container.querySelector('#team')).toBeInTheDocument()
+      expect(screen.getByText(`The ${config.siteConfig.name} Team`)).toBeInTheDocument()
+      expect(screen.getByText(config.PENDING_TEXT).closest('a')).toBeNull()
+      expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
+    })
+  })
+})
+
+describe('TheFreeForCharityTeam with a populated roster', () => {
+  it('shows no placeholder when the team is not pending', () => {
+    render(<TheFreeForCharityTeam />)
+    expect(screen.queryByText(PENDING_TEXT)).not.toBeInTheDocument()
   })
 })
