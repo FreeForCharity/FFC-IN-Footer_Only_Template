@@ -338,13 +338,17 @@ describe('Footer component', () => {
 
   it('percent-encodes a comma so a malformed contactEmail cannot add a recipient', () => {
     const original = siteConfig.contactEmail
+    const originalPending = siteConfig.pending
     try {
       siteConfig.contactEmail = 'a@example.org,evil@example.com'
+      // A configured email is not pending, whatever this site ships with.
+      siteConfig.pending = (originalPending ?? []).filter((f) => f !== 'email')
       render(<Footer />)
       const contact = screen.getByText('a@example.org,evil@example.com').closest('a')!
       expect(contact.getAttribute('href')).toBe('mailto:a@example.org%2Cevil@example.com')
     } finally {
       siteConfig.contactEmail = original
+      siteConfig.pending = originalPending
     }
   })
 

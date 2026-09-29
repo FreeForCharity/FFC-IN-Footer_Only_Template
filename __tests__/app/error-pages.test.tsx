@@ -6,7 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 
 import NotFound, { metadata as notFoundMeta } from '../../src/app/not-found'
 import ErrorBoundaryPage from '../../src/app/error'
-import { siteConfig } from '../../src/lib/site.config'
+import { PENDING_TEXT, isPending, siteConfig } from '../../src/lib/site.config'
 
 const root = process.cwd()
 
@@ -73,8 +73,14 @@ describe('not-found page (app/not-found.tsx)', () => {
   })
 
   it('exposes the configured contact email as a mailto link', () => {
-    render(<NotFound />)
+    const { container } = render(<NotFound />)
 
+    // A pending email is empty: the placeholder shows, and no empty mailto: link.
+    if (isPending('email')) {
+      expect(screen.getByText(PENDING_TEXT).closest('a')).toBeNull()
+      expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
+      return
+    }
     expect(screen.getByRole('link', { name: siteConfig.contactEmail })).toHaveAttribute(
       'href',
       `mailto:${siteConfig.contactEmail}`

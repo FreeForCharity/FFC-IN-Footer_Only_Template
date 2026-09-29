@@ -7,7 +7,7 @@ import TermsPage from '../../src/app/terms-of-service/page'
 import VulnDisclosurePage from '../../src/app/vulnerability-disclosure-policy/page'
 import SecurityAckPage from '../../src/app/security-acknowledgements/page'
 import FfcDonationPolicyPage from '../../src/app/free-for-charity-donation-policy/page'
-import { siteConfig } from '../../src/lib/site.config'
+import { PENDING_TEXT, isPending, siteConfig } from '../../src/lib/site.config'
 
 /**
  * The policy pages a site publishes as its OWN must be about that site's
@@ -133,6 +133,13 @@ describe('policies this site publishes as its own', () => {
       a.getAttribute('href')
     )
 
+    // A pending email is empty: the page shows the placeholder instead, and
+    // must not fall back to any other organization's address.
+    if (isPending('email')) {
+      expect(mailtos).toEqual([])
+      expect(container.textContent).toContain(PENDING_TEXT)
+      return
+    }
     expect(mailtos.length).toBeGreaterThan(0)
     for (const href of mailtos) {
       expect(href).toBe(`mailto:${siteConfig.contactEmail}`)
@@ -145,6 +152,13 @@ describe('policies this site publishes as its own', () => {
       a.getAttribute('href')
     )
 
+    // A pending email is empty: the page shows the placeholder instead, and
+    // must not fall back to any other organization's address.
+    if (isPending('email')) {
+      expect(mailtos).toEqual([])
+      expect(container.textContent).toContain(PENDING_TEXT)
+      return
+    }
     expect(mailtos.length).toBeGreaterThan(0)
     for (const href of mailtos) {
       expect(href).toBe(`mailto:${siteConfig.contactEmail}`)

@@ -79,7 +79,11 @@ charity's name, URL, contact email, social links, etc.
   profile exists for the charity. An empty field that is _not_ listed keeps its
   plain meaning, "the charity has none". `taxStatusLabel` is not a pending
   field: it is a legal claim, and `''` means "make no claim". The unit tests
-  fail if a pending field still carries a value. Remove each entry as the
+  fail if a pending field still carries a value. A pending `email` also shows
+  the placeholder (never an empty `mailto:` link) on the policy and error
+  pages; leave the `Contact:` line out of both `security.txt` copies until the
+  charity supplies an address. A pending `ein` is left out of the donation
+  policy and the social card (`pnpm run og:card`). Remove each entry as the
   charity supplies it; this template's own config lists none.
 - **Footer quick links** — the list in `src/components/footer/index.tsx` must
   only contain destinations your site actually serves. Add an entry per section

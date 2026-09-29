@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { mailtoHref, siteConfig, siteUrl } from '@/lib/site.config'
+import { siteConfig, siteUrl } from '@/lib/site.config'
 import { pageMetadata } from '@/lib/pageMetadata'
 import ContactDetails from '@/components/policy/ContactDetails'
 import SupportingOrgDisclosure from '@/components/policy/SupportingOrgDisclosure'
+import ContactEmail from '@/components/policy/ContactEmail'
 
 export const metadata: Metadata = pageMetadata({
   title: 'Privacy Policy',
@@ -408,12 +409,10 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights and complaints.</strong> Contact us at{' '}
-            <a href={mailtoHref()} className="text-[#0062cc] underline">
-              {siteConfig.contactEmail}
-            </a>{' '}
-            to exercise any of these rights; we will respond within the time limits the GDPR sets.
-            You also have the right to lodge a complaint with your national data protection
-            supervisory authority (in the UK, the Information Commissioner&apos;s Office).
+            <ContactEmail className="text-[#0062cc] underline" /> to exercise any of these rights;
+            we will respond within the time limits the GDPR sets. You also have the right to lodge a
+            complaint with your national data protection supervisory authority (in the UK, the
+            Information Commissioner&apos;s Office).
           </p>
 
           {/* Section 9 */}
@@ -459,12 +458,10 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights.</strong> Submit a request to{' '}
-            <a href={mailtoHref()} className="text-[#0062cc] underline">
-              {siteConfig.contactEmail}
-            </a>
-            . We will verify your request using information associated with your interactions with
-            us, and you may use an authorized agent to submit a request on your behalf. We will
-            respond within the timeframes California law requires.
+            <ContactEmail className="text-[#0062cc] underline" />. We will verify your request using
+            information associated with your interactions with us, and you may use an authorized
+            agent to submit a request on your behalf. We will respond within the timeframes
+            California law requires.
           </p>
 
           {/* Section 10 */}

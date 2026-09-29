@@ -2,7 +2,8 @@
 
 import React, { useEffect } from 'react'
 import Link from 'next/link'
-import { mailtoHref, siteConfig } from '@/lib/site.config'
+import { siteConfig } from '@/lib/site.config'
+import ContactEmail from '@/components/policy/ContactEmail'
 
 // Route-segment error boundary. Next.js renders this instead of its own
 // unstyled default when a render below the root layout throws, so visitors
@@ -69,12 +70,7 @@ export default function Error({
                 Vulnerability Disclosure Policy
               </Link>{' '}
               contact route, or email{' '}
-              <a
-                href={mailtoHref()}
-                className="text-[#005BB7] font-[700] underline decoration-dotted hover:decoration-solid transition-all"
-              >
-                {siteConfig.contactEmail}
-              </a>
+              <ContactEmail className="text-[#005BB7] font-[700] underline decoration-dotted hover:decoration-solid transition-all" />
               .
             </p>
             {error.digest ? (
