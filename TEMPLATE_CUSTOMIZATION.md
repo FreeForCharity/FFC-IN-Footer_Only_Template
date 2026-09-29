@@ -82,7 +82,8 @@ charity's name, URL, contact email, social links, etc.
   fail if a pending field still carries a value. A pending `email` also shows
   the placeholder (never an empty `mailto:` link) on the policy and error
   pages; leave the `Contact:` line out of both `security.txt` copies until the
-  charity supplies an address. A pending `ein` is left out of the donation
+  charity supplies an address (the post-deploy smoke check then reports the
+  missing line as a notice rather than a failure). A pending `ein` is left out of the donation
   policy and the social card (`pnpm run og:card`). Remove each entry as the
   charity supplies it; this template's own config lists none.
 - **Footer quick links** — the list in `src/components/footer/index.tsx` must

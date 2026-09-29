@@ -402,7 +402,9 @@ async function checkSelfHostedFonts() {
   ]
 
   for (const file of files) {
-    const rel = relative(ROOT, file)
+    // Posix separators, so the reported path reads the same on every OS (on
+    // Windows relative() returns backslash-separated paths).
+    const rel = relative(ROOT, file).split(sep).join('/')
     const isCss = /\.css$/i.test(rel)
     const body = await readFile(file, 'utf8')
     const spans = commentSpans(body, isCss)

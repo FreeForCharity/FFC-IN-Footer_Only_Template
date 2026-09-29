@@ -13,7 +13,8 @@
  *   - /robots.txt is 200 and lists Sitemap:
  *   - /sitemap.xml is 200 and contains <urlset>
  *   - /.well-known/security.txt or /security.txt is 200 with a Contact: line
- *     and a future RFC 3339 Expires: date
+ *     (unless the email is listed in siteConfig.pending, see
+ *     scripts/security-contact.mjs) and a future RFC 3339 Expires: date
  *   - the manifest URL linked from the home page returns 200 JSON with
  *     name + icons
  *   - 404 page is branded when the deployment serves a branded 404
@@ -27,6 +28,12 @@
  *   1  one or more checks failed (details on stderr)
  *   2  invalid usage
  */
+
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { contactCheck, readPendingFields } from './security-contact.mjs'
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 const baseArg = process.argv[2]
 if (!baseArg) {
@@ -312,8 +319,17 @@ async function smoke() {
     record('security.txt served at /.well-known/security.txt or /security.txt', false)
   } else {
     record(`security.txt served at ${secFile.path}`, true)
-    const contactMatch = /^Contact:\s*(.+)$/im.exec(secFile.body)
-    record('security.txt has Contact:', !!contactMatch, contactMatch?.[1]?.trim() || '')
+    const { pending, error } = await readPendingFields(
+      path.join(ROOT, 'src', 'lib', 'site.config.ts')
+    )
+    if (error) {
+      console.log(
+        `notice: could not read siteConfig.pending (${error}); nothing treated as pending`
+      )
+    }
+    const contact = contactCheck(secFile.body, pending)
+    record('security.txt has Contact:', contact.ok, contact.detail)
+    if (contact.notice) console.log(`notice: ${contact.notice}`)
     const expiresMatch = /^Expires:\s*(.+)$/im.exec(secFile.body)
     if (expiresMatch) {
       const rawExpires = expiresMatch[1].trim()
