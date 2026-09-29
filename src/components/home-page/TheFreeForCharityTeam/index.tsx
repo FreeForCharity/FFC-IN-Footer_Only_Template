@@ -8,6 +8,17 @@ import { PENDING_TEXT, isPending, siteConfig } from '@/lib/site.config'
 // touch this component. Each card renders an initials monogram (no photos) and
 // links to the member's LinkedIn when one is provided. The first three members
 // render in the top row and the remaining members in a second row.
+/**
+ * The section heading, "The <name> Team". A name that already starts with the
+ * article keeps its own ("The Brain Injury Research Foundation Team", not
+ * "The The Brain Injury ... Team"). Case-insensitive, and only the whole word:
+ * "Theatre Guild" still becomes "The Theatre Guild Team".
+ */
+export function teamHeading(name: string): string {
+  const trimmed = name.trim()
+  return /^the\s/i.test(trimmed) ? `${trimmed} Team` : `The ${trimmed} Team`
+}
+
 const index = () => {
   // Safety guard: with no members there is nothing to show (a pre-501(c)(3)
   // application supplies at least three, so this is normally populated).
@@ -24,7 +35,7 @@ const index = () => {
         className="font-[400] text-[40px] lg:text-[48px]  tracking-[0] text-center mx-auto mb-[50px]"
         id="faustina-font"
       >
-        The {siteConfig.name} Team
+        {teamHeading(siteConfig.name)}
       </h1>
 
       {isPending('team') && team.length === 0 && (

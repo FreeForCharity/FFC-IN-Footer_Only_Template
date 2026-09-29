@@ -261,11 +261,15 @@ describe('siteConfig.pending contract', () => {
     })
 
     it('rejects a pending field that still carries a value', () => {
-      // The template's own EIN and roster are set, so listing them is a violation.
-      siteConfig.pending = ['ein', 'team']
+      // An EIN that is set, listed as pending, is a violation. So is a roster
+      // that is populated; this site may ship with its roster pending (empty),
+      // so 'team' is only asserted when there is a roster to carry a value.
+      const hasRoster = team.length > 0
+      siteConfig.ein = '12-3456789'
+      siteConfig.pending = hasRoster ? ['ein', 'team'] : ['ein']
       expect(pendingViolations()).toEqual([
         'ein: pending but has a value',
-        'team: pending but has a value',
+        ...(hasRoster ? ['team: pending but has a value'] : []),
       ])
     })
 
