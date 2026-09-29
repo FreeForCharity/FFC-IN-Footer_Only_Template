@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import Header from '../../src/components/header'
+import { siteConfig } from '../../src/lib/site.config'
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations)
@@ -30,9 +31,11 @@ describe('Header component', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument()
   })
 
-  it('should display the Free For Charity logo', () => {
+  it("should display the site's logo, named for the site", () => {
     render(<Header />)
-    expect(screen.getByAltText('Free For Charity')).toBeInTheDocument()
+    // The logo's alt text is the site's own name, so this case survives a
+    // rebrand instead of pinning the pre-rebrand literal.
+    expect(screen.getByAltText(siteConfig.name)).toBeInTheDocument()
   })
 
   it('should display Home navigation link', () => {

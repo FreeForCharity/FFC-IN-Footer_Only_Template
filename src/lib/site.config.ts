@@ -1,5 +1,5 @@
 /**
- * Central site configuration for Free For Charity template sites.
+ * Central site configuration for FFC template sites.
  *
  * EDIT THIS FILE to customize a new FFC-supported nonprofit site.
  * Most values that vary between sites flow from here so pages, metadata,
@@ -116,7 +116,7 @@ export type SiteConfig = {
   vulnerabilityDisclosurePath: string
   /** Social links displayed in the footer. */
   social: readonly SiteSocialLink[]
-  /** IRS Employer Identification Number (tax ID), e.g. '46-2471893'. */
+  /** IRS Employer Identification Number (tax ID), in the form '12-3456789'. */
   ein: string
   /**
    * Primary phone number. `display` is the human-readable form shown to users;
@@ -328,8 +328,8 @@ export function cardDescription(): string {
 
 /**
  * `mailto:` link to `contactEmail`, optionally with a subject. Every mailto
- * built from `siteConfig.contactEmail` goes through here (the Free For Charity
- * donation policy page links FFC's own address directly, by design). The
+ * built from `siteConfig.contactEmail` goes through here (the FFC donation
+ * policy page links FFC's own address directly, by design). The
  * characters that would end or corrupt the address part of a mailto: URI
  * (RFC 6068) are percent-encoded -- `?` and `#` end it, `&` and `%` corrupt
  * it, and `,` separates recipients -- so a malformed contactEmail can never

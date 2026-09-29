@@ -4,7 +4,7 @@
  * Google Tag Manager container ID.
  *
  * A fork MUST replace this with its own container before going live, or the
- * charity's visitor analytics are reported into Free For Charity's property.
+ * charity's visitor analytics are reported into FFC's property.
  * `npm run check:rebrand` reads THIS file and flags the template's id.
  *
  * An EMPTY string is a supported state and means "no container provisioned
