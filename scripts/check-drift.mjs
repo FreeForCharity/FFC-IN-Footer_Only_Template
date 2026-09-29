@@ -605,6 +605,147 @@ async function readForCspCheck(path) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// FFC identity left behind after a rebrand.
+//
+// Ported from FFC-IN-FFC_Single_Page_Template's scripts/check-drift.mjs, which
+// carried this scan while this template carried none — so a hard-coded
+// "Free For Charity" shipped on every provisioned charity site and no check
+// looked for it (FFC-Cloudflare-Automation#1392). The patterns and allowances
+// are deliberately the same as the sibling template's: the two templates'
+// drift checks being incomparable is half of what that issue reports, so a
+// divergence here is a regression, not a customization.
+// ---------------------------------------------------------------------------
+
+// The template's own identity. A child site counts as "rebranded" once
+// siteConfig.name has been changed away from this default, at which point any
+// leftover FFC identity in rendered pages is a real drift bug. On the template
+// itself (name unchanged) this gate stays dormant, so it never fails template
+// PRs — which is also why its mutation test has to rebrand the fixture first.
+const TEMPLATE_ORG_NAME = 'Free For Charity'
+
+// Patterns that identify the Free For Charity organization specifically.
+// Safe to hard-fail on once a site has rebranded — none has a legitimate use in
+// a child site's own rendered pages. FFC references a child legitimately keeps
+// (e.g. the supporting-org credit) live in src/lib/site.config.ts via
+// siteConfig, not as literals in src/app or src/components.
+const FFC_IDENTITY_PATTERNS = [
+  { re: /Free For Charity|Free for Charity/, label: 'the template org name "Free For Charity"' },
+  { re: /freeforcharity\.org/i, label: 'a freeforcharity.org URL' },
+  { re: /46-?2471893/, label: "Free For Charity's EIN (46-2471893)" },
+  { re: /520[\s.-]?222[\s.-]?8104/, label: "Free For Charity's phone number (520-222-8104)" },
+  { re: /[A-Za-z0-9._%+-]+@freeforcharity\.org/i, label: 'a @freeforcharity.org email address' },
+]
+
+// A child site that customizes its footer with a hardcoded "Built with Free For
+// Charity" platform credit may keep it. Allow ONLY those specific lines (the
+// credit text, the exact attribution href, and the FFC donation-policy label —
+// that page documents FFC's own policy, so its label intentionally keeps FFC's
+// name after a rebrand) so any other freeforcharity.org URL — or an EIN, phone,
+// or email — is still flagged even inside the footer.
+function isAllowedIdentityLine(relPath, line) {
+  const normalized = relPath.split(sep).join('/')
+  if (normalized !== 'src/components/footer/index.tsx') return false
+  return (
+    /Built with Free For Charity/.test(line) ||
+    /href="https:\/\/freeforcharity\.org"/i.test(line) ||
+    /Free For Charity Donation Policy/.test(line)
+  )
+}
+
+// siteConfig.supportedBy intentionally keeps Free For Charity's name and URL
+// forever: it is the permanent "Supported by" attribution required by the FFC
+// footer standard, not leftover branding. Blank exactly that block (preserving
+// newlines so reported line numbers stay accurate) before the identity scan,
+// so every OTHER FFC reference in site.config.ts is still flagged.
+function withoutSupportedByBlock(relPath, body) {
+  const normalized = relPath.split(sep).join('/')
+  if (normalized !== 'src/lib/site.config.ts') return body
+  return body.replace(/supportedBy:\s*\{[^}]*\}/g, (block) => block.replace(/[^\n]/g, ' '))
+}
+
+// Pages that ARE Free For Charity's own documents, published on every site
+// under FFC's name by design — not leftover template branding. The footer's
+// "Free For Charity Donation Policy" link (allowlisted above) points at this
+// one. Exempted by exact path only, so the same identity anywhere else —
+// including the charity's own /donation-policy — is still an error.
+const FFC_OWN_DOCUMENTS = new Set(['src/app/free-for-charity-donation-policy/page.tsx'])
+
+/**
+ * Every line in `files` that still carries Free For Charity's identity once the
+ * site is named `name`. Dormant (returns nothing) while `name` is still the
+ * template's own.
+ *
+ * @param {{path: string, body: string}[]} files repo-relative paths, any separator
+ * @param {string | null} name siteConfig.name
+ * @returns {{path: string, line: number, label: string}[]}
+ */
+function brandIdentityFindings(files, name) {
+  if (!name || name === TEMPLATE_ORG_NAME) return []
+  const findings = []
+  for (const { path, body } of files) {
+    const rel = path.split(sep).join('/').split('\\').join('/')
+    if (FFC_OWN_DOCUMENTS.has(rel)) continue
+    const lines = withoutSupportedByBlock(rel, body).split('\n')
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      if (isAllowedIdentityLine(rel, line)) continue
+      for (const p of FFC_IDENTITY_PATTERNS) {
+        if (p.re.test(line)) findings.push({ path: rel, line: i + 1, label: p.label })
+      }
+    }
+  }
+  return findings
+}
+
+/**
+ * The value of the first quoted `name:` in site.config.ts (the type
+ * declaration's `name: string` is unquoted, so it never matches). Reads a whole
+ * single- or double-quoted string, escapes included, so a name containing the
+ * other quote character — "St. Mary's Shelter" — is read in full rather than
+ * cut off at the apostrophe. extractStringProperty() above is not used here for
+ * exactly that reason: its character class stops at the first quote of either
+ * kind, and a truncated name would silently un-dormant this gate on the
+ * template itself.
+ *
+ * @param {string} source
+ * @returns {string | null}
+ */
+function siteNameFromConfig(source) {
+  const m = source.match(/\bname:\s*(?:'((?:\\.|[^'\\\n])*)'|"((?:\\.|[^"\\\n])*)")/)
+  if (!m) return null
+  const raw = m[1] ?? m[2]
+  return raw.replace(/\\(.)/g, '$1')
+}
+
+async function checkBrandIdentity() {
+  const cfgPath = join(SRC_DIR, 'lib', 'site.config.ts')
+  const cfgBody = await readIfExists(cfgPath)
+  // A missing config is reported by readSiteConfig(); do not double-report it.
+  if (!cfgBody) return
+
+  const name = siteNameFromConfig(cfgBody)
+  // Dormant on the upstream template itself: FFC identity is correct there.
+  if (!name || name === TEMPLATE_ORG_NAME) return
+
+  // Scan the whole src/ tree (app, components, lib, data) — leftover FFC
+  // identity in a config or data module is just as wrong as in a page.
+  const paths = await walk(SRC_DIR, (n) => /\.(tsx?|jsx?)$/.test(n))
+  const files = []
+  for (const full of paths) {
+    const body = await readIfExists(full)
+    if (body === null) continue
+    files.push({ path: relative(ROOT, full), body })
+  }
+
+  for (const f of brandIdentityFindings(files, name)) {
+    errors.push(
+      `${f.path}:${f.line} still references ${f.label} after this site rebranded to "${name}". ` +
+        `Replace it with the new organization's details.`
+    )
+  }
+}
+
 async function checkCspSync() {
   const headersRaw = await readForCspCheck(join(PUBLIC_DIR, '_headers'))
   const layoutRaw = await readForCspCheck(join(SRC_DIR, 'app', 'layout.tsx'))
@@ -867,6 +1008,7 @@ await checkSecrets()
 await checkSelfHostedFonts()
 await checkDeployOrigin(siteConfig)
 await checkPlaceholderUrl(siteConfig)
+await checkBrandIdentity()
 await checkCspSync()
 await checkSecurityTxtSync(siteConfig)
 await checkSocialCard()

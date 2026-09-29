@@ -21,8 +21,8 @@ export default function SupportingOrgDisclosure() {
   const supporter = siteConfig.supportedBy.name
 
   // The supporting organization's OWN site is the one place this section makes
-  // no sense: it would read "Free For Charity participates in the free website
-  // program run by Free For Charity". That organization operates its own
+  // no sense: it would name that organization as both the participant and the
+  // operator of the program it runs. That organization operates its own
   // infrastructure, so there is no third party to disclose and no split in
   // responsibility to explain. Render nothing rather than a self-referential
   // paragraph — which is exactly what this template itself renders.
