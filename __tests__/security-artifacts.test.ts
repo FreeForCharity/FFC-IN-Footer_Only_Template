@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { siteConfig } from '../src/lib/site.config'
+import { isPending, siteConfig } from '../src/lib/site.config'
 import { githubPagesProjectPath } from './helpers/githubPagesProjectPath'
 
 const root = process.cwd()
@@ -58,7 +58,10 @@ describe('deployable security artifacts', () => {
     const wellKnownPayload = payload(wellKnown)
 
     expect(payload(rootCopy)).toBe(wellKnownPayload)
-    expect(wellKnownPayload).toContain(`Contact: mailto:${siteConfig.contactEmail}`)
+    // A pending email is empty: security.txt then carries no Contact line
+    // rather than another organization's address.
+    if (isPending('email')) expect(wellKnownPayload).not.toMatch(/^Contact:/m)
+    else expect(wellKnownPayload).toContain(`Contact: mailto:${siteConfig.contactEmail}`)
     expect(wellKnownPayload).toContain('Preferred-Languages: en')
     // One deploy serves one origin+prefix. deploy.yml derives the base path
     // from public/CNAME alone, so this reads the same signal: with a CNAME the

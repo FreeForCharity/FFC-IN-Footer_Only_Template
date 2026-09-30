@@ -12,6 +12,11 @@
 # belt-and-braces -- it produces `https://custom.example/<repo>/security.txt`,
 # an address no host serves. scripts/check-drift.mjs reads the same signal and
 # fails if these lines and public/CNAME get out of step.
+#
+# Contact is the charity's own address (siteConfig.contactEmail). While that
+# email is still awaiting the charity (listed in siteConfig.pending), leave the
+# Contact line out entirely rather than list another organization's address,
+# and add `Contact: mailto:<address>` once the charity supplies one.
 
 Contact: mailto:clarkemoyer@freeforcharity.org
 Expires: 2027-12-31T00:00:00.000Z

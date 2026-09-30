@@ -21,6 +21,7 @@ jest.mock('../../src/components/ui/TeamMemberCard', () => {
 })
 
 import HomePage from '../../src/app/home-page'
+import { PENDING_TEXT, isPending } from '../../src/lib/site.config'
 
 describe('HomePage (app/home-page)', () => {
   it('should render without crashing', () => {
@@ -29,6 +30,8 @@ describe('HomePage (app/home-page)', () => {
 
   it('should render TheFreeForCharityTeam component', () => {
     render(<HomePage />)
-    expect(screen.getAllByTestId('team-member-card').length).toBeGreaterThan(0)
+    // A roster the charity has not supplied yet renders a placeholder instead.
+    if (isPending('team')) expect(screen.getByText(PENDING_TEXT)).toBeInTheDocument()
+    else expect(screen.getAllByTestId('team-member-card').length).toBeGreaterThan(0)
   })
 })

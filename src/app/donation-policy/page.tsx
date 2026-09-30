@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { mailtoHref, siteConfig } from '@/lib/site.config'
+import { siteConfig } from '@/lib/site.config'
 import { pageMetadata } from '@/lib/pageMetadata'
+import ContactEmail from '@/components/policy/ContactEmail'
 
 export const metadata: Metadata = pageMetadata({
   title: 'Donation Policy',
@@ -9,6 +10,11 @@ export const metadata: Metadata = pageMetadata({
 })
 
 export default function DonationPolicy() {
+  // An EIN still awaiting the charity (listed in siteConfig.pending) is empty:
+  // leave the parenthetical out rather than render "(EIN: )".
+  const ein = siteConfig.ein.trim()
+  const einClause = ein ? ` (EIN: ${ein})` : ''
+
   return (
     <main id="main-content" className="ffc-container py-16">
       <div className="max-w-4xl mx-auto">
@@ -28,15 +34,15 @@ export default function DonationPolicy() {
               organization holds IRS 501(c)(3) recognition. */}
           {siteConfig.taxStatusLabel.trim() ? (
             <p>
-              {siteConfig.name} is a qualified 501(c)(3) nonprofit organization{' '}
-              {`(EIN: ${siteConfig.ein}).`} Donations are tax-deductible to the full extent allowed
-              by law.
+              {siteConfig.name} is a qualified 501(c)(3) nonprofit organization
+              {`${einClause}.`} Donations are tax-deductible to the full extent allowed by law.
             </p>
           ) : (
             <p>
-              {siteConfig.name} {`(EIN: ${siteConfig.ein})`} has not yet received IRS recognition as
-              a 501(c)(3) organization, so donations may not be tax-deductible. Please consult a tax
-              advisor before claiming a deduction.
+              {siteConfig.name}
+              {einClause} has not yet received IRS recognition as a 501(c)(3) organization, so
+              donations may not be tax-deductible. Please consult a tax advisor before claiming a
+              deduction.
             </p>
           )}
 
@@ -77,10 +83,7 @@ export default function DonationPolicy() {
           </h2>
           <p>For questions about donations or this policy, please contact us at:</p>
           <p>
-            Email:{' '}
-            <a href={mailtoHref()} className="text-primary underline">
-              {siteConfig.contactEmail}
-            </a>
+            Email: <ContactEmail className="text-primary underline" />
             {/* Only a configured number is shown, matching the footer's phone guard. */}
             {siteConfig.phone.tel.trim() && siteConfig.phone.display.trim() && (
               <>

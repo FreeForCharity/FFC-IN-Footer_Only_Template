@@ -67,8 +67,10 @@ export const testConfig = {
    * Used in: tests/google-tag-manager.spec.ts
    *
    * Empty until the charity's own container is provisioned (FFC workflows
-   * 505/503). The GTM spec skips itself while this is empty rather than waiting
-   * for a script that an unconfigured site correctly never injects.
+   * 505/503). While this is empty, the tests that need the tag itself (in
+   * tests/google-tag-manager.spec.ts and tests/smoke.spec.ts) skip rather than
+   * wait for a script that an unconfigured site correctly never injects; the
+   * dataLayer and consent tests still run.
    */
   googleTagManager: {
     // Trimmed to match the component, which treats a whitespace-only id as

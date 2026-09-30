@@ -42,6 +42,32 @@ export type SiteAddress = {
   mapUrl: string
 }
 
+/**
+ * A footer-standard field the charity has not supplied yet. Listing a field in
+ * `siteConfig.pending` renders a visible "awaiting information" placeholder in
+ * its place (plain text, never a link), so a gap in the FFC footer standard is
+ * a call to action on the page rather than a silent omission. The field's own
+ * value must stay empty while it is pending, so no placeholder or borrowed
+ * value (e.g. the template's own details) can ship behind it.
+ *
+ * An empty value that is NOT listed here keeps its plain meaning: the charity
+ * has none (e.g. no public phone). `taxStatusLabel` is deliberately not a
+ * pending field: it is a legal claim, and '' means "make no claim".
+ */
+export type PendingField =
+  | 'email'
+  | 'phone'
+  | 'address'
+  | 'ein'
+  | 'guidestar'
+  | 'social'
+  | 'team'
+  | 'donationUrl'
+  | 'volunteerUrl'
+
+/** Visible text shown in place of a pending field. */
+export const PENDING_TEXT = 'Awaiting information from the charity'
+
 export type SiteConfig = {
   /** Display name of the charity (used in titles, OG/Twitter cards). */
   name: string
@@ -125,7 +151,13 @@ export type SiteConfig = {
   phone: { display: string; tel: string }
   /** Physical office addresses shown in the footer contact column. */
   addresses: readonly SiteAddress[]
-  /** GuideStar / Candid transparency profile links shown in the footer. */
+  /**
+   * GuideStar / Candid transparency profile links shown in the footer. Each is
+   * a transparency claim, so the seal renders only when `profileUrl` is set and
+   * the direct-link button only when `directProfileUrl` is set. Leave both ''
+   * until the charity has its own Candid profile (never copy another
+   * organization's), and list 'guidestar' in `pending` if one is coming.
+   */
   guidestar: { profileUrl: string; directProfileUrl: string }
   /**
    * Tax-status clause appended to the footer copyright line, e.g.
@@ -150,6 +182,11 @@ export type SiteConfig = {
    * nonprofit. Omit for a standalone charity (the footer clause is hidden).
    */
   parentOrg?: { name: string; url: string; hubUrl: string }
+  /**
+   * Footer-standard fields still awaiting the charity. See `PendingField`.
+   * Omit (or leave empty) once every field is supplied.
+   */
+  pending?: readonly PendingField[]
 }
 
 export const siteConfig: SiteConfig = {
@@ -352,6 +389,11 @@ function linkOrEmail(url: string, subject: string): string {
   const trimmed = url.trim()
   if (/^https:\/\/\S+$/i.test(trimmed)) return trimmed
   return mailtoHref(subject)
+}
+
+/** True when `field` is listed in `siteConfig.pending`. */
+export function isPending(field: PendingField): boolean {
+  return siteConfig.pending?.includes(field) ?? false
 }
 
 /** Footer Donate link: `donationUrl`, else an email to the charity. */

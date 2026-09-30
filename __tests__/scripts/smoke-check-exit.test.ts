@@ -160,6 +160,9 @@ const failuresRemaining = new Map<string, number>()
  */
 let serveBrokenHome = false
 
+/** Serve a security.txt with no Contact: line (see the Contact test below). */
+let serveNoContact = false
+
 function startKeepAliveServer(): Promise<Server> {
   const server = createServer((req, res) => {
     const path = (req.url ?? '/').split('?')[0]
@@ -188,6 +191,13 @@ function startKeepAliveServer(): Promise<Server> {
         'Keep-Alive': 'timeout=120',
       })
       res.end('<!doctype html><html><body>nothing this script looks for</body></html>')
+      return
+    }
+
+    if (serveNoContact && path === '/.well-known/security.txt') {
+      res.writeHead(200, { 'Content-Type': 'text/plain', Connection: 'keep-alive' })
+      res.end(`Expires: ${EXPIRES}
+`)
       return
     }
 
@@ -358,6 +368,24 @@ describe('smoke-check process exit', () => {
       expect(outcome.stderr).toContain('Failures:')
       // Not merely the heading: the list under it has to survive too.
       expect(outcome.stderr).toMatch(/\n {2}- /)
+    },
+    EXIT_BUDGET_MS + 15_000
+  )
+
+  // The Contact line is required unless the site lists 'email' in
+  // siteConfig.pending (scripts/security-contact.mjs covers that branch).
+  // This repo's own config has a contact email, so a missing line must fail.
+  it(
+    'fails a security.txt with no Contact: line while the email is not pending',
+    async () => {
+      serveNoContact = true
+      const outcome = await runSmokeCheck(baseUrl).finally(() => {
+        serveNoContact = false
+      })
+
+      expect(outcome.timedOut).toBe(false)
+      expect(outcome.code).toBe(1)
+      expect(outcome.stderr).toContain('security.txt has Contact:')
     },
     EXIT_BUDGET_MS + 15_000
   )

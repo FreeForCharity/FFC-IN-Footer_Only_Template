@@ -109,7 +109,7 @@ describe('Header component', () => {
 
   it('should have the logo link to homepage', () => {
     render(<Header />)
-    const logo = screen.getByAltText('Free For Charity')
+    const logo = screen.getByAltText(siteConfig.name)
     const logoLink = logo.closest('a')
     expect(logoLink).toHaveAttribute('href', '/')
   })

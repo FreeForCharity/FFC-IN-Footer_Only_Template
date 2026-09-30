@@ -41,9 +41,10 @@ charity's name, URL, contact email, social links, etc.
 | `phone`                       | Footer phone link (`phone.display` shown, `phone.tel` used for the `tel:` link)                                                                                                                                                                                                                           |
 | `addresses`                   | Footer contact column (`addresses[].label` / `.lines` / `.mapUrl`)                                                                                                                                                                                                                                        |
 | `taxStatusLabel`              | Footer copyright tax-status clause (e.g. `a US 501c3 Non Profit`) and the donation policy's tax-deductibility sentence. A legal claim: set `''` until the organization holds IRS 501(c)(3) recognition; the footer then omits the clause and the donation policy says donations may not be tax-deductible |
-| `guidestar`                   | Footer GuideStar/Candid seal links (`guidestar.profileUrl`, `guidestar.directProfileUrl`)                                                                                                                                                                                                                 |
+| `guidestar`                   | Footer GuideStar/Candid seal (`guidestar.profileUrl`) and direct-profile button (`guidestar.directProfileUrl`), each rendered only when its own URL is set. Leave both `''` until the charity has its own Candid profile; never copy another organization's                                               |
 | `supportedBy`                 | Permanent "Supported by Free For Charity" bottom-bar attribution and "Supported Charity Login" quick link. Part of the FFC footer standard: required, always rendered — do **not** change or remove it when customizing.                                                                                  |
 | `parentOrg`                   | Footer "a project of" parent-org clause (omit for a standalone charity)                                                                                                                                                                                                                                   |
+| `pending`                     | Optional list of footer-standard fields still awaiting the charity (`email`, `phone`, `address`, `ein`, `guidestar`, `social`, `team`, `donationUrl`, `volunteerUrl`). Each listed field keeps an empty value and shows "Awaiting information from the charity" in its slot. See below                    |
 
 ### Things `siteConfig` does NOT drive
 
@@ -68,6 +69,23 @@ charity's name, URL, contact email, social links, etc.
   your charity publishes no phone number. The footer then omits the "Call Us
   Today" block entirely. Do **not** put a placeholder there: it ships as a
   `tel:` link that looks callable and dials nothing.
+- **Details the charity has not supplied yet — `siteConfig.pending`.** Leave
+  the field empty and list it in `pending` until the charity supplies it, e.g.
+  `pending: ['phone', 'guidestar']`. The footer (or, for `team`, the team
+  section) then shows **"Awaiting information from the charity"** in that
+  slot, as plain text and never a link: no `tel:`, no seal, no map link. Never
+  fill a gap with another organization's values (least of all this template's
+  Free For Charity details), and keep both GuideStar URLs empty until a Candid
+  profile exists for the charity. An empty field that is _not_ listed keeps its
+  plain meaning, "the charity has none". `taxStatusLabel` is not a pending
+  field: it is a legal claim, and `''` means "make no claim". The unit tests
+  fail if a pending field still carries a value. A pending `email` also shows
+  the placeholder (never an empty `mailto:` link) on the policy and error
+  pages; leave the `Contact:` line out of both `security.txt` copies until the
+  charity supplies an address (the post-deploy smoke check then reports the
+  missing line as a notice rather than a failure). A pending `ein` is left out of the donation
+  policy and the social card (`pnpm run og:card`). Remove each entry as the
+  charity supplies it; this template's own config lists none.
 - **Footer quick links** — the list in `src/components/footer/index.tsx` must
   only contain destinations your site actually serves. Add an entry per section
   or route you add.

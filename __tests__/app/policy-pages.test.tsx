@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import { siteConfig } from '../../src/lib/site.config'
+import { PENDING_TEXT, isPending, siteConfig } from '../../src/lib/site.config'
 
 // Import page components and their metadata exports
 import DonationPolicyPage, { metadata as donationMeta } from '../../src/app/donation-policy/page'
@@ -68,7 +68,8 @@ describe('Policy page rendering', () => {
   it('Donation Policy renders heading and EIN', () => {
     render(<DonationPolicyPage />)
     expect(screen.getByText('Donation Policy')).toBeInTheDocument()
-    expect(screen.getByText(new RegExp(siteConfig.ein))).toBeInTheDocument()
+    // A pending EIN is empty, and an empty RegExp would match every element.
+    if (!isPending('ein')) expect(screen.getByText(new RegExp(siteConfig.ein))).toBeInTheDocument()
   })
 
   // Pins the rendered sentence: this charity's name and EIN, formatted
@@ -77,11 +78,34 @@ describe('Policy page rendering', () => {
   // correctly provisioned pre-501(c)(3) charity does not fail its own CI.
   it('Donation Policy states the EIN in one clean parenthetical', () => {
     const { container } = render(<DonationPolicyPage />)
+    const einClause = siteConfig.ein.trim() ? ` (EIN: ${siteConfig.ein.trim()})` : ''
     expect(container.textContent).toContain(
       siteConfig.taxStatusLabel.trim()
-        ? `${siteConfig.name} is a qualified 501(c)(3) nonprofit organization (EIN: ${siteConfig.ein}).`
-        : `${siteConfig.name} (EIN: ${siteConfig.ein}) has not yet received IRS recognition`
+        ? `${siteConfig.name} is a qualified 501(c)(3) nonprofit organization${einClause}.`
+        : `${siteConfig.name}${einClause} has not yet received IRS recognition`
     )
+  })
+
+  // A pending EIN is empty (see siteConfig.pending): the sentence must drop
+  // the parenthetical rather than render an empty "(EIN: )".
+  it('Donation Policy leaves out an empty EIN', () => {
+    const original = { ein: siteConfig.ein, taxStatusLabel: siteConfig.taxStatusLabel }
+    try {
+      siteConfig.ein = ''
+      for (const taxStatusLabel of ['a US 501c3 Non Profit', '']) {
+        siteConfig.taxStatusLabel = taxStatusLabel
+        const { container, unmount } = render(<DonationPolicyPage />)
+        expect(container.textContent).not.toContain('EIN:')
+        expect(container.textContent).toContain(
+          taxStatusLabel
+            ? `${siteConfig.name} is a qualified 501(c)(3) nonprofit organization.`
+            : `${siteConfig.name} has not yet received IRS recognition`
+        )
+        unmount()
+      }
+    } finally {
+      Object.assign(siteConfig, original)
+    }
   })
 
   // The tax-deductibility sentence is a legal claim: a pre-501(c)(3)
@@ -133,7 +157,13 @@ describe('Policy page rendering', () => {
   })
 
   it('Donation Policy has a contact email link', () => {
-    render(<DonationPolicyPage />)
+    const { container } = render(<DonationPolicyPage />)
+    // A pending email is empty: the placeholder shows, and no empty mailto: link.
+    if (isPending('email')) {
+      expect(screen.getByText(PENDING_TEXT).closest('a')).toBeNull()
+      expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
+      return
+    }
     const emailLink = screen.getByText(siteConfig.contactEmail)
     expect(emailLink.closest('a')).toHaveAttribute('href', `mailto:${siteConfig.contactEmail}`)
   })

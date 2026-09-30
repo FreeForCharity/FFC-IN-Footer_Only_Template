@@ -160,6 +160,12 @@ test.describe('Post-deploy smoke tests', () => {
   })
 
   test('GTM loads and dataLayer is available', async ({ page }) => {
+    // GTM_ID is empty until the charity's own container is provisioned, and the
+    // site then correctly renders no tag: there is nothing to wait for.
+    test.skip(
+      !testConfig.googleTagManager.configured,
+      'GTM_ID is empty: no container provisioned for this site yet'
+    )
     await page.goto('./')
 
     // Wait for lazy-loaded GTM script (strategy="lazyOnload")

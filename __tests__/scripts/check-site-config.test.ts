@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
@@ -88,6 +89,38 @@ describe('check-site-config validator: additionalProperties', () => {
     const errors = validateInChild(schema, { social: { name: 'x', rogue: 1 } })
     expect(errors).toHaveLength(1)
     expect(errors[0]).toContain('cfg.social')
+  })
+})
+
+describe('shared schema: fields awaiting the charity', () => {
+  const schema = JSON.parse(readFileSync(join(root, 'schema', 'site-config.schema.json'), 'utf8'))
+  const forkConfig = {
+    name: 'Example Charity',
+    ein: '12-3456789',
+    contactEmail: 'hello@example.org',
+    phone: { display: '', tel: '' },
+    addresses: [],
+    social: [],
+    supportedBy: {
+      name: 'Free For Charity',
+      url: 'https://freeforcharity.org',
+      hubUrl: 'https://freeforcharity.org/hub/',
+    },
+  }
+
+  it('accepts empty GuideStar URLs (no Candid profile yet) and a pending list', () => {
+    const errors = validateInChild(schema, {
+      ...forkConfig,
+      guidestar: { profileUrl: '', directProfileUrl: '' },
+      pending: ['guidestar', 'phone'],
+    })
+    expect(errors).toEqual([])
+  })
+
+  it('rejects a pending list that is not an array of strings', () => {
+    const guidestar = { profileUrl: '', directProfileUrl: '' }
+    expect(validateInChild(schema, { ...forkConfig, guidestar, pending: 'phone' })).not.toEqual([])
+    expect(validateInChild(schema, { ...forkConfig, guidestar, pending: [1] })).not.toEqual([])
   })
 })
 
