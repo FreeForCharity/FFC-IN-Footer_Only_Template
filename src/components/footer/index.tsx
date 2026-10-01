@@ -8,7 +8,6 @@ import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
 import type { LucideIcon } from 'lucide-react'
-import { assetPath } from '@/lib/assetPath'
 import {
   PENDING_TEXT,
   donateHref,
@@ -62,7 +61,7 @@ const Footer: React.FC = () => {
             {/* The seal and the direct link are transparency claims: each renders
               only when its own GuideStar URL is configured, so a charity with no
               profile shows neither rather than linking to someone else's. */}
-            {siteConfig.guidestar.profileUrl.trim() && (
+            {siteConfig.guidestar.profileUrl.trim() && siteConfig.guidestar.sealUrl.trim() && (
               <a
                 href={siteConfig.guidestar.profileUrl}
                 aria-label={`${siteConfig.name} Candid Seal of Transparency`}
