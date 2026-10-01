@@ -76,10 +76,15 @@ describe('siteConfig contract', () => {
     }
 
     // Converged shape: these keys must match the FFC Single Page template's
-    // canonical SiteConfig (guidestar.profileUrl / directProfileUrl,
+    // canonical SiteConfig (guidestar.profileUrl / directProfileUrl plus this
+    // template's guidestar.sealUrl, Candid's live seal widget,
     // phone.display / phone.tel, addresses[].mapUrl, supportedBy.hubUrl).
     // Empty = no GuideStar / Candid profile yet (the footer hides that element).
-    for (const url of [siteConfig.guidestar.profileUrl, siteConfig.guidestar.directProfileUrl]) {
+    for (const url of [
+      siteConfig.guidestar.sealUrl,
+      siteConfig.guidestar.profileUrl,
+      siteConfig.guidestar.directProfileUrl,
+    ]) {
       expect(url).toMatch(/^(https:\/\/\S+)?$/)
     }
 
@@ -183,6 +188,7 @@ describe('siteConfig.pending contract', () => {
     address: () => siteConfig.addresses.length === 0,
     ein: () => siteConfig.ein.trim() === '',
     guidestar: () =>
+      siteConfig.guidestar.sealUrl.trim() === '' &&
       siteConfig.guidestar.profileUrl.trim() === '' &&
       siteConfig.guidestar.directProfileUrl.trim() === '',
     social: () => siteConfig.social.every((s) => s.href.trim() === ''),
@@ -248,7 +254,7 @@ describe('siteConfig.pending contract', () => {
       siteConfig.phone = { display: '', tel: '' }
       siteConfig.addresses = []
       siteConfig.ein = ''
-      siteConfig.guidestar = { profileUrl: '', directProfileUrl: '' }
+      siteConfig.guidestar = { sealUrl: '', profileUrl: '', directProfileUrl: '' }
       siteConfig.social = [{ label: 'Facebook', href: '' }]
       siteConfig.donationUrl = ''
       siteConfig.volunteerUrl = ''
