@@ -545,6 +545,22 @@ describe('pending footer fields', () => {
       if (showLink) expect(directLink()!.closest('a')).toHaveAttribute('href', directProfileUrl)
     })
 
+    // A fork that fills in the profile links but not its own seal URL must not
+    // render an <img> with an empty src: the seal stays hidden, the link shows.
+    it('hides the seal when the profile URL is set but the seal URL is empty', () => {
+      siteConfig.guidestar = {
+        sealUrl: '',
+        profileUrl: 'https://example.org/profile',
+        directProfileUrl: 'https://example.org/direct',
+      }
+      siteConfig.pending = []
+      render(<Footer />)
+
+      expect(seal()).toBeNull()
+      expect(screen.queryByRole('img', { name: 'Candid Seal of Transparency' })).toBeNull()
+      expect(directLink()!.closest('a')).toHaveAttribute('href', 'https://example.org/direct')
+    })
+
     it('shows the placeholder, and no seal or link, while GuideStar is pending', () => {
       siteConfig.guidestar = { sealUrl: '', profileUrl: '', directProfileUrl: '' }
       siteConfig.pending = ['guidestar']
