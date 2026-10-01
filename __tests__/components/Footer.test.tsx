@@ -55,13 +55,14 @@ describe('Footer component', () => {
     expect(screen.getByText(new RegExp(currentYear.toString()))).toBeInTheDocument()
   })
 
-  itWithGuidestar('should have GuideStar profile link', () => {
+  itWithGuidestar('should have Candid profile links and the live seal', () => {
     render(<Footer />)
-    expect(screen.getByLabelText(`View ${siteConfig.name} GuideStar Profile`)).toHaveAttribute(
-      'href',
-      siteConfig.guidestar.profileUrl
-    )
-    expect(screen.getByText('Direct GuideStar Profile Link').closest('a')).toHaveAttribute(
+    const sealLink = screen.getByLabelText(`${siteConfig.name} Candid Seal of Transparency`)
+    expect(sealLink).toHaveAttribute('href', siteConfig.guidestar.profileUrl)
+    expect(
+      within(sealLink).getByRole('img', { name: 'Candid Seal of Transparency' })
+    ).toHaveAttribute('src', siteConfig.guidestar.sealUrl)
+    expect(screen.getByText('Direct Candid Profile Link').closest('a')).toHaveAttribute(
       'href',
       siteConfig.guidestar.directProfileUrl
     )
@@ -361,9 +362,9 @@ describe('Footer component', () => {
     expect(hubLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  itWithGuidestar('should have GuideStar image with alt text', () => {
+  itWithGuidestar('should have the Candid seal image with alt text', () => {
     render(<Footer />)
-    expect(screen.getByAltText('GuideStar Platinum Seal of Transparency')).toBeInTheDocument()
+    expect(screen.getByAltText('Candid Seal of Transparency')).toBeInTheDocument()
   })
 
   it('should have Google Maps links for addresses', () => {
@@ -443,7 +444,7 @@ describe('pending footer fields', () => {
     siteConfig.phone = { display: '', tel: '' }
     siteConfig.addresses = []
     siteConfig.ein = ''
-    siteConfig.guidestar = { profileUrl: '', directProfileUrl: '' }
+    siteConfig.guidestar = { sealUrl: '', profileUrl: '', directProfileUrl: '' }
     siteConfig.social = siteConfig.social.map((link) => ({ ...link, href: '' }))
     siteConfig.donationUrl = ''
     siteConfig.volunteerUrl = ''
@@ -479,8 +480,8 @@ describe('pending footer fields', () => {
     expect(screen.getByText(`${siteConfig.name} EIN:`, { exact: false })).toBeInTheDocument()
 
     // Nothing that looks actionable survives behind a placeholder.
-    expect(screen.queryByAltText('GuideStar Platinum Seal of Transparency')).toBeNull()
-    expect(screen.queryByText('Direct GuideStar Profile Link')).toBeNull()
+    expect(screen.queryByAltText('Candid Seal of Transparency')).toBeNull()
+    expect(screen.queryByText('Direct Candid Profile Link')).toBeNull()
     expect(document.querySelector('a[href^="tel:"]')).toBeNull()
     expect(document.querySelector('a[href*="google.com/maps"]')).toBeNull()
     expect(document.querySelector('a[href="mailto:"]')).toBeNull()
@@ -502,7 +503,7 @@ describe('pending footer fields', () => {
   it('treats an empty field that is NOT pending as "the charity has none"', () => {
     siteConfig.phone = { display: '', tel: '' }
     siteConfig.addresses = []
-    siteConfig.guidestar = { profileUrl: '', directProfileUrl: '' }
+    siteConfig.guidestar = { sealUrl: '', profileUrl: '', directProfileUrl: '' }
     siteConfig.pending = []
     render(<Footer />)
 
@@ -520,8 +521,8 @@ describe('pending footer fields', () => {
   // The seal and the direct-link button are separate transparency claims, so
   // each is gated on its own URL, and neither renders when both are empty.
   describe('GuideStar elements', () => {
-    const seal = () => screen.queryByAltText('GuideStar Platinum Seal of Transparency')
-    const directLink = () => screen.queryByText('Direct GuideStar Profile Link')
+    const seal = () => screen.queryByAltText('Candid Seal of Transparency')
+    const directLink = () => screen.queryByText('Direct Candid Profile Link')
 
     it.each([
       ['both URLs', 'https://example.org/seal', 'https://example.org/direct', true, true],
@@ -530,7 +531,11 @@ describe('pending footer fields', () => {
       ['neither URL', '', '', false, false],
       ['whitespace-only URLs', '   ', '   ', false, false],
     ])('with %s configured', (_case, profileUrl, directProfileUrl, showSeal, showLink) => {
-      siteConfig.guidestar = { profileUrl, directProfileUrl }
+      siteConfig.guidestar = {
+        sealUrl: 'https://example.org/seal.svg',
+        profileUrl,
+        directProfileUrl,
+      }
       siteConfig.pending = []
       render(<Footer />)
 
@@ -541,7 +546,7 @@ describe('pending footer fields', () => {
     })
 
     it('shows the placeholder, and no seal or link, while GuideStar is pending', () => {
-      siteConfig.guidestar = { profileUrl: '', directProfileUrl: '' }
+      siteConfig.guidestar = { sealUrl: '', profileUrl: '', directProfileUrl: '' }
       siteConfig.pending = ['guidestar']
       render(<Footer />)
 

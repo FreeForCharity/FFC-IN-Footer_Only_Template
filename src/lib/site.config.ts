@@ -152,13 +152,17 @@ export type SiteConfig = {
   /** Physical office addresses shown in the footer contact column. */
   addresses: readonly SiteAddress[]
   /**
-   * GuideStar / Candid transparency profile links shown in the footer. Each is
-   * a transparency claim, so the seal renders only when `profileUrl` is set and
-   * the direct-link button only when `directProfileUrl` is set. Leave both ''
-   * until the charity has its own Candid profile (never copy another
-   * organization's), and list 'guidestar' in `pending` if one is coming.
+   * Candid (GuideStar) transparency seal and profile links shown in the footer.
+   * `sealUrl` is Candid's live seal widget for the charity's own Candid
+   * organization id, so the seal always shows the current year's level (the
+   * same source freeforcharity.org renders) instead of a static image that
+   * goes stale. Each is a transparency claim, so the seal renders only when
+   * `profileUrl` is set and the direct-link button only when `directProfileUrl`
+   * is set. Leave all three '' until the charity has its own Candid profile
+   * (never copy another organization's), and list 'guidestar' in `pending` if
+   * one is coming.
    */
-  guidestar: { profileUrl: string; directProfileUrl: string }
+  guidestar: { sealUrl: string; profileUrl: string; directProfileUrl: string }
   /**
    * Tax-status clause appended to the footer copyright line, e.g.
    * 'a US 501c3 Non Profit'. It is a legal claim, so it must be true: an
@@ -240,9 +244,11 @@ export const siteConfig: SiteConfig = {
   ],
   taxStatusLabel: 'a US 501c3 Non Profit',
   guidestar: {
-    profileUrl: 'https://www.guidestar.org/profile/46-2471893',
+    sealUrl: 'https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/9326392/svg',
+    profileUrl:
+      'https://app.candid.org/profile/9326392/free-for-charity-46-2471893/?pkId=7232730a-03b5-467f-a82c-443dcd2122ed',
     directProfileUrl:
-      'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742',
+      'https://app.candid.org/profile/9326392/free-for-charity/?pkId=7232730a-03b5-467f-a82c-443dcd2122ed&isActive=true',
   },
   supportedBy: {
     name: 'Free For Charity',
