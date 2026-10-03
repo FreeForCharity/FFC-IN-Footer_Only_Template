@@ -17,6 +17,8 @@ import {
   volunteerHref,
 } from '@/lib/site.config'
 
+import { SaleShareOptOut } from '@/components/sale-share-opt-out'
+
 // Visible stand-in for a footer-standard field the charity has not supplied
 // yet (see PendingField in site.config.ts). Plain text, never a link: a gap
 // in the standard should read as a call to action, not as a working control.
@@ -219,6 +221,15 @@ const Footer: React.FC = () => {
                 >
                   Cookie Preferences
                 </button>
+              </li>
+              <li>
+                {/* "Do Not Sell or Share" is a statutory opt-out (CPRA, and
+                    the Colorado / Connecticut equivalents), distinct from the
+                    cookie banner: a visitor who accepted everything must still
+                    be able to exercise it. Required to be reachable from every
+                    page, which is why it lives here rather than only inside
+                    the preferences modal. */}
+                <SaleShareOptOut className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500] text-left" />
               </li>
             </ul>
           </div>

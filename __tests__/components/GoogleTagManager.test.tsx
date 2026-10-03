@@ -1,10 +1,29 @@
-import React from 'react'
 import { renderToString } from 'react-dom/server'
-import GoogleTagManager, { GoogleTagManagerNoScript } from '../../src/components/google-tag-manager'
+
+import * as gtm from '../../src/components/google-tag-manager'
 import { GTM_ID } from '../../src/lib/analytics.config'
 
-// React suppresses <noscript> children in client-side renders (jsdom).
-// We use server-side renderToString to verify the noscript markup.
+/**
+ * INVERTED DELIBERATELY. This suite used to render `GoogleTagManagerNoScript`
+ * and assert the iframe was present, hidden and titled.
+ *
+ * The <noscript> GTM iframe is the one tracking path consent cannot reach:
+ * with JavaScript disabled the Consent Mode bootstrap never runs, the cookie
+ * banner never renders, and the footer's "Do Not Sell or Share" control does
+ * not exist — but the iframe would still request the GTM container, carrying
+ * no consent signal, with no way for a GPC-sending visitor to stop it. That
+ * made the privacy policy's claim, that the consent check runs before any
+ * Google tag loads, false for every JS-disabled visitor.
+ *
+ * It is asserted by ABSENCE because re-adding it is a one-line edit that a
+ * presence-only suite would wave through, and the policy claim would silently
+ * become false again.
+ *
+ * MERGED WITH `main`, which still had the presence suite. Its NoScript cases
+ * are gone with the component; its `GoogleTagManager` cases are kept below,
+ * and one of them is why the absence check here no longer goes through
+ * `renderToString`.
+ */
 
 // A test container id. It is deliberately NOT a real GTM container, and
 // especially not the template's own: hardcoding that is how a fork's analytics
@@ -12,80 +31,85 @@ import { GTM_ID } from '../../src/lib/analytics.config'
 // `npm run check:rebrand` exists to catch.
 const TEST_GTM_ID = 'GTM-TEST000'
 
-describe('GoogleTagManagerNoScript component', () => {
-  describe('when a container is configured', () => {
-    const html = renderToString(<GoogleTagManagerNoScript gtmId={TEST_GTM_ID} />)
-
-    it('should render a noscript element', () => {
-      expect(html).toContain('<noscript>')
-    })
-
-    it('should contain an iframe pointing to GTM', () => {
-      expect(html).toContain('googletagmanager.com/ns.html')
-      expect(html).toContain(TEST_GTM_ID)
-    })
-
-    it('should have the iframe hidden', () => {
-      expect(html).toContain('height="0"')
-      expect(html).toContain('width="0"')
-    })
-
-    it('should have an accessible title on the iframe', () => {
-      expect(html).toContain('title="Google Tag Manager"')
-    })
+describe('Google Tag Manager noscript fallback', () => {
+  it('no longer exports a noscript component', () => {
+    expect('GoogleTagManagerNoScript' in gtm).toBe(false)
   })
 
-  // Every new FFC site starts here, before workflow 505/503 provisions its
-  // container. Emitting a snippet with an empty id would request `ns.html?id=`
-  // and `gtm.js?id=`, which fails in the browser — so the components must
-  // render nothing at all rather than an empty tag.
-  // `GoogleTagManager` wraps next/script, which renders NOTHING through
-  // renderToString outside a Next runtime — measured: it returns '' even for a
-  // fully configured id. So `expect(renderToString(<GoogleTagManager …/>)).toBe('')`
-  // is vacuously true and cannot fail. The component function is called
-  // directly instead, where its `return null` guard is observable.
-  describe('when no container is configured', () => {
-    it('renders nothing for an empty id', () => {
-      expect(renderToString(<GoogleTagManagerNoScript gtmId="" />)).toBe('')
-      expect(GoogleTagManager({ gtmId: '' })).toBeNull()
-      expect(GoogleTagManagerNoScript({ gtmId: '' })).toBeNull()
-    })
-
-    // A whitespace-only id is unconfigured too. It passes a bare truthiness
-    // check, so without an explicit trim the components emit
-    // `ns.html?id=%20%20` and `gtm.js?id=%20%20`, which fail in the browser
-    // exactly like an empty id would — but silently, since a tag IS rendered.
-    it('renders nothing for a whitespace-only id', () => {
-      expect(renderToString(<GoogleTagManagerNoScript gtmId="   " />)).toBe('')
-      expect(GoogleTagManager({ gtmId: '   ' })).toBeNull()
-      expect(GoogleTagManagerNoScript({ gtmId: '   ' })).toBeNull()
-    })
-
-    it('still renders for a real id (so the checks above are not vacuous)', () => {
-      expect(GoogleTagManager({ gtmId: TEST_GTM_ID })).not.toBeNull()
-      expect(GoogleTagManagerNoScript({ gtmId: TEST_GTM_ID })).not.toBeNull()
-    })
-
-    it('trims a padded id rather than emitting it verbatim', () => {
-      const html = renderToString(<GoogleTagManagerNoScript gtmId={`  ${TEST_GTM_ID}  `} />)
-      expect(html).toContain(`id=${TEST_GTM_ID}`)
-      expect(html).not.toContain('%20')
-    })
+  it('exports only the script loader', () => {
+    // Guards the assertion above from passing for the wrong reason: a module
+    // that failed to load would also lack the export.
+    expect(typeof gtm.default).toBe('function')
   })
 
-  describe('the shipped configuration', () => {
-    it('never carries a container id this site does not own', () => {
-      // Either unset (awaiting provisioning) or a well-formed GTM container.
-      expect(GTM_ID.trim() === '' || /^GTM-[A-Z0-9]+$/.test(GTM_ID.trim())).toBe(true)
-    })
+  it('emits no noscript element and no ns.html request', () => {
+    // NOT through renderToString. `GoogleTagManager` wraps next/script, which
+    // renders NOTHING outside a Next runtime — measured on `main`, where the
+    // same discovery is recorded: it returns '' even for a fully configured
+    // id. An absence assertion against that string is vacuously true and
+    // cannot fail, which is exactly the failure mode this suite exists to
+    // avoid. The element is inspected directly instead.
+    const markup = JSON.stringify(gtm.default({ gtmId: TEST_GTM_ID }))
 
-    it('matches the id actually rendered by default', () => {
-      const defaultHtml = renderToString(<GoogleTagManagerNoScript />)
-      if (GTM_ID.trim() === '') {
-        expect(defaultHtml).toBe('')
-      } else {
-        expect(defaultHtml).toContain(GTM_ID.trim())
-      }
-    })
+    expect(markup).not.toContain('noscript')
+    expect(markup).not.toContain('ns.html')
+    // Not vacuous: the snippet it DOES emit is in there.
+    expect(markup).toContain('googletagmanager.com/gtm.js')
+    expect(markup).toContain(TEST_GTM_ID)
+  })
+})
+
+/**
+ * Kept from `main`. Every new FFC site starts with no container, before
+ * workflow 505/503 provisions one, so the configured branch would otherwise
+ * ship unverified on every fork — which is what the `gtmId` prop exists for.
+ */
+describe('GoogleTagManager with no container configured', () => {
+  it('renders nothing for an empty id', () => {
+    expect(gtm.default({ gtmId: '' })).toBeNull()
+  })
+
+  // A whitespace-only id is unconfigured too. It passes a bare truthiness
+  // check, so without an explicit trim the component emits
+  // `gtm.js?id=%20%20`, which fails in the browser exactly like an empty id
+  // would — but silently, since a tag IS rendered.
+  it('renders nothing for a whitespace-only id', () => {
+    expect(gtm.default({ gtmId: '   ' })).toBeNull()
+  })
+
+  it('still renders for a real id (so the checks above are not vacuous)', () => {
+    expect(gtm.default({ gtmId: TEST_GTM_ID })).not.toBeNull()
+  })
+
+  it('trims a padded id rather than emitting it verbatim', () => {
+    const markup = JSON.stringify(gtm.default({ gtmId: `  ${TEST_GTM_ID}  ` }))
+    expect(markup).toContain(TEST_GTM_ID)
+    expect(markup).not.toContain('%20')
+    expect(markup).not.toContain(`  ${TEST_GTM_ID}`)
+  })
+})
+
+describe('the shipped GTM configuration', () => {
+  it('never carries a container id this site does not own', () => {
+    // Either unset (awaiting provisioning) or a well-formed GTM container.
+    expect(GTM_ID.trim() === '' || /^GTM-[A-Z0-9]+$/.test(GTM_ID.trim())).toBe(true)
+  })
+
+  it('renders by default exactly when a container is configured', () => {
+    // `main` asserted this through the noscript component's HTML. With that
+    // component gone the same property is checked on the loader itself, by
+    // direct call for the reason given above.
+    const rendered = gtm.default()
+    if (GTM_ID.trim() === '') {
+      expect(rendered).toBeNull()
+    } else {
+      expect(JSON.stringify(rendered)).toContain(GTM_ID.trim())
+    }
+  })
+
+  it('renders nothing through renderToString either way, which is why nothing asserts on it', () => {
+    // Recorded rather than assumed: this is the measurement that makes the
+    // direct-call style above necessary, and it is cheap to keep honest.
+    expect(renderToString(<gtm.default gtmId={TEST_GTM_ID} />)).toBe('')
   })
 })

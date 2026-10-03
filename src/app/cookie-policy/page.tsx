@@ -57,12 +57,12 @@ export default function CookiePolicy() {
               Remember your cookie consent preferences
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Understand how you use our website (under the regional consent model described in
-              section 3.3)
+              Understand how you use our website (in the EEA, the UK and Switzerland only after you
+              opt in — see section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Analyze website traffic and user behavior (under the regional consent model described
-              in section 3.3)
+              Analyze website traffic and user behavior (in the EEA, the UK and Switzerland only
+              after you opt in — see section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               Improve our website and user experience
@@ -224,18 +224,25 @@ export default function CookiePolicy() {
               <strong>When we ask permission first</strong>
             </p>
             <p className="text-sm text-[#666] mb-2">
-              If you are in the European Economic Area, the United Kingdom, or Switzerland, Google
-              Analytics sets <strong>no cookies and collects no identifiers</strong> until you
-              accept. It still counts your visit in an aggregate, cookie-free way so we know how
-              many people used the site — that measurement cannot be tied back to you or to your
-              next visit.
+              Where you are decides this. In the European Economic Area, the United Kingdom and
+              Switzerland, Google Analytics sets{' '}
+              <strong>
+                no analytics or advertising cookies and collects no identifiers from your device
+              </strong>{' '}
+              until you accept. It still counts your visit in an aggregate, cookie-free way so we
+              know how many people used the site — that measurement cannot be tied back to you or to
+              your next visit.
             </p>
             <p className="text-sm text-[#666] mb-2">
-              Everywhere else, Google Analytics cookies are set from your first visit. You can turn
-              them off at any time using the Cookie Preferences link in our footer, and we will
-              delete the cookies listed below when you do. Which of these defaults applies to you is
-              determined by Google from your IP address at the time of your visit; IP geolocation is
-              approximate.
+              Everywhere else, including the United States, the cookies listed below are set from
+              your first page view without requiring your prior opt-in, because no law there
+              requires us to ask first. The cookie banner is still shown, and declining turns them
+              off. Advertising data is also shared with Google in those regions to measure our
+              Google Ad Grants search ads — you can stop that with the{' '}
+              <strong>Do Not Sell or Share My Personal Information</strong> link in our footer or by
+              sending a Global Privacy Control signal. Wherever you are, you can turn analytics off
+              at any time using the Cookie Preferences link in our footer, and we will delete the
+              cookies listed below when you do.
             </p>
             <p className="text-sm text-[#666]">
               <strong>Microsoft Clarity is different.</strong> It records how visitors move through
@@ -390,6 +397,62 @@ export default function CookiePolicy() {
             </p>
           </div>
 
+          {/* Google Ads / Ad Grants conversion tracking */}
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold mb-2 text-[#333]">
+              Google Ads conversion tracking (Ad Grants)
+            </h4>
+            <p className="text-sm mb-2 text-[#666]">
+              This site advertises through Google Ad Grants, which gives nonprofits free search
+              advertising. Keeping that grant requires us to measure which ads lead to a donation or
+              a volunteer sign-up, so where advertising storage is permitted Google may set the
+              cookies below. They are advertising cookies, not analytics: the{' '}
+              <em>Do Not Sell or Share My Personal Information</em> link in our footer, and a
+              browser sending Global Privacy Control, both stop them being set and delete the ones
+              already on your device.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 pr-4 text-[#333]">Cookie Name</th>
+                    <th className="text-left py-2 pr-4 text-[#333]">Purpose</th>
+                    <th className="text-left py-2 text-[#333]">Duration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="py-2 pr-4 font-mono text-[#666]">_gcl_au</td>
+                    <td className="py-2 pr-4 text-[#666]">
+                      Links an ad click to a later action on this site
+                    </td>
+                    <td className="py-2 text-[#666]">3 months</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 pr-4 font-mono text-[#666]">_gcl_aw, _gcl_dc, _gcl_gb</td>
+                    <td className="py-2 pr-4 text-[#666]">
+                      Records which kind of ad click brought you here; which one is set depends on
+                      the ad
+                    </td>
+                    <td className="py-2 text-[#666]">90 days</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 font-mono text-[#666]">_gac_&lt;property-id&gt;</td>
+                    <td className="py-2 pr-4 text-[#666]">
+                      Carries ad-click details to our analytics property so a conversion can be
+                      credited
+                    </td>
+                    <td className="py-2 text-[#666]">90 days</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs mt-2 text-gray-600">
+              We do <strong>not</strong> enable personalized or remarketing advertising. Ad Grants
+              accounts cannot use it, and we leave that signal switched off.
+            </p>
+          </div>
+
           {/* Section 4 */}
           <ol className="list-decimal list-inside pb-[1em]" start={4}>
             <li>
@@ -490,14 +553,19 @@ export default function CookiePolicy() {
             </li>
           </ol>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            We do not sell or share personal information as defined by the CCPA/CPRA, so there is
-            nothing for a Global Privacy Control or Do Not Track signal to opt out of, and this site
-            does not read those browser signals. In the EEA, the UK, and Switzerland, analytics and
-            marketing cookies are off until you opt in through the consent banner. Everywhere else,
-            analytics cookies are set from your first visit under Google Consent Mode; you can turn
-            them off at any time via the Cookie Preferences link in the footer, and we delete the
-            cookies this site set when you do. Session recording (Microsoft Clarity) and marketing
-            tags (Meta Pixel) load only after your explicit opt-in, everywhere in the world.
+            This site reads the Global Privacy Control (GPC) signal and treats it as an opt-out of
+            advertising data sharing. The check runs before any Google tag loads, so a browser
+            sending GPC never has advertising cookies set. We do share advertising data with Google
+            to measure our Google Ad Grants search ads, which California law may treat as
+            &ldquo;sharing&rdquo; for cross-context behavioral advertising, so there is a real
+            opt-out to exercise — GPC exercises it automatically, and so does the{' '}
+            <strong>Do Not Sell or Share My Personal Information</strong> link in the footer. Do Not
+            Track (DNT) is a separate, deprecated signal with no agreed meaning, and we do not act
+            on it. GPC opts you out of sale and sharing, not of basic analytics: outside the EEA,
+            the UK and Switzerland analytics cookies are set automatically, and you can turn them
+            off at any time via the Cookie Preferences link in the footer — we delete the cookies
+            this site set when you do. Session recording (Microsoft Clarity) and marketing tags
+            (Meta Pixel) load only after your explicit opt-in, everywhere in the world.
           </p>
 
           {/* Section 6 */}

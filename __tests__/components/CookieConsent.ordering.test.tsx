@@ -2,14 +2,18 @@
  * Consent Mode ordering guarantees, tested with a REAL (non-placeholder)
  * GA4 measurement id so the direct GA loader actually injects scripts.
  *
- * The race this locks out: a returning visitor OUTSIDE the EEA/UK/CH who
- * previously DECLINED analytics runs under the unscoped granted-by-default
- * bootstrap. If GA's `config` were queued before the stored denial's
- * `consent update`, GA could set cookies and send a cookie-based hit
- * before the denial applied — the bootstrap's `wait_for_update` on the
- * grant only buys a 500ms window, it is not an ordering guarantee. The
- * component must therefore push the consent update BEFORE injecting the
- * GA script — one ordered path, no earlier mount effect that loads GA
+ * The race this locks out inverted with the defaults, and the ordering
+ * requirement survived it. It used to be a returning visitor OUTSIDE the
+ * EEA/UK/CH who had DECLINED: under the unscoped granted-by-default
+ * bootstrap, GA's `config` queued ahead of their stored denial could set
+ * cookies and send a cookie-based hit before the denial applied. There is no
+ * permissive default now, so that visitor is safe by default — and a
+ * returning visitor who ACCEPTED is the one at risk, since their opening hit
+ * would go out cookieless if GA loaded before their stored grant. Either
+ * way `wait_for_update` only buys a 500ms window, which is not an ordering
+ * guarantee. The component must therefore push the consent update BEFORE
+ * injecting the GA script — one ordered path, no earlier mount effect that
+ * loads GA
  * before the stored-choice restore.
  */
 import React from 'react'
@@ -137,14 +141,27 @@ describe('CookieConsent Consent Mode ordering (real GA id)', () => {
     )
   })
 
-  it('still loads GA (regional defaults, no update needed) when no choice is stored', async () => {
+  it('still loads GA, with no consent update, when no choice is stored', async () => {
     render(<CookieConsent />)
 
     await waitFor(() => {
       expect(events).toContain('ga-script')
     })
 
-    // No stored choice → nothing to restore → no consent update pushed.
+    // No stored choice → nothing to restore → no consent update pushed, so
+    // the tag runs under whichever REGIONAL default applies to this visitor.
+    // Inside the EEA/UK/CH that is denied, and the tag sends cookieless pings;
+    // everywhere else the unscoped default grants analytics and it uses
+    // cookies from this first pageview. Loading GA before a choice is
+    // deliberate in both cases, and this case asserts only that no consent
+    // update is pushed when there is nothing stored to push.
+    //
+    // This comment has been wrong twice in opposite directions: it once said
+    // "regional defaults" under a global-denial model, and then "the tag stays
+    // in the denied default state ... a permissive default that no longer
+    // exists" after the regional model was restored. The permissive default
+    // exists; naming one region's behaviour as the only behaviour is what
+    // keeps breaking it.
     expect(events).not.toContain('consent-update')
   })
   it('queues the Consent Mode update BEFORE the custom consent_update event', async () => {
