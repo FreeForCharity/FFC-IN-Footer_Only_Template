@@ -279,14 +279,20 @@ export default function CookieConsent() {
       // ORDERING MATTERS on the stored-choice path below: applyConsent
       // pushes the Consent Mode `update` BEFORE loadGoogleAnalytics queues
       // GA's `config`, so a returning visitor's stored choice is in the
-      // dataLayer ahead of the first hit. Which choice is at risk inverted
-      // with the defaults: it used to be a stored DENIAL that had to arrive
-      // first, because the default was permissive and the hit would
-      // otherwise go out with cookies; now it is a stored GRANT, because the
-      // default is denied and the hit would otherwise go out cookieless.
-      // Either way the fix is the same order. Only the undecided branches
-      // may load GA without a preceding update — there is no stored choice
-      // to apply. Never load GA before this restore has run.
+      // dataLayer ahead of the first hit.
+      //
+      // Under the REGIONAL defaults, which choice is at risk depends on where
+      // the visitor is, and both cases now exist at once. Outside the
+      // EEA/UK/CH the unscoped default GRANTS analytics, so a stored DENIAL
+      // must land first or the opening hit goes out with cookies for someone
+      // who said no — a privacy failure. Inside those regions the default
+      // DENIES, so a stored GRANT must land first or that hit goes out
+      // cookieless — a measurement loss. This comment has described each of
+      // those as "the" risk in turn, under a global-grant and then a
+      // global-deny model; naming only one was what made it wrong both times.
+      // Either way the fix is the same order. Only the undecided branches may
+      // load GA without a preceding update — there is no stored choice to
+      // apply. Never load GA before this restore has run.
       const handleMissingChoice = () => {
         if (showBannerIfMissing) setShowBanner(true)
         loadGoogleAnalytics()
@@ -353,15 +359,14 @@ export default function CookieConsent() {
     // Check if user has already made a choice with error handling. This
     // single ordered path also loads the Google tags on every pageview:
     // stored choice → consent update first, then GA; no stored choice →
-    // banner + GA under the denied-by-default state. Do NOT load GA before
-    // this runs. The reason inverted with the defaults and still holds: it
-    // used to be that a returning decliner's stored denial had to beat GA's
-    // config, since the default was permissive; now it is a returning
-    // GRANTER's stored acceptance that must, or their opening hit goes out
-    // cookieless. The single consent default carries wait_for_update, but
-    // that is only a brief hold window, not an ordering guarantee — this
-    // restore-before-load order is what guarantees it. (There is one default
-    // call now; this said "both" when the bootstrap emitted two.)
+    // banner + GA under whichever regional default applies. Do NOT load GA
+    // before this runs. Which stored choice is at risk depends on the
+    // visitor's region — a denial outside the EEA/UK/CH, a grant inside it —
+    // and the full reasoning is on the restore path above rather than
+    // duplicated here, because keeping two copies in sync is what let this
+    // comment go stale twice. BOTH consent defaults carry wait_for_update,
+    // but that is a brief hold window (500ms), not an ordering guarantee:
+    // this restore-before-load order is what guarantees it.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPreferencesFromLocalStorage(true)
 
