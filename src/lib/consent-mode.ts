@@ -81,6 +81,11 @@
  * statutory right under California, Colorado and Connecticut law, and it
  * must survive a visitor who otherwise accepts everything.
  */
+import {
+  CHILD_DIRECTED as configChildDirected,
+  AD_PERSONALIZATION as configAdPersonalization,
+} from '@/lib/analytics.config'
+
 export const SALE_SHARE_OPT_OUT_KEY = 'ffc-sale-share-opt-out'
 
 /**
@@ -104,31 +109,21 @@ export const SALE_SHARE_OPT_OUT_KEY = 'ffc-sale-share-opt-out'
  */
 export const SALE_SHARE_OPT_OUT_EVENT = 'ffc:sale-share-opt-out'
 
-/**
- * TRUE when this site is directed to children — a youth sports club, a
- * preschool, a children's programme. Denies every advertising signal for
- * every visitor, everywhere, regardless of region or consent. COPPA and
- * Google's own policies do not permit ad personalisation on child-directed
- * properties, and a child's "accept" is not a valid legal basis. Analytics
- * is unaffected. When in doubt set it TRUE: the cost is remarketing a
- * child-directed site cannot lawfully use anyway.
- *
- * Declared here rather than in a config module because this template has no
- * analytics config file; a site that needs it flips the constant.
- */
-const CHILD_DIRECTED = false
-
-/**
- * TRUE only when this site deliberately runs PERSONALISED advertising —
- * remarketing, audience targeting, Display. Google Ad Grants accounts
- * CANNOT do any of that (Grants are search-only), so a Grant-funded site
- * should leave this FALSE: it buys nothing, and ad_personalization is the
- * signal that most squarely enables cross-context behavioural advertising
- * under California, Colorado and Connecticut law. Ad Grants conversion
- * tracking does NOT need it — that runs on ad_storage and ad_user_data,
- * which stay granted outside the EEA/UK/CH.
- */
-const AD_PERSONALIZATION = false && !CHILD_DIRECTED
+// Both knobs live in `analytics.config.ts`, documented there with their legal
+// consequences.
+//
+// They used to be hardcoded constants here, under a comment claiming this
+// template had no analytics config file. It has one, so the comment was false
+// and the documented knob was not a knob: a charity following its own
+// instructions would have been editing a constant inside the consent library.
+// Copilot reported the pair as a coverage gap, which is what surfaced that.
+//
+// `&& !CHILD_DIRECTED` is the COPPA lock. A child-directed site denies ad
+// personalisation whatever the other knob says, because that is not the site's
+// choice to make -- and the literal `false &&` this replaced made the enabled
+// branch unreachable, so no test could have exercised it either.
+const CHILD_DIRECTED = configChildDirected === true
+const AD_PERSONALIZATION = configAdPersonalization === true && !CHILD_DIRECTED
 
 /**
  * ISO 3166 region codes where Google's EU User Consent Policy applies:

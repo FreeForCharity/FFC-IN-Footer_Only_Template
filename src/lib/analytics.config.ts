@@ -24,3 +24,40 @@
  * to its literal value and rejects the empty-string comparisons the guards use.
  */
 export const GTM_ID: string = 'GTM-TQ5H8HPR'
+
+/**
+ * TRUE when this site is directed to children — a youth sports club, a
+ * preschool, a children's programme. Denies every advertising signal for every
+ * visitor, everywhere, regardless of region or consent. COPPA and Google's own
+ * policies do not permit ad personalisation on child-directed properties, and
+ * a child's "accept" is not a valid legal basis. Analytics is unaffected. When
+ * in doubt set it TRUE: the cost is remarketing a child-directed site cannot
+ * lawfully use anyway.
+ *
+ * Moved here from `consent-mode.ts`, where it was a hardcoded `false` with a
+ * comment explaining that this template had no analytics config file. It has
+ * one — this file — so the comment was false and the documented knob was
+ * not actually a knob: a charity following its own instructions would have
+ * edited a constant inside the consent library. Reported by Copilot as a
+ * coverage gap, which is how the bigger problem surfaced.
+ *
+ * The explicit `: boolean` matters, as with GTM_ID above: without it
+ * TypeScript narrows to the literal `false` and the enabled branch becomes
+ * unreachable dead code that no test can exercise.
+ */
+export const CHILD_DIRECTED: boolean = false
+
+/**
+ * TRUE only when this site deliberately runs PERSONALISED advertising —
+ * remarketing, audience targeting, Display. Google Ad Grants accounts CANNOT
+ * do any of that (Grants are search-only), so a Grant-funded site should leave
+ * this FALSE: it buys nothing, and `ad_personalization` is the signal that most
+ * squarely enables cross-context behavioural advertising under California,
+ * Colorado and Connecticut law. Ad Grants conversion tracking does NOT need it
+ * — that runs on `ad_storage` and `ad_user_data`, which stay granted outside
+ * the EEA/UK/CH.
+ *
+ * A child-directed site overrides this to denied regardless of what is set
+ * here; see `consent-mode.ts`.
+ */
+export const AD_PERSONALIZATION: boolean = false
