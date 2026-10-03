@@ -2,32 +2,10 @@
 
 import Script from 'next/script'
 
+import { scriptString } from '@/lib/script-string'
+
 // Google Tag Manager ID
 const GTM_ID = 'GTM-TQ5H8HPR'
-
-/**
- * Serialises the container id for embedding in the inline script body.
- *
- * `JSON.stringify` supplies the quotes and escapes quotes and newlines, but
- * NOT `<` — a value containing `</script>` would close the element early and
- * let the rest parse as markup. U+2028/U+2029 are escaped too: legal in JSON,
- * illegal in a JS string literal before ES2019.
- *
- * Defence in depth, not a live hole: the id is a build-time constant set by a
- * maintainer, never by a visitor. It matters because `isConfigured()` only
- * rejects placeholders — nothing validates the SHAPE of what lands here.
- *
- * Deliberately local rather than imported from the cookie-consent component,
- * which exports the same helper: that module is `'use client'`, so importing
- * from it makes this a client-boundary call and breaks the build wherever
- * this component renders on the server.
- */
-function scriptString(value: string): string {
-  return JSON.stringify(value)
-    .replace(/</g, '\\u003c')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029')
-}
 
 export default function GoogleTagManager() {
   return (
@@ -50,17 +28,26 @@ export default function GoogleTagManager() {
   )
 }
 
-// Export a component for the noscript iframe that goes in the body
-export function GoogleTagManagerNoScript() {
-  return (
-    <noscript>
-      <iframe
-        src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-        height="0"
-        width="0"
-        style={{ display: 'none', visibility: 'hidden' }}
-        title="Google Tag Manager"
-      />
-    </noscript>
-  )
-}
+/*
+ * THE <noscript> GTM IFRAME WAS DELETED, NOT UNMOUNTED.
+ *
+ * It used to live here as `GoogleTagManagerNoScript` and render in <body>.
+ * It is gone because it is the one tracking path consent cannot reach: with
+ * JavaScript disabled the Consent Mode bootstrap never runs, the cookie
+ * banner never renders, and the footer's "Do Not Sell or Share" control does
+ * not exist — yet the iframe would still request the GTM container, carrying
+ * no consent signal, with no way for a GPC-sending visitor to stop it.
+ *
+ * That made the privacy policy's claim — that the consent check runs before
+ * any Google tag loads — false for every JS-disabled visitor. Deleting the
+ * export rather than merely removing the usage is deliberate: an unmounted
+ * component is one import away from coming back, and `tests/` asserts the
+ * iframe's ABSENCE from the rendered page so that re-adding it fails CI.
+ *
+ * The scriptString helper that used to be duplicated here is also gone, for
+ * a related reason: its local copy carried a comment justifying the
+ * duplication as a server-boundary necessity, which was untrue — this file
+ * declares 'use client' on line 1. One implementation now lives in
+ * src/lib/script-string.ts, so an escaping fix cannot land in one loader and
+ * miss the other.
+ */

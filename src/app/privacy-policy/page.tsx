@@ -347,19 +347,23 @@ export default function PrivacyPolicy() {
           </p>
           <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Consent:</strong> Wherever in the world you are, Google&apos;s tags (Google
-              Tag Manager and Google Analytics) set no analytics or advertising cookies and read no
-              identifiers from your device until you accept through the cookie consent banner —
-              until then your visit is counted only in an aggregate, cookie-free way that cannot be
-              tied back to you. Session recording (Microsoft Clarity) and marketing tags (Meta
-              Pixel) load only after you explicitly opt in. You can withdraw consent at any time via
-              the Cookie Preferences link in the footer; this site then deletes the tracking cookies
-              it set, Google&apos;s tags return to that cookie-free state, and Clarity and the Meta
-              Pixel stop loading from your next page view.
+              <strong>Consent:</strong> In the European Economic Area, the United Kingdom and
+              Switzerland, Google&apos;s tags (Google Tag Manager and Google Analytics) set no
+              analytics or advertising cookies and read no identifiers from your device until you
+              accept through the cookie consent banner — until then your visit is counted only in an
+              aggregate, cookie-free way that cannot be tied back to you. Session recording
+              (Microsoft Clarity) and marketing tags (Meta Pixel) load only after you explicitly opt
+              in, and that is true everywhere in the world, not only in those regions. You can
+              withdraw consent at any time via the Cookie Preferences link in the footer; this site
+              then deletes the tracking cookies it set, Google&apos;s tags return to that
+              cookie-free state, and Clarity and the Meta Pixel stop loading from your next page
+              view.
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Legitimate interests:</strong> Operating, securing, and improving this website
               (for example, essential cookies and server logs), balanced against your rights.
+              Outside the EEA, the UK and Switzerland this is also the basis on which analytics
+              cookies are set from your first page view, which is why no prompt appears there.
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Legal obligation:</strong> Where processing is required to comply with
@@ -367,13 +371,27 @@ export default function PrivacyPolicy() {
             </li>
           </ul>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>How consent works here.</strong> We use Google Consent Mode. The same rule
-            applies to every visitor, so nothing depends on where you are: analytics runs
-            cookie-free until you accept, in every country, and there is none in which analytics
-            cookies are set before you choose. You can turn them off again at any time via the
-            Cookie Preferences link in the footer. (Visitors in Switzerland are protected by
-            Switzerland&apos;s Federal Act on Data Protection (FADP) rather than the GDPR; the
-            treatment described here is the same either way.) See our{' '}
+            <strong>How consent works, in plain language.</strong> We use Google Consent Mode, and
+            what it does depends on where you are. If you are in the European Economic Area, the
+            United Kingdom or Switzerland, nothing is stored until you accept: Google&apos;s tags
+            set no analytics or advertising cookies and read no identifiers from your device, and
+            analytics counts your visit only in an aggregate, cookie-free way. Everywhere else —
+            including the United States, where this charity operates — analytics cookies are set
+            from your first page view without a prompt, because no law there requires us to ask
+            first and the measurement is what tells us whether the site is working. Advertising data
+            is shared with Google in those regions too, for the Ad Grants search ads described in
+            the California section below, and you can stop that at any time with the{' '}
+            <em>Do Not Sell or Share My Personal Information</em> link in the footer or by sending a
+            Global Privacy Control signal. To be precise about what happens before an EEA/UK/Swiss
+            visitor decides: the tags still load and send a cookie-free signal to Google, which is
+            what lets us count visits without identifying anyone; nothing is stored on your device
+            and nothing follows you to your next visit. One thing does travel: if you arrived from
+            an ad, the click identifier already in your link is carried between pages of this site
+            so the ad can still be credited if you accept — until you do, it is stripped from what
+            the tags send. You can change your mind at any time via the Cookie Preferences link in
+            the footer. (Visitors in Switzerland are protected by Switzerland&apos;s Federal Act on
+            Data Protection (FADP) rather than the GDPR; the treatment described here is the same
+            either way.) See our{' '}
             <Link href="/cookie-policy" className="text-[#007bff] underline">
               Cookie Policy
             </Link>{' '}
@@ -410,32 +428,58 @@ export default function PrivacyPolicy() {
             supplements the rest of this policy.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>We do not sell or share your personal information.</strong> Free For Charity
-            does not sell personal information, and does not share it for cross-context behavioral
-            advertising, as those terms are defined by California law — and has not done so in the
-            preceding 12 months. We do not knowingly collect or sell the personal information of
-            anyone under 16. We do not collect sensitive personal information beyond what is
-            necessary to provide this website and our services, and we do not use it to infer
-            characteristics about you.
+            <strong>We do not sell your personal information for money.</strong> Free For Charity
+            has never received, and does not receive, payment for your personal information.
+            California law defines &ldquo;sharing&rdquo; broadly enough to cover what we describe
+            next, so we tell you plainly rather than rely on that distinction.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>We do share advertising data with Google.</strong> This site advertises through
+            Google Ad Grants, the programme that gives nonprofits free search advertising to reach
+            people looking to donate or volunteer. Keeping that grant requires us to measure which
+            ads lead to those actions, so where advertising storage is permitted we allow Google to
+            set advertising cookies and to receive conversion data. Under the CCPA/CPRA this may
+            constitute &ldquo;sharing&rdquo; for cross-context behavioral advertising, and you have
+            the right to opt out. We do not enable personalized or remarketing advertising — Ad
+            Grants accounts cannot use it, and we leave that signal switched off.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>How to opt out.</strong> Use the{' '}
+            <em>Do Not Sell or Share My Personal Information</em> link in the site footer. We also
+            honor the Global Privacy Control (GPC): if your browser or an extension sends that
+            signal we treat it as an opt-out automatically, and you need do nothing else. Opting out
+            stops advertising data sharing; it does not switch off the basic analytics we use to see
+            how the site performs, which you control separately through Cookie Preferences. Visitors
+            in the EEA, the UK and Switzerland are never opted in to begin with — nothing is shared
+            there until you accept.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            We do not knowingly collect or sell the personal information of anyone under 16. We do
+            not collect sensitive personal information beyond what is necessary to provide this
+            website and our services, and we do not use it to infer characteristics about you.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Your rights.</strong> You have the right to: know what personal information we
             collect, use, and disclose, and to access it; delete personal information we collected
-            from you; correct inaccurate personal information; opt out of any sale or sharing of
-            personal information (not applicable, since we do neither); limit the use of sensitive
+            from you; correct inaccurate personal information; opt out of the sharing of personal
+            information for advertising, as described above — this right does apply here, and the
+            footer link or a Global Privacy Control signal exercises it; limit the use of sensitive
             personal information; and not be discriminated against for exercising any of these
-            rights.
+            rights, which means opting out does not change what this site offers you.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>Opt-out preference signals (Global Privacy Control / Do Not Track).</strong> We
-            do not sell or share personal information as defined by California law, so there is
-            nothing for a Global Privacy Control or Do Not Track signal to opt out of, and this site
-            does not read those browser signals. It matters less than it once did: under Google
-            Consent Mode no analytics cookie is set anywhere until you accept, so there is nothing
-            for such a signal to switch off before you have chosen. You can turn analytics off again
-            at any time via the Cookie Preferences link in the footer; we delete the cookies this
-            site set when you do. Session recording (Microsoft Clarity) and marketing tags (Meta
-            Pixel) never load without your explicit opt-in, anywhere in the world.
+            <strong>Opt-out preference signals (Global Privacy Control / Do Not Track).</strong>{' '}
+            This site reads the Global Privacy Control (GPC) signal and treats it as an opt-out of
+            advertising data sharing. The check runs before any Google tag loads, so a browser
+            sending GPC never has advertising cookies set in the first place — there is nothing to
+            undo afterwards. Because GPC is a statutory signal, this site does not override it: if
+            your browser sends it, the opt-out stands even if you also press Accept. Do Not Track
+            (DNT) is a separate, deprecated signal with no agreed meaning, and we do not act on it.
+            GPC opts you out of sale and sharing, not of basic analytics: outside the EEA, the UK
+            and Switzerland analytics cookies are set automatically, and any visitor, anywhere, can
+            turn them off at any time via the Cookie Preferences link in the footer — we delete the
+            cookies we set when you do. Session recording (Microsoft Clarity) and marketing (Meta
+            Pixel) scripts never load unless you explicitly opt in.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights.</strong> Submit a request to{' '}

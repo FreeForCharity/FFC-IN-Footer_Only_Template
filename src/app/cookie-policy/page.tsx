@@ -56,10 +56,12 @@ export default function CookiePolicy() {
               Remember your cookie consent preferences
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Understand how you use our website (only after you opt in — see section 3.3)
+              Understand how you use our website (in the EEA, the UK and Switzerland only after you
+              opt in — see section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Analyze website traffic and user behavior (only after you opt in — see section 3.3)
+              Analyze website traffic and user behavior (in the EEA, the UK and Switzerland only
+              after you opt in — see section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               Improve our website and user experience
@@ -221,8 +223,8 @@ export default function CookiePolicy() {
               <strong>When we ask permission first</strong>
             </p>
             <p className="text-sm text-[#666] mb-2">
-              We apply the strictest setting to everyone: no matter where in the world you are,
-              Google Analytics sets{' '}
+              Where you are decides this. In the European Economic Area, the United Kingdom and
+              Switzerland, Google Analytics sets{' '}
               <strong>
                 no analytics or advertising cookies and collects no identifiers from your device
               </strong>{' '}
@@ -231,10 +233,14 @@ export default function CookiePolicy() {
               your next visit.
             </p>
             <p className="text-sm text-[#666] mb-2">
-              There is no country in which analytics cookies are set before you choose. You can turn
-              them off at any time using the Cookie Preferences link in our footer, and we will
-              delete the cookies listed below when you do. The same rule applies to every visitor,
-              so nothing depends on where you are.
+              Everywhere else, including the United States, the cookies listed below are set from
+              your first page view without a prompt, because no law there requires us to ask first.
+              Advertising data is also shared with Google in those regions to measure our Google Ad
+              Grants search ads — you can stop that with the{' '}
+              <strong>Do Not Sell or Share My Personal Information</strong> link in our footer or by
+              sending a Global Privacy Control signal. Wherever you are, you can turn analytics off
+              at any time using the Cookie Preferences link in our footer, and we will delete the
+              cookies listed below when you do.
             </p>
             <p className="text-sm text-[#666]">
               <strong>Microsoft Clarity is different.</strong> It records how visitors move through
@@ -489,15 +495,19 @@ export default function CookiePolicy() {
             </li>
           </ol>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            We do not sell or share personal information as defined by the CCPA/CPRA, so there is
-            nothing for a Global Privacy Control or Do Not Track signal to opt out of, and this site
-            does not read those browser signals. It matters less than it once did: under Google
-            Consent Mode analytics and marketing cookies are off for every visitor, in every
-            country, until you opt in through the consent banner, so there is nothing for such a
-            signal to switch off before you have chosen. You can turn them off again at any time via
-            the Cookie Preferences link in the footer, and we delete the cookies this site set when
-            you do. Session recording (Microsoft Clarity) and marketing tags (Meta Pixel) load only
-            after your explicit opt-in, everywhere in the world.
+            This site reads the Global Privacy Control (GPC) signal and treats it as an opt-out of
+            advertising data sharing. The check runs before any Google tag loads, so a browser
+            sending GPC never has advertising cookies set. We do share advertising data with Google
+            to measure our Google Ad Grants search ads, which California law may treat as
+            &ldquo;sharing&rdquo; for cross-context behavioral advertising, so there is a real
+            opt-out to exercise — GPC exercises it automatically, and so does the{' '}
+            <strong>Do Not Sell or Share My Personal Information</strong> link in the footer. Do Not
+            Track (DNT) is a separate, deprecated signal with no agreed meaning, and we do not act
+            on it. GPC opts you out of sale and sharing, not of basic analytics: outside the EEA,
+            the UK and Switzerland analytics cookies are set automatically, and you can turn them
+            off at any time via the Cookie Preferences link in the footer — we delete the cookies
+            this site set when you do. Session recording (Microsoft Clarity) and marketing tags
+            (Meta Pixel) load only after your explicit opt-in, everywhere in the world.
           </p>
 
           {/* Section 6 */}

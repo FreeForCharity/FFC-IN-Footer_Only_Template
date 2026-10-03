@@ -1,7 +1,7 @@
 import './globals.css'
 import Footer from './../components/footer'
 import CookieConsent from './../components/cookie-consent'
-import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/google-tag-manager'
+import GoogleTagManager from './../components/google-tag-manager'
 import { siteConfig } from '@/lib/site.config'
 import {
   openSans,
@@ -87,7 +87,11 @@ export default function RootLayout({
         ].join(' ')}
         suppressHydrationWarning={true}
       >
-        <GoogleTagManagerNoScript />
+        {/* The GTM <noscript> iframe used to render here and is deliberately
+            gone. With JavaScript off the consent bootstrap never runs, the
+            banner never renders and the footer opt-out does not exist, so that
+            iframe was the one Google request no visitor could refuse. Its
+            absence is asserted in tests/ so re-adding it fails CI. */}
         <a href="#main-content" className="skip-to-content">
           Skip to main content
         </a>

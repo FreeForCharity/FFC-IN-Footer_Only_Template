@@ -11,14 +11,19 @@ Google Tag Manager (GTM) is a tag management system that allows you to manage an
 ### Components
 
 1. **GoogleTagManager** - Main component that injects the GTM script into the page
-2. **GoogleTagManagerNoScript** - Fallback iframe for users with JavaScript disabled
+
+There is deliberately NO `<noscript>` iframe component. It was removed because
+it is the one Google request a visitor cannot refuse: with JavaScript disabled
+the Consent Mode bootstrap never runs, the cookie banner never renders and the
+footer's "Do Not Sell or Share" control does not exist, yet the iframe would
+still load the container carrying no consent signal. Its absence is asserted in
+`tests/`, so re-adding it fails CI.
 
 ### Features
 
 - ✅ Standard GTM implementation following Google's guidelines
 - ✅ Initializes `dataLayer` before GTM loads
 - ✅ Uses Next.js Script component with `afterInteractive` strategy
-- ✅ Includes noscript fallback for accessibility
 - ✅ Integrates with existing cookie consent system
 - ✅ GTM ID hardcoded directly in component (no environment variable needed)
 
@@ -43,7 +48,7 @@ Replace `GTM-XXXXXXX` with your actual GTM container ID from Google Tag Manager 
 The component is automatically integrated into the root layout (`src/app/layout.tsx`):
 
 ```tsx
-import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/GoogleTagManager'
+import GoogleTagManager from './../components/GoogleTagManager'
 
 export default function RootLayout({ children }) {
   return (
@@ -51,10 +56,7 @@ export default function RootLayout({ children }) {
       <head>
         <GoogleTagManager />
       </head>
-      <body>
-        <GoogleTagManagerNoScript />
-        {/* ... rest of body content */}
-      </body>
+      <body>{/* ... rest of body content */}</body>
     </html>
   )
 }

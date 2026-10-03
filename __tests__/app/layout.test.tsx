@@ -84,7 +84,7 @@ describe('Root layout', () => {
     expect(bootstrapIndex).toBeLessThan(gtmIndex)
   })
 
-  it('emits ONE unscoped denied consent default, with no region scoping', () => {
+  it('emits BOTH consent defaults, region-scoped and unscoped', () => {
     const markup = renderToStaticMarkup(
       <RootLayout>
         <main id="main-content">Route content</main>
@@ -95,15 +95,37 @@ describe('Root layout', () => {
     // which is the point of keeping this case: it is the only check that
     // what actually reaches the page carries the contract. A lib-level test
     // passes even if the layout stops emitting the bootstrap.
+    //
+    // This case previously asserted ONE unscoped denial and the ABSENCE of a
+    // region key — the global model this branch reversed. The shape of the
+    // contract changed; the reason for checking it at the layout level did
+    // not.
     const defaultCalls = markup.split("gtag('consent', 'default'").length - 1
-    expect(defaultCalls).toBe(1)
-    expect(markup).toContain("'analytics_storage': 'denied'")
+    expect(defaultCalls).toBe(2)
+    expect(markup).toContain("'region'")
+    expect(markup).toContain('"CH"')
 
-    // By absence too. This case previously asserted that the denial came
-    // BEFORE the grant, which is satisfied by any file containing both --
-    // so it would have passed unchanged against a permissive default.
-    expect(markup).not.toContain("'analytics_storage': 'granted'")
-    expect(markup).not.toContain("'ad_storage': 'granted'")
-    expect(markup).not.toContain("'region'")
+    // The regional split, on the page: denied inside the region, analytics
+    // granted outside it.
+    expect(markup).toContain("'analytics_storage': 'denied'")
+    expect(markup).toContain("'analytics_storage': 'granted'")
+
+    // The GPC / stored-opt-out read has to reach the page too. A bootstrap
+    // that lost it would still satisfy every assertion above.
+    expect(markup).toContain('globalPrivacyControl')
+  })
+
+  it('ships no GTM noscript iframe for consent to miss', () => {
+    const markup = renderToStaticMarkup(
+      <RootLayout>
+        <main id="main-content">Route content</main>
+      </RootLayout>
+    )
+
+    // With JavaScript off the bootstrap never runs and the banner never
+    // renders, so this iframe was the one Google request no visitor could
+    // refuse. Asserted here, on the rendered layout, because that is where
+    // it used to be mounted.
+    expect(markup).not.toContain('googletagmanager.com/ns.html')
   })
 })

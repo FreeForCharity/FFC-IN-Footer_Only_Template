@@ -180,8 +180,11 @@ test.describe('Post-deploy smoke tests', () => {
     })
     expect(hasDataLayer).toBe(true)
 
-    // Verify GTM noscript fallback exists in HTML
+    // The GTM noscript fallback must NOT exist: with JavaScript disabled the
+    // consent bootstrap never runs and the banner never renders, so that
+    // iframe was the one Google request no visitor could refuse. Inverted
+    // when it was deleted; see tests/google-tag-manager.spec.ts.
     const pageContent = await page.content()
-    expect(pageContent).toContain('googletagmanager.com/ns.html')
+    expect(pageContent).not.toContain('googletagmanager.com/ns.html')
   })
 })
