@@ -48,7 +48,7 @@ Replace `GTM-XXXXXXX` with your actual GTM container ID from Google Tag Manager 
 The component is automatically integrated into the root layout (`src/app/layout.tsx`):
 
 ```tsx
-import GoogleTagManager from './../components/GoogleTagManager'
+import GoogleTagManager from './../components/google-tag-manager'
 
 export default function RootLayout({ children }) {
   return (

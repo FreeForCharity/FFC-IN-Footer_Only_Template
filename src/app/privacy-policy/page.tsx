@@ -383,7 +383,8 @@ export default function PrivacyPolicy() {
               <strong>Legitimate interests:</strong> Operating, securing, and improving this website
               (for example, essential cookies and server logs), balanced against your rights.
               Outside the EEA, the UK and Switzerland this is also the basis on which analytics
-              cookies are set from your first page view, which is why no prompt appears there.
+              cookies are set from your first page view, without requiring your prior opt-in. The
+              cookie banner is still shown there, so you can decline.
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Legal obligation:</strong> Where processing is required to comply with

@@ -24,8 +24,19 @@ jest.mock('../../src/components/google-tag-manager', () => ({
   default: function MockGoogleTagManager() {
     return <script id="gtm-script" />
   },
-  GoogleTagManagerNoScript: function MockGoogleTagManagerNoScript() {
-    return null
+  // NOT a component returning null, which is what this was.
+  //
+  // The absence assertion further down renders the layout and checks that no
+  // `ns.html` request appears. With a null-rendering mock of the deleted
+  // fallback, a layout that re-imported and mounted it would still render
+  // nothing and the guard would pass -- the mock, not the layout, was
+  // supplying the absence. A getter that throws turns that re-import into a
+  // loud failure instead. Reported by Copilot.
+  get GoogleTagManagerNoScript() {
+    throw new Error(
+      'the layout must not import GoogleTagManagerNoScript: the <noscript> GTM ' +
+        'iframe was deleted because consent cannot reach it'
+    )
   },
 }))
 

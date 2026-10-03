@@ -81,10 +81,16 @@ export default function CookieConsent() {
   // Loads GA4 directly whenever a REAL measurement id is configured — on
   // every pageview, regardless of the analytics toggle. Google Consent Mode
   // (bootstrapped in the root layout) gates what the tag may STORE, not
-  // whether it loads: denied-by-default for every visitor worldwide, so the
-  // tag sends cookieless pings until they accept. There is no
-  // granted-by-default branch any more. With the shipped placeholder id this
-  // stays inert; fleet sites get GA4 delivered through GTM instead.
+  // whether it loads.
+  //
+  // What it stores depends on where the visitor is: inside the EEA/UK/CH the
+  // region-scoped default denies, so the tag sends cookieless pings until
+  // they accept; everywhere else the unscoped default grants, so it uses
+  // cookies from the first pageview unless they decline. This comment used to
+  // say "denied-by-default for every visitor worldwide ... there is no
+  // granted-by-default branch any more", which is the model this branch
+  // reversed. With the shipped placeholder id this stays inert; fleet sites
+  // get GA4 delivered through GTM instead.
   const loadGoogleAnalytics = useCallback(() => {
     if (
       typeof window !== 'undefined' &&

@@ -149,10 +149,19 @@ describe('CookieConsent Consent Mode ordering (real GA id)', () => {
     })
 
     // No stored choice → nothing to restore → no consent update pushed, so
-    // the tag stays in the denied default state and sends cookieless pings.
-    // Loading GA here is deliberate and is not the same as measuring with
-    // cookies; the title used to say "regional defaults", which described a
-    // permissive default that no longer exists.
+    // the tag runs under whichever REGIONAL default applies to this visitor.
+    // Inside the EEA/UK/CH that is denied, and the tag sends cookieless pings;
+    // everywhere else the unscoped default grants analytics and it uses
+    // cookies from this first pageview. Loading GA before a choice is
+    // deliberate in both cases, and this case asserts only that no consent
+    // update is pushed when there is nothing stored to push.
+    //
+    // This comment has been wrong twice in opposite directions: it once said
+    // "regional defaults" under a global-denial model, and then "the tag stays
+    // in the denied default state ... a permissive default that no longer
+    // exists" after the regional model was restored. The permissive default
+    // exists; naming one region's behaviour as the only behaviour is what
+    // keeps breaking it.
     expect(events).not.toContain('consent-update')
   })
   it('queues the Consent Mode update BEFORE the custom consent_update event', async () => {
