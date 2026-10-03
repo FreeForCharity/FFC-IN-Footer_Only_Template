@@ -2,6 +2,7 @@ import {
   CONSENT_WAIT_FOR_UPDATE_MS,
   CONSENT_MODE_BOOTSTRAP,
   EU_CONSENT_REGIONS,
+  SALE_SHARE_OPT_OUT_EVENT,
   SALE_SHARE_OPT_OUT_KEY,
   hasSaleShareOptOut,
   isConfigured,
@@ -267,6 +268,28 @@ describe('updateGoogleConsent', () => {
     })
   })
 
+  it('honours an explicit adsDenied override without reading storage', () => {
+    const gtag = jest.fn()
+    window.gtag = gtag
+
+    // The override exists so a caller that already knows the opt-out state
+    // does not depend on a storage re-read that can throw.
+    updateGoogleConsent(
+      { necessary: true, functional: true, analytics: true, marketing: true },
+      { adsDenied: true }
+    )
+
+    expect(gtag).toHaveBeenCalledWith(
+      'consent',
+      'update',
+      expect.objectContaining({
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        analytics_storage: 'granted',
+      })
+    )
+  })
+
   it('a stored sale/share opt-out overrides an accept-everything choice', () => {
     const gtag = jest.fn()
     window.gtag = gtag
@@ -340,6 +363,67 @@ describe('setSaleShareOptOut', () => {
       'update',
       expect.objectContaining({ analytics_storage: 'granted', ad_storage: 'denied' })
     )
+  })
+
+  it('WITH prefs, still denies ads when localStorage throws', () => {
+    const gtag = jest.fn()
+    window.gtag = gtag
+
+    // The hole this closes: setSaleShareOptOut(true, prefs) wrote the flag,
+    // and when the write threw it delegated to updateGoogleConsent, which
+    // re-read storage, threw, and reported "not opted out" from its catch. A
+    // prefs.marketing === true then GRANTED advertising, discarding the
+    // opt-out argument that was the entire point of the call.
+    //
+    // Same defect class as the no-prefs case below, surviving one branch
+    // over: an invariant stated in one layer and violated in the next.
+    withStorageThrowing(() =>
+      setSaleShareOptOut(true, {
+        necessary: true,
+        functional: true,
+        analytics: true,
+        marketing: true,
+      })
+    )
+
+    expect(gtag).toHaveBeenCalledWith(
+      'consent',
+      'update',
+      expect.objectContaining({
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        // Analytics is untouched: this is an opt-out of sale/sharing.
+        analytics_storage: 'granted',
+      })
+    )
+  })
+
+  it('notifies the non-Google tags, which cannot hear a consent update', () => {
+    const seen: string[] = []
+    const onOptOut = () => seen.push('opt-out')
+    window.addEventListener(SALE_SHARE_OPT_OUT_EVENT, onOptOut)
+    try {
+      setSaleShareOptOut(true)
+    } finally {
+      window.removeEventListener(SALE_SHARE_OPT_OUT_EVENT, onOptOut)
+    }
+
+    // Consent Mode governs Google only. Without this event the Meta Pixel
+    // keeps its cookies and reloads on the next page, while the footer
+    // control claims advertising sharing is off.
+    expect(seen).toEqual(['opt-out'])
+  })
+
+  it('does NOT announce an opt-out when clearing the flag', () => {
+    const seen: string[] = []
+    const onOptOut = () => seen.push('opt-out')
+    window.addEventListener(SALE_SHARE_OPT_OUT_EVENT, onOptOut)
+    try {
+      setSaleShareOptOut(false)
+    } finally {
+      window.removeEventListener(SALE_SHARE_OPT_OUT_EVENT, onOptOut)
+    }
+    expect(seen).toEqual([])
   })
 
   it('still denies for this session when localStorage throws', () => {

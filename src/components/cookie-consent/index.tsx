@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { updateGoogleConsent, isConfigured } from '@/lib/consent-mode'
+import {
+  updateGoogleConsent,
+  isConfigured,
+  hasSaleShareOptOut,
+  SALE_SHARE_OPT_OUT_EVENT,
+} from '@/lib/consent-mode'
 import { scriptString } from '@/lib/script-string'
 
 // Environment variables for tracking IDs (replace with actual values)
@@ -181,7 +186,10 @@ export default function CookieConsent() {
   const deleteTrackingCookies = useCallback(
     (prefs?: CookiePreferences) => {
       const deleteAnalytics = !prefs || !prefs.analytics
-      const deleteMarketing = !prefs || !prefs.marketing
+      // A sale/share opt-out (footer control, GPC, or a child-directed site)
+      // forces the marketing cookies out regardless of the banner's marketing
+      // toggle: it is a statutory right, and it outranks an earlier accept.
+      const deleteMarketing = !prefs || !prefs.marketing || hasSaleShareOptOut()
 
       expireCookies([
         ...(deleteAnalytics ? ['_ga', '_gid', '_clck', '_clsk'] : []),
@@ -212,23 +220,34 @@ export default function CookieConsent() {
       document.cookie = `cookie-consent=${encodeURIComponent(cookieValue)}; path=/; max-age=31536000; SameSite=Lax${secureFlag}`
 
       // Delete each non-granted category's cookies on EVERY apply — not only
-      // on withdrawal of a stored grant. The original reason was that
-      // storage was GRANTED outside the EEA/UK/CH before any choice, so
-      // cookies could already exist the first time a visitor declined. That
-      // is no longer true and the sweep is still right: a restore from
-      // storage carries no previous state at all, and cookies set under an
-      // earlier grant outlive the choice that allowed them. Keying on the
-      // resulting preferences covers both.
-      if (!prefs.analytics || !prefs.marketing) {
+      // on withdrawal of a stored grant. Storage IS granted outside the
+      // EEA/UK/CH before any choice is made, so cookies can already exist the
+      // first time a visitor declines; and a restore from storage carries no
+      // previous state, while cookies set under an earlier grant outlive the
+      // choice that allowed them. Keying on the resulting preferences covers
+      // both.
+      //
+      // `hasSaleShareOptOut()` is in the condition, not only inside
+      // deleteTrackingCookies, and that matters: an opted-out visitor whose
+      // stored choice is accept-everything has both categories granted, so
+      // without it this branch never runs and the Pixel keeps its cookies.
+      // The clause was first added inside the helper alone, where it was
+      // unreachable for exactly that visitor — a mutation run found it inert.
+      if (!prefs.analytics || !prefs.marketing || hasSaleShareOptOut()) {
         deleteTrackingCookies(prefs)
       }
 
-      // Push the Google Consent Mode `update`. Storage is now denied by
-      // default for every visitor, so this is the ONLY thing that ever
-      // lifts it — and on a decline it is what pins storage denied with
-      // cookieless pings only. It used to read that this lifts the denial
-      // for EEA/UK/CH visitors and merely enforces a decline for everyone
-      // else; there is no permissive default left for anyone.
+      // Push the Google Consent Mode `update`. Under the REGIONAL defaults
+      // what this call does depends on the visitor: for an EEA/UK/CH visitor
+      // it is the only thing that ever lifts the scoped denial, and for
+      // everyone else it mostly re-affirms the granted default and only
+      // matters when they actively DECLINE, at which point it pins storage
+      // denied with cookieless pings only.
+      //
+      // This comment has been wrong in both directions — it claimed the
+      // denial applied only to EEA/UK/CH under a global model, then that
+      // "there is no permissive default left for anyone" under a regional
+      // one. There is: the unscoped default.
       //
       // Queued BEFORE the custom `consent_update` event pushed below: both
       // writes land in the same dataLayer queue and GTM processes it in order,
@@ -259,7 +278,13 @@ export default function CookieConsent() {
       if (prefs.analytics) {
         loadMicrosoftClarity()
       }
-      if (prefs.marketing) {
+      // The Pixel does NOT speak Consent Mode, so denying ad_storage does
+      // nothing to it. It has to be gated here, by hand, or the footer
+      // control would claim advertising sharing is off while Meta kept
+      // receiving PageView data on every later page. This is also what makes
+      // the child-directed guarantee true for non-Google tags:
+      // hasSaleShareOptOut() returns true whenever that knob is set.
+      if (prefs.marketing && !hasSaleShareOptOut()) {
         loadMetaPixel()
       }
     },
@@ -370,11 +395,26 @@ export default function CookieConsent() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPreferencesFromLocalStorage(true)
 
+    // The footer's "Do Not Sell or Share" control reaches the non-Google tags
+    // through this event. Consent Mode governs Google only, so without it the
+    // control would deny ad_storage while the Meta Pixel carried on with the
+    // cookies it had already set.
+    //
+    // What this does NOT claim: a Pixel already executing in this page cannot
+    // be unloaded. Expiring its cookies and refusing to load it again is the
+    // most a client-side control can honestly do, and the policy text says so
+    // rather than promising more.
+    const onSaleShareOptOut = () => {
+      expireCookies(['_fbp', 'fr'])
+    }
+    window.addEventListener(SALE_SHARE_OPT_OUT_EVENT, onSaleShareOptOut)
+
     // Cleanup function to remove the window method
     return () => {
       delete window.openCookiePreferences
+      window.removeEventListener(SALE_SHARE_OPT_OUT_EVENT, onSaleShareOptOut)
     }
-  }, [loadPreferencesFromLocalStorage])
+  }, [loadPreferencesFromLocalStorage, expireCookies])
 
   // Focus management for modal
   useEffect(() => {
