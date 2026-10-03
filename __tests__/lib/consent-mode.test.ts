@@ -58,6 +58,19 @@ function defaultCallBlocks(src: string): string[] {
     .map((chunk) => chunk.slice(0, chunk.indexOf('});')))
 }
 
+/**
+ * The opt-out keeps an in-memory session flag, so it survives a storage
+ * failure. That flag is module state: without this hook a case that opts out
+ * leaks into every later case in this file, and the symptom is a later
+ * assertion of "not opted out" failing for a reason that is nowhere near it.
+ *
+ * Cleared through the public API rather than by reaching into the module --
+ * this is what a visitor opting back in does, and it keeps the test honest
+ * about what the production code actually offers.
+ */
+beforeEach(() => {
+  setSaleShareOptOut(false)
+})
 describe('CONSENT_MODE_BOOTSTRAP', () => {
   it('emits TWO defaults: a region-scoped denial and an unscoped default', () => {
     const blocks = defaultCallBlocks(CONSENT_MODE_BOOTSTRAP)
@@ -268,7 +281,7 @@ describe('updateGoogleConsent', () => {
     })
   })
 
-  it('honours an explicit adsDenied override without reading storage', () => {
+  it('honours an explicit adsDenied override even when storage says nothing', () => {
     const gtag = jest.fn()
     window.gtag = gtag
 
