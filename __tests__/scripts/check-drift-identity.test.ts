@@ -13,10 +13,12 @@ import { tmpdir } from 'node:os'
  * the control that proves the dormancy is real rather than the scan being
  * broken.
  *
- * Cases that assert on the header assert against the SHIPPED component text,
- * mutated in place with its anchor checked first, rather than against a
- * hand-written copy: a fixture that merely resembles the component would keep
- * passing after the component changed.
+ * Cases that assert on the header, the footer or siteConfig's own prose assert
+ * against the SHIPPED text, mutated in place with its anchor checked first,
+ * rather than against a hand-written copy: a fixture that merely resembles the
+ * component would keep passing after the component changed. The remaining
+ * footer cases are hand-written on purpose — they pin the per-line allowance
+ * rather than the component.
  */
 
 const REBRANDED = 'Sample Charity Trust'
@@ -74,6 +76,53 @@ function shippedHeader(): string {
 }
 
 /**
+ * The shipped footer component. Every other footer case below writes a
+ * hand-rolled fixture, which is why FFC-Cloudflare-Automation#1431's
+ * provisioning matrix — not this suite — was what caught a freeforcharity.org
+ * reference added to the real component in #172.
+ */
+function shippedFooter(): string {
+  return readFileSync(join(process.cwd(), 'src/components/footer/index.tsx'), 'utf8')
+}
+
+/** The shipped siteConfig, renamed as provisioning renames it. */
+function shippedConfigRebranded(): string {
+  return mutate(
+    readFileSync(join(process.cwd(), 'src/lib/site.config.ts'), 'utf8'),
+    "name: 'Free For Charity',",
+    `name: '${REBRANDED}',`
+  )
+}
+
+/**
+ * A line carrying nothing but a comment. Provisioning rewrites siteConfig
+ * VALUES and never prose, so FFC identity in a comment reaches every child
+ * site verbatim — whereas a finding on a data line is one the provisioner has
+ * already replaced by the time a real site is built.
+ */
+function isCommentLine(line: string): boolean {
+  const trimmed = line.trim()
+  return (
+    trimmed.startsWith('*') ||
+    trimmed.startsWith('//') ||
+    trimmed.startsWith('/*') ||
+    trimmed.startsWith('{/*')
+  )
+}
+
+/** Identity findings that land on a comment line of one of `sources`. */
+function commentFindings(dir: string, sources: Record<string, string>): string[] {
+  const lines = Object.fromEntries(
+    Object.entries(sources).map(([rel, body]) => [rel, body.split('\n')])
+  )
+  return identityFindings(dir).filter((finding) => {
+    const match = /(src\/[^\s:]+):(\d+)/.exec(finding)
+    if (!match) return false
+    return isCommentLine(lines[match[1]]?.[Number(match[2]) - 1] ?? '')
+  })
+}
+
+/**
  * Substitutes `from` -> `to` once, asserting the anchor is present first. A
  * refactor that moved the anchor would otherwise leave the mutation a no-op and
  * the case green while testing nothing.
@@ -115,6 +164,49 @@ describe('check-drift FFC identity scan', () => {
       'src/components/header/index.tsx': shippedHeader(),
     })
     expect(identityFindings(dir)).toEqual([])
+  })
+
+  it('does not flag the shipped footer after a rebrand', () => {
+    // The footer's own FFC references are the allowlisted ones (the platform
+    // credit, the attribution href, the donation-policy label), so the real
+    // component has to survive a rebrand with nothing reported. Asserted
+    // against the shipped text because a hand-written footer stops tracking
+    // the component the moment someone edits it — which is exactly how #172's
+    // `as on freeforcharity.org` seal comment reached a provisioned site.
+    const dir = make(configSource(REBRANDED), {
+      'src/components/footer/index.tsx': shippedFooter(),
+    })
+    expect(identityFindings(dir)).toEqual([])
+  })
+
+  it('names FFC in no comment of the shipped config or footer', () => {
+    // Provisioning rewrites values, never prose: an FFC reference in a comment
+    // is inherited verbatim by every child site and fails its drift check
+    // there, with nothing the provisioner can do about it. Data-line findings
+    // are filtered out because the provisioner does replace those.
+    const config = shippedConfigRebranded()
+    const footer = shippedFooter()
+    const dir = make(config, { 'src/components/footer/index.tsx': footer })
+    expect(
+      commentFindings(dir, {
+        'src/lib/site.config.ts': config,
+        'src/components/footer/index.tsx': footer,
+      })
+    ).toEqual([])
+  })
+
+  it('flags an FFC reference re-introduced into a shipped comment', () => {
+    // The discriminator for the case above: without it, a filter that matched
+    // no finding at all would look identical to clean prose.
+    const config = mutate(
+      shippedConfigRebranded(),
+      '   * organization id, so the seal always shows the current year',
+      '   * organization id (the same widget freeforcharity.org renders), so the seal shows the year'
+    )
+    const findings = commentFindings(make(config), { 'src/lib/site.config.ts': config })
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toContain('a freeforcharity.org URL')
+    expect(findings[0]).toContain(REBRANDED)
   })
 
   it('flags the shipped header if the hard-coded alt text is re-introduced', () => {

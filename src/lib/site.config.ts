@@ -154,9 +154,9 @@ export type SiteConfig = {
   /**
    * Candid (GuideStar) transparency seal and profile links shown in the footer.
    * `sealUrl` is Candid's live seal widget for the charity's own Candid
-   * organization id, so the seal always shows the current year's level (the
-   * same source freeforcharity.org renders) instead of a static image that
-   * goes stale. Each is a transparency claim, so the seal renders only when
+   * organization id, so the seal always shows the current year's level
+   * instead of a static image that goes stale. Each is a transparency
+   * claim, so the seal renders only when
    * `profileUrl` is set and the direct-link button only when `directProfileUrl`
    * is set. Leave all three '' until the charity has its own Candid profile
    * (never copy another organization's), and list 'guidestar' in `pending` if
