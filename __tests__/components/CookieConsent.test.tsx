@@ -243,7 +243,10 @@ describe('CookieConsent component', () => {
     fireEvent.click(screen.getByText('Accept All'))
 
     const consentEvent = window.dataLayer.find(
-      (e: { event: string }) => e.event === 'consent_update'
+      // `event?:` because the dataLayer also carries eventless writes now --
+      // the sale/share opt-out corrects `marketing_consent` without firing a
+      // trigger. A required `event` here stops type-checking the whole file.
+      (e: { event?: string }) => e.event === 'consent_update'
     )
     expect(consentEvent).toBeDefined()
     expect(consentEvent?.analytics_consent).toBe('granted')
@@ -541,7 +544,10 @@ describe('CookieConsent component', () => {
     fireEvent.click(screen.getByText('Decline All'))
 
     const consentEvent = window.dataLayer.find(
-      (e: { event: string }) => e.event === 'consent_update'
+      // `event?:` because the dataLayer also carries eventless writes now --
+      // the sale/share opt-out corrects `marketing_consent` without firing a
+      // trigger. A required `event` here stops type-checking the whole file.
+      (e: { event?: string }) => e.event === 'consent_update'
     )
     expect(consentEvent).toBeDefined()
     expect(consentEvent?.analytics_consent).toBe('denied')
