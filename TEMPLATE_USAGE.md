@@ -57,7 +57,11 @@ Quick checklist of content areas to update:
 - [ ] Customize color scheme and branding in `src/app/globals.css`
 - [ ] Update policy page content in `src/app/*/page.tsx`
 - [ ] Update SEO metadata in `src/lib/siteMetadata.ts`
-- [ ] Update E2E test config in `tests/test.config.ts`
+- [ ] Replace the GTM container ID in `src/lib/analytics.config.ts`
+      (or set it to `''` until your container is provisioned)
+- [ ] Trim the footer quick links to the sections your site actually has
+- [ ] Run `pnpm test` — the suites derive from `site.config.ts`, so they should
+      still pass after a rebrand; a failure is a real finding
 
 ---
 
@@ -648,7 +652,7 @@ Files to update:
 
 **Color scheme**: Edit `src/app/globals.css` and Tailwind configuration
 
-**Fonts**: Update font imports in `src/app/layout.tsx` (if using Google Fonts)
+**Fonts**: Fonts are self-hosted. Add the woff2 files under `src/fonts/<family>/` (with the font's license) and declare them with `next/font/local` in `src/lib/fonts.ts`. Do not use `next/font/google`.
 
 ### 4. Update Team and Content
 

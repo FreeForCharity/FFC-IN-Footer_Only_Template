@@ -1,19 +1,22 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { siteUrl } from '@/lib/site.config'
+import { siteConfig, siteUrl } from '@/lib/site.config'
+import { pageMetadata } from '@/lib/pageMetadata'
+import ContactDetails from '@/components/policy/ContactDetails'
+import SupportingOrgDisclosure from '@/components/policy/SupportingOrgDisclosure'
+import ContactEmail from '@/components/policy/ContactEmail'
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy | Free For Charity',
-  description: 'Privacy Policy for Free For Charity website',
-  // Own canonical: without it Next inherits the layout's, which points at the home page.
-  alternates: { canonical: siteUrl('/privacy-policy') },
-}
+export const metadata: Metadata = pageMetadata({
+  title: 'Privacy Policy',
+  description: `Privacy Policy for ${siteConfig.name}`,
+  path: '/privacy-policy',
+})
 
 export default function PrivacyPolicy() {
   return (
     <main id="main-content" className="pt-[140px] pb-[54px]">
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
-        <div id="aria-font">
+        <div className="aria-font">
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]"></p>
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             <strong>Privacy Policy</strong>
@@ -31,23 +34,39 @@ export default function PrivacyPolicy() {
             </li>
           </ol>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            At Free for Charity, accessible from https://freeforcharity.org, your privacy is one of
-            our primary concerns. This Privacy Policy document contains types of information we
-            collect and record, and how we use it. By using our website, you hereby consent to our
-            Privacy Policy and agree to its terms.
+            At {siteConfig.name}, accessible from{' '}
+            {/*
+              siteUrl(), not siteConfig.url -- see ContactDetails: the origin
+              alone drops the GitHub Pages base path and links off this site.
+            */}
+            <a href={siteUrl('/')} className="text-[#0062cc] underline">
+              {siteUrl('/')}
+            </a>
+            , your privacy is one of our primary concerns. This Privacy Policy sets out what
+            information we collect and record, how we use it, and what you can ask us to do about
+            it. By using this website you agree to the terms of this policy.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            This policy covers {siteConfig.name} and this website only. Section 2 explains how the
+            site is provided and what that means for the commitments made here.
           </p>
 
           {/* Section 2 */}
           <ol className="list-decimal list-inside pb-[1em]" start={2}>
             <li>
               <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Who We Are</strong>
+                <strong>Who We Are, and How This Site Is Provided</strong>
               </h2>
             </li>
           </ol>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Our website address is: https://freeforcharity.org
+            {siteConfig.name} is the organization responsible for this website and for the personal
+            data described in this policy. Our contact details are in the Contact section below.
           </p>
+          <ContactDetails />
+          <div className="pt-[14px]">
+            <SupportingOrgDisclosure />
+          </div>
 
           {/* Section 3 */}
           <ol className="list-decimal list-inside pb-[1em]" start={3}>
@@ -158,7 +177,7 @@ export default function PrivacyPolicy() {
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Additional Third-Party Services:</strong> Microsoft Forms may use additional
               services (including HubSpot) for form analytics and feedback collection. These are
-              controlled by Microsoft, not Free For Charity.
+              controlled by Microsoft, not {siteConfig.name}.
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Privacy Policy:</strong> Review Microsoft&apos;s privacy practices at{' '}
@@ -166,7 +185,7 @@ export default function PrivacyPolicy() {
                 href="https://privacy.microsoft.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#007bff] underline"
+                className="text-[#0062cc] underline"
               >
                 https://privacy.microsoft.com/
               </a>
@@ -326,7 +345,8 @@ export default function PrivacyPolicy() {
             </li>
           </ul>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            To exercise these rights, please contact us at 520-222-8104.
+            To exercise these rights, please contact us using the details in the Contact section
+            below.
           </p>
 
           {/* Section 8 */}
@@ -372,15 +392,17 @@ export default function PrivacyPolicy() {
           </ul>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>How consent works, in plain language.</strong> We use Google Consent Mode, and
-            what it does depends on where you are. If you are in the European Economic Area, the
-            United Kingdom or Switzerland, nothing is stored until you accept: Google&apos;s tags
-            set no analytics or advertising cookies and read no identifiers from your device, and
-            analytics counts your visit only in an aggregate, cookie-free way. Everywhere else —
-            including the United States, where this charity operates — analytics cookies are set
-            from your first page view without a prompt, because no law there requires us to ask
-            first and the measurement is what tells us whether the site is working. Advertising data
-            is shared with Google in those regions too, for the Ad Grants search ads described in
-            the California section below, and you can stop that at any time with the{' '}
+            what it does depends on where you are. Which default applies is determined by Google
+            from your IP address at the time of your visit, and IP geolocation is approximate. If
+            you are in the European Economic Area, the United Kingdom or Switzerland, nothing is
+            stored until you accept: Google&apos;s tags set no analytics or advertising cookies and
+            read no identifiers from your device, and analytics counts your visit only in an
+            aggregate, cookie-free way. Everywhere else — including the United States, where this
+            charity operates — analytics cookies are set from your first page view, because no law
+            there requires us to ask first and the measurement is what tells us whether the site is
+            working; the cookie banner is still shown, and declining turns them off. Advertising
+            data is shared with Google in those regions too, for the Ad Grants search ads described
+            in the California section below, and you can stop that at any time with the{' '}
             <em>Do Not Sell or Share My Personal Information</em> link in the footer or by sending a
             Global Privacy Control signal. To be precise about what happens before an EEA/UK/Swiss
             visitor decides: the tags still load and send a cookie-free signal to Google, which is
@@ -392,7 +414,7 @@ export default function PrivacyPolicy() {
             the footer. (Visitors in Switzerland are protected by Switzerland&apos;s Federal Act on
             Data Protection (FADP) rather than the GDPR; the treatment described here is the same
             either way.) See our{' '}
-            <Link href="/cookie-policy" className="text-[#007bff] underline">
+            <Link href="/cookie-policy" className="text-[#0062cc] underline">
               Cookie Policy
             </Link>{' '}
             for the full details.
@@ -405,13 +427,10 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights and complaints.</strong> Contact us at{' '}
-            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
-              clarkemoyer@freeforcharity.org
-            </a>{' '}
-            or 520-222-8104 to exercise any of these rights; we will respond within the time limits
-            the GDPR sets. You also have the right to lodge a complaint with your national data
-            protection supervisory authority (in the UK, the Information Commissioner&apos;s
-            Office).
+            <ContactEmail className="text-[#0062cc] underline" /> to exercise any of these rights;
+            we will respond within the time limits the GDPR sets. You also have the right to lodge a
+            complaint with your national data protection supervisory authority (in the UK, the
+            Information Commissioner&apos;s Office).
           </p>
 
           {/* Section 9 */}
@@ -428,10 +447,11 @@ export default function PrivacyPolicy() {
             supplements the rest of this policy.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>We do not sell your personal information for money.</strong> Free For Charity
-            has never received, and does not receive, payment for your personal information.
-            California law defines &ldquo;sharing&rdquo; broadly enough to cover what we describe
-            next, so we tell you plainly rather than rely on that distinction.
+            <strong>We do not sell your personal information for money.</strong> {siteConfig.name}
+            has never received, and does not receive, payment for your personal information, and has
+            not done so in the preceding 12 months. California law defines &ldquo;sharing&rdquo;
+            broadly enough to cover what we describe next, so we tell you plainly rather than rely
+            on that distinction.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>We do share advertising data with Google.</strong> This site advertises through
@@ -500,12 +520,10 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights.</strong> Submit a request to{' '}
-            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
-              clarkemoyer@freeforcharity.org
-            </a>{' '}
-            or 520-222-8104. We will verify your request using information associated with your
-            interactions with us, and you may use an authorized agent to submit a request on your
-            behalf. We will respond within the timeframes California law requires.
+            <ContactEmail className="text-[#0062cc] underline" />. We will verify your request using
+            information associated with your interactions with us, and you may use an authorized
+            agent to submit a request on your behalf. We will respond within the timeframes
+            California law requires.
           </p>
 
           {/* Section 10 */}
@@ -636,15 +654,7 @@ export default function PrivacyPolicy() {
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             If you have any questions about this Privacy Policy, please contact us:
           </p>
-          <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Email:</strong>{' '}
-              <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
-                clarkemoyer@freeforcharity.org
-              </a>{' '}
-              520-222-8104
-            </li>
-          </ul>
+          <ContactDetails />
 
           {/* Section 16 */}
           <ol className="list-decimal list-inside pb-[1em]" start={16}>
@@ -656,21 +666,14 @@ export default function PrivacyPolicy() {
           </ol>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>16.1. Data Protection Officer</strong>
+            <strong>16.1. Who handles privacy questions</strong>
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            We have appointed a Data Protection Officer (DPO) responsible for overseeing questions
-            in relation to this Privacy Policy:
+            Questions and requests about this policy are handled by {siteConfig.name} at the contact
+            address above. We have not designated a statutory Data Protection Officer; if your
+            enquiry is one that requires an escalation route, write to us and we will tell you how
+            it will be handled and by whom.
           </p>
-          <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Contact DPO:</strong> Clarke Moyer{' '}
-              <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
-                clarkemoyer@freeforcharity.org
-              </a>{' '}
-              520-222-8104
-            </li>
-          </ul>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[700] mt-[1.5em]">
             Your trust matters to us, and we are committed to protecting your personal information

@@ -96,6 +96,8 @@ Create ruleset named "Protect Main":
 - [ ] Search and replace "Free For Charity" with your org name
 - [ ] Search and replace EIN "46-2471893" with your EIN
 - [ ] Search and replace "ffcworkingsite1.org" with your domain
+- [ ] For any footer detail the charity has not supplied yet (email, phone, address, EIN, GuideStar, social, team, donation or volunteer URL): leave the field empty in `src/lib/site.config.ts` and list it in `siteConfig.pending` until the charity supplies it. Never copy another organization's values
+- [ ] Leave all three `guidestar` URLs (`sealUrl`, `profileUrl`, `directProfileUrl`) empty until the charity has its own GuideStar / Candid profile (the footer then hides the seal and the direct link). The seal URL must use the charity's own Candid organization id, never another organization's
 
 ### Contact Information
 

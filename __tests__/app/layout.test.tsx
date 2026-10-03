@@ -30,6 +30,8 @@ jest.mock('../../src/components/google-tag-manager', () => ({
 }))
 
 import RootLayout from '../../src/app/layout'
+import { EU_CONSENT_REGIONS } from '../../src/lib/consent-mode'
+import { siteConfig } from '../../src/lib/site.config'
 
 describe('Root layout', () => {
   it('preserves the skip link without wrapping route pages in another main landmark', () => {
@@ -64,8 +66,10 @@ describe('Root layout', () => {
     expect(document.querySelector('meta[name="color-scheme"]')?.getAttribute('content')).toBe(
       'light'
     )
+    // Sourced from siteConfig so a fork's brand colour does not fail this suite;
+    // the manifest reads the same field, asserted in manifest-lighthouse-parity.
     expect(document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe(
-      '#ffffff'
+      siteConfig.themeColor
     )
   })
 
@@ -104,6 +108,13 @@ describe('Root layout', () => {
     expect(defaultCalls).toBe(2)
     expect(markup).toContain("'region'")
     expect(markup).toContain('"CH"')
+
+    // Stronger than those substrings, and kept from `main`, which asserted it
+    // as a separate case: the code list the layout actually emits must be the
+    // exported constant, all 32 of them. A bootstrap that emitted a region key
+    // with three codes in it satisfies everything above.
+    expect(EU_CONSENT_REGIONS).toHaveLength(32)
+    expect(markup).toContain(`'region': ${JSON.stringify([...EU_CONSENT_REGIONS])}`)
 
     // The regional split, on the page: denied inside the region, analytics
     // granted outside it.

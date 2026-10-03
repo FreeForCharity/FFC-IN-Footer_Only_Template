@@ -2,6 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site.config'
+import ContactEmail from '@/components/policy/ContactEmail'
 
 // Rendered by Next.js for any unmatched route. With `output: 'export'` this
 // becomes out/404.html, which GitHub Pages serves for unknown paths — so the
@@ -73,12 +74,7 @@ export default function NotFound() {
                 Vulnerability Disclosure Policy
               </Link>{' '}
               contact route, or email{' '}
-              <a
-                href={`mailto:${siteConfig.contactEmail}`}
-                className="text-[#005BB7] font-[700] underline decoration-dotted hover:decoration-solid transition-all"
-              >
-                {siteConfig.contactEmail}
-              </a>
+              <ContactEmail className="text-[#005BB7] font-[700] underline decoration-dotted hover:decoration-solid transition-all" />
               .
             </p>
           </div>

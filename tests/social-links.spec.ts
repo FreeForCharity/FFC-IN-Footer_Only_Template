@@ -9,7 +9,9 @@ import { testConfig } from './test.config'
  * 2. Defunct platforms (like Google+) are not present
  * 3. All social icons link to correct destinations
  *
- * Note: Test expectations use values from test.config.ts for easy customization
+ * Expectations come from test.config.ts, which derives them from
+ * src/lib/site.config.ts — so which platforms appear, and how many, follow the
+ * charity's own configuration instead of the template's original four.
  */
 
 test.describe('Footer Social Links', () => {
@@ -27,52 +29,41 @@ test.describe('Footer Social Links', () => {
   })
 
   test('should display active social media links', async ({ page }) => {
-    // Navigate to the homepage
     await page.goto('/')
 
-    // Verify Facebook link is present
-    const facebookLink = page.locator(`footer a[href*="${testConfig.socialLinks.facebook.url}"]`)
-    await expect(facebookLink).toBeVisible()
-    await expect(facebookLink).toHaveAttribute(
-      'aria-label',
-      testConfig.socialLinks.facebook.ariaLabel
+    // A fork may disable every social link (an empty href is the documented
+    // "off" state in SiteConfig), and that is a correct configuration, not a
+    // failure. Requiring at least one made such a fork fail here.
+    test.skip(
+      testConfig.socialLinks.length === 0,
+      'No social links are enabled for this site; the disabled-icon case is asserted below.'
     )
 
-    // Verify X (Twitter) link is present
-    const twitterLink = page.locator(`footer a[href*="${testConfig.socialLinks.twitter.url}"]`)
-    await expect(twitterLink).toBeVisible()
-    await expect(twitterLink).toHaveAttribute(
-      'aria-label',
-      testConfig.socialLinks.twitter.ariaLabel
-    )
-
-    // Verify LinkedIn link is present
-    const linkedInLink = page.locator(`footer a[href*="${testConfig.socialLinks.linkedin.url}"]`)
-    await expect(linkedInLink).toBeVisible()
-    await expect(linkedInLink).toHaveAttribute(
-      'aria-label',
-      testConfig.socialLinks.linkedin.ariaLabel
-    )
-
-    // Verify GitHub link is present
-    const githubLink = page.locator(`footer a[href*="${testConfig.socialLinks.github.url}"]`)
-    await expect(githubLink).toBeVisible()
-    await expect(githubLink).toHaveAttribute('aria-label', testConfig.socialLinks.github.ariaLabel)
+    for (const social of testConfig.socialLinks) {
+      const link = page.locator(`footer a[href*="${social.url}"]`)
+      await expect(link).toBeVisible()
+      await expect(link).toHaveAttribute('aria-label', social.ariaLabel)
+    }
   })
 
-  test('should have exactly 4 social media icons', async ({ page }) => {
-    // Navigate to the homepage
+  test('should render exactly the configured social icons', async ({ page }) => {
     await page.goto('/')
 
-    // Count all social media links in the footer
-    // They are identified by having target="_blank" and being in the footer's social links section
+    // Every label the config declares, enabled or not. Checking the full set
+    // means a disabled platform that still renders an icon fails here, and it
+    // keeps the selector non-empty when nothing is enabled — joining an empty
+    // list produced '', which is not a valid selector.
+    const selector = testConfig.allSocialLabels
+      .map((label) => `footer a[aria-label="${label}"]`)
+      .join(', ')
 
-    // We should have exactly 4 social icons: Facebook, X (Twitter), LinkedIn, GitHub
-    // Note: This count might be higher due to other external links in footer
-    // So let's be more specific and count only links with aria-label containing social platform names
-    const socialMediaLinks = page.locator(
-      `footer a[aria-label="${testConfig.socialLinks.facebook.ariaLabel}"], footer a[aria-label="${testConfig.socialLinks.twitter.ariaLabel}"], footer a[aria-label="${testConfig.socialLinks.linkedin.ariaLabel}"], footer a[aria-label="${testConfig.socialLinks.github.ariaLabel}"]`
-    )
-    await expect(socialMediaLinks).toHaveCount(4)
+    if (selector === '') {
+      // No social platforms configured at all: there is nothing to render and
+      // nothing to select.
+      await expect(page.locator('footer a[target="_blank"][aria-label]')).toHaveCount(0)
+      return
+    }
+
+    await expect(page.locator(selector)).toHaveCount(testConfig.socialLinks.length)
   })
 })

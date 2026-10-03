@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
-import { siteUrl } from '@/lib/site.config'
+import { siteConfig } from '@/lib/site.config'
+import ContactDetails from '@/components/policy/ContactDetails'
 import Link from 'next/link'
+import { pageMetadata } from '@/lib/pageMetadata'
 
-export const metadata: Metadata = {
-  title: 'Cookie Policy | Free For Charity',
-  description: 'Cookie Policy for Free For Charity website',
-  // Own canonical: without it Next inherits the layout's, which points at the home page.
-  alternates: { canonical: siteUrl('/cookie-policy') },
-}
+export const metadata: Metadata = pageMetadata({
+  title: 'Cookie Policy',
+  description: `Cookie Policy for ${siteConfig.name}`,
+  path: '/cookie-policy',
+})
 
 // Update this date when the policy changes
 const LAST_UPDATED = 'August 30, 2026'
@@ -16,7 +17,7 @@ export default function CookiePolicy() {
   return (
     <main id="main-content" className="pt-[140px] pb-[54px]">
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
-        <div id="aria-font">
+        <div className="aria-font">
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             <strong>Cookie Policy</strong>
           </h1>
@@ -154,7 +155,7 @@ export default function CookiePolicy() {
                 href="https://privacy.microsoft.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://privacy.microsoft.com/
               </a>
@@ -165,7 +166,7 @@ export default function CookiePolicy() {
                 href="https://legal.hubspot.com/privacy-policy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://legal.hubspot.com/privacy-policy
               </a>
@@ -202,7 +203,7 @@ export default function CookiePolicy() {
                 href="https://www.zeffy.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://www.zeffy.com/privacy
               </a>
@@ -292,7 +293,7 @@ export default function CookiePolicy() {
                 href="https://policies.google.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://policies.google.com/privacy
               </a>
@@ -335,7 +336,7 @@ export default function CookiePolicy() {
                 href="https://privacy.microsoft.com/en-us/privacystatement"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://privacy.microsoft.com/privacystatement
               </a>
@@ -388,7 +389,7 @@ export default function CookiePolicy() {
                 href="https://www.facebook.com/privacy/policy/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://www.facebook.com/privacy/policy/
               </a>
@@ -468,7 +469,7 @@ export default function CookiePolicy() {
                 href="https://tools.google.com/dlpage/gaoptout"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 Google Analytics Opt-out Browser Add-on
               </a>
@@ -479,7 +480,7 @@ export default function CookiePolicy() {
                 href="https://www.facebook.com/settings/?tab=ads"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 Facebook Ad Settings
               </a>
@@ -535,23 +536,7 @@ export default function CookiePolicy() {
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             If you have questions about our use of cookies, please contact us:
           </p>
-          <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Email:</strong>{' '}
-              <a href="mailto:privacy@freeforcharity.org" className="text-blue-600 hover:underline">
-                privacy@freeforcharity.org
-              </a>
-            </li>
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Emergency Contact:</strong> Clarke Moyer
-            </li>
-            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Phone:</strong>{' '}
-              <a href="tel:520-222-8104" className="text-blue-600 hover:underline">
-                520-222-8104
-              </a>
-            </li>
-          </ul>
+          <ContactDetails />
 
           {/* Section 8 */}
           <ol className="list-decimal list-inside pb-[1em]" start={8}>
@@ -563,7 +548,7 @@ export default function CookiePolicy() {
           </ol>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             For more information about how we handle your personal data, please see our{' '}
-            <Link href="/privacy-policy" className="text-blue-600 hover:underline">
+            <Link href="/privacy-policy" className="text-blue-600 underline">
               Privacy Policy
             </Link>
             .

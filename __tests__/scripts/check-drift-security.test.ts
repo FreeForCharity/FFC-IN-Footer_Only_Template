@@ -1,32 +1,72 @@
 import { spawnSync } from 'node:child_process'
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { githubPagesProjectPath } from '../helpers/githubPagesProjectPath'
 
 const syncedCsp =
   "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
 
-function payload(expires = '2027-12-31T00:00:00.000Z'): string {
+// Read from scripts/check-drift.mjs, the copy of this value the script itself
+// uses, so the fixture stays correct on any fork. Hardcoding the template's
+// own project path here is what made this suite fail on a correct rebrand.
+const projectPath = githubPagesProjectPath()
+
+/**
+ * One deploy serves one origin+prefix, so the payload takes the prefix rather
+ * than listing both variants. `origin` varies too: the CNAME cases below need
+ * a payload on the custom domain with no base path.
+ */
+function payload(
+  expires = '2027-12-31T00:00:00.000Z',
+  { origin = 'https://ffcworkingsite1.org', prefix = projectPath } = {}
+): string {
   return [
     'Contact: mailto:clarkemoyer@freeforcharity.org',
     `Expires: ${expires}`,
     'Preferred-Languages: en',
-    'Canonical: https://ffcworkingsite1.org/.well-known/security.txt',
-    'Canonical: https://ffcworkingsite1.org/security.txt',
-    'Canonical: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/.well-known/security.txt',
-    'Canonical: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/security.txt',
-    'Policy: https://ffcworkingsite1.org/vulnerability-disclosure-policy',
-    'Policy: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/vulnerability-disclosure-policy',
-    'Acknowledgments: https://ffcworkingsite1.org/security-acknowledgements',
-    'Acknowledgments: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/security-acknowledgements',
+    `Canonical: ${origin}${prefix}/.well-known/security.txt`,
+    `Canonical: ${origin}${prefix}/security.txt`,
+    `Policy: ${origin}${prefix}/vulnerability-disclosure-policy`,
+    `Acknowledgments: ${origin}${prefix}/security-acknowledgements`,
     '',
   ].join('\n')
 }
 
+/**
+ * Writes the real card with its IHDR dimensions rewritten.
+ *
+ * Bytes 16..24 of a PNG are width and height as big-endian uint32s. The CRC
+ * that follows is deliberately left stale -- the guard reads the header and
+ * never validates it, and a fixture that faithfully re-CRCs would be testing
+ * a property nothing depends on. This exists because the guard has TWO size
+ * checks and only one of them was reachable: with a genuine 1200x630 PNG in
+ * place, "declared size disagrees with the file" always fires first and
+ * "the file is not 1200x630 at all" never runs. Mutation testing found that
+ * -- neutering the absolute check left the suite green.
+ */
+function cardResizedTo(width: number, height: number): Buffer {
+  const bytes = Buffer.from(readFileSync(join(process.cwd(), 'public/og-card.png')))
+  bytes.writeUInt32BE(width, 16)
+  bytes.writeUInt32BE(height, 20)
+  return bytes
+}
+
 function makeFixture(
   overrides: Partial<
-    Record<'headers' | 'layout' | 'siteConfig' | 'wellKnown' | 'rootSecurity', string | null>
-  > = {}
+    Record<
+      | 'headers'
+      | 'layout'
+      | 'siteConfig'
+      | 'wellKnown'
+      | 'rootSecurity'
+      | 'cname'
+      | 'siteMetadata'
+      | 'ogCard',
+      string | null
+    >
+  > = {},
+  ogCardBytes?: Buffer
 ) {
   const dir = mkdtempSync(join(tmpdir(), 'ffc-drift-'))
   mkdirSync(join(dir, 'scripts'), { recursive: true })
@@ -34,6 +74,11 @@ function makeFixture(
   mkdirSync(join(dir, 'src/lib'), { recursive: true })
   mkdirSync(join(dir, 'public/.well-known'), { recursive: true })
   cpSync(join(process.cwd(), 'scripts/check-drift.mjs'), join(dir, 'scripts/check-drift.mjs'))
+  // The real card, so the social-card guard has a genuine 1200x630 PNG to
+  // read an IHDR out of. cardResizedTo() below replaces it for the size cases.
+  if (overrides.ogCard !== null)
+    cpSync(join(process.cwd(), 'public/og-card.png'), join(dir, 'public/og-card.png'))
+  if (ogCardBytes) writeFileSync(join(dir, 'public/og-card.png'), ogCardBytes)
 
   const files = {
     headers: [
@@ -56,6 +101,11 @@ function makeFixture(
       "export const siteConfig = { url: 'https://ffcworkingsite1.org', vulnerabilityDisclosurePath: '/vulnerability-disclosure-policy' }\n",
     wellKnown: payload(),
     rootSecurity: payload(),
+    siteMetadata:
+      "const socialCard = { url: assetPath('/og-card.png'), width: 1200, height: 630 }\n",
+    // No public/CNAME by default: that is the state a freshly provisioned
+    // charity repo is in, and the state the deploy reads as "project path".
+    cname: null,
     ...overrides,
   }
 
@@ -67,6 +117,9 @@ function makeFixture(
     writeFileSync(join(dir, 'public/.well-known/security.txt'), files.wellKnown)
   if (files.rootSecurity !== null)
     writeFileSync(join(dir, 'public/security.txt'), files.rootSecurity)
+  if (files.cname !== null) writeFileSync(join(dir, 'public/CNAME'), files.cname)
+  if (files.siteMetadata !== null)
+    writeFileSync(join(dir, 'src/lib/siteMetadata.ts'), files.siteMetadata)
 
   return dir
 }
@@ -210,6 +263,173 @@ describe('security drift guard', () => {
     expect(result.output).toContain('must start with "https://"')
   })
 
+  // siteConfig.url is the ORIGIN; sitePath() supplies the GitHub Pages base
+  // path, and deploy.yml derives that base path from public/CNAME alone. So
+  // the two have to move together. The failure this guards is silent: both
+  // halves are individually well-formed and the build never complains, but
+  // siteUrl() then emits `https://custom.example/<repo>/page/` — an address
+  // neither the custom domain nor github.io serves.
+  const rebrandedConfig = (url: string) =>
+    `export const siteConfig = { url: '${url}', vulnerabilityDisclosurePath: '/vulnerability-disclosure-policy' }\n`
+
+  it('fails when siteConfig.url names a custom domain but there is no CNAME', () => {
+    const dir = makeFixture({
+      siteConfig: rebrandedConfig('https://charity.example'),
+      wellKnown: payload(undefined, { origin: 'https://charity.example' }),
+      rootSecurity: payload(undefined, { origin: 'https://charity.example' }),
+    })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain('there is no public/CNAME')
+    expect(result.output).toContain(`https://charity.example${projectPath}/...`)
+  })
+
+  it('fails when public/CNAME and siteConfig.url name different hosts', () => {
+    const dir = makeFixture({
+      cname: 'charity.example\n',
+      siteConfig: rebrandedConfig('https://freeforcharity.github.io'),
+      wellKnown: payload(undefined, { origin: 'https://freeforcharity.github.io', prefix: '' }),
+      rootSecurity: payload(undefined, { origin: 'https://freeforcharity.github.io', prefix: '' }),
+    })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain('public/CNAME points at "charity.example"')
+  })
+
+  it('accepts a custom domain when the CNAME and the origin agree', () => {
+    const dir = makeFixture({
+      cname: 'charity.example\n',
+      siteConfig: rebrandedConfig('https://charity.example'),
+      wellKnown: payload(undefined, { origin: 'https://charity.example', prefix: '' }),
+      rootSecurity: payload(undefined, { origin: 'https://charity.example', prefix: '' }),
+    })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.output).not.toContain('public/CNAME points at')
+    expect(result.output).not.toContain('there is no public/CNAME')
+    expect(result.status).toBe(0)
+  })
+
+  // The un-rebranded template ships no CNAME and keeps the placeholder host.
+  // That is not a charity deploy, so the origin rule must stay quiet — the
+  // placeholder itself is what checkPlaceholderUrl is for.
+  it('stays quiet about the origin while the placeholder host is still in place', () => {
+    const dir = makeFixture()
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.output).not.toContain('there is no public/CNAME')
+    expect(result.status).toBe(0)
+  })
+
+  it('requires security.txt to follow the CNAME across the cutover', () => {
+    const dir = makeFixture({
+      cname: 'charity.example\n',
+      siteConfig: rebrandedConfig('https://charity.example'),
+      // Left on the project path: the config and CNAME moved, this did not.
+      wellKnown: payload(undefined, { origin: 'https://charity.example' }),
+      rootSecurity: payload(undefined, { origin: 'https://charity.example' }),
+    })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain(
+      'Missing: Canonical: https://charity.example/.well-known/security.txt'
+    )
+  })
+
+  it('warns about a security.txt line this deploy does not serve', () => {
+    const stale = `${payload()}Canonical: https://charity.example/security.txt\n`
+    const dir = makeFixture({ wellKnown: stale, rootSecurity: stale })
+    fixtures.push(dir)
+
+    const result = runDrift(dir)
+
+    expect(result.output).toContain('which this deploy does not serve')
+    expect(result.output).toContain('https://charity.example/security.txt')
+    // A leftover line during a cutover is untidy, not broken: the required
+    // lines are all present, so this must not fail the build.
+    expect(result.status).toBe(0)
+  })
+
+  // next/link applies basePath itself. Wrapping its href in sitePath() applies
+  // it twice, and every such link 404s on a project-path deploy. This shipped on
+  // FFC-EX-neurospike.org with the whole test suite green, because the suite
+  // builds with no base path — where sitePath() is the identity function and the
+  // doubling cannot happen. Hence a static check rather than another test.
+  const navComponent = (href: string) =>
+    [
+      "import Link from 'next/link'",
+      "import { sitePath } from '@/lib/site.config'",
+      'export default function Nav() {',
+      `  return <Link href={${href}}>Home</Link>`,
+      '}',
+      '',
+    ].join('\n')
+
+  it('fails when a next/link href is wrapped in sitePath()', () => {
+    const dir = makeFixture()
+    fixtures.push(dir)
+    writeFileSync(join(dir, 'src/app/nav.tsx'), navComponent("sitePath('/org-leadership')"))
+
+    const result = runDrift(dir)
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain('wraps a next/link href in sitePath()')
+    expect(result.output).toContain('applies it twice')
+  })
+
+  it('accepts a bare route path on next/link', () => {
+    const dir = makeFixture()
+    fixtures.push(dir)
+    writeFileSync(join(dir, 'src/app/nav.tsx'), navComponent("'/org-leadership'"))
+
+    const result = runDrift(dir)
+
+    expect(result.output).not.toContain('wraps a next/link href')
+    expect(result.status).toBe(0)
+  })
+
+  // A raw <a> to a file in public/ is exactly what sitePath() is for — Next does
+  // not process that href, so the base path must be applied by hand. Flagging it
+  // would push authors toward the bug this guard exists to prevent.
+  it('does not flag a raw <a> href wrapped in sitePath(), even beside a Link import', () => {
+    const dir = makeFixture()
+    fixtures.push(dir)
+    writeFileSync(
+      join(dir, 'src/app/nav.tsx'),
+      [
+        "import Link from 'next/link'",
+        "import { sitePath } from '@/lib/site.config'",
+        'export default function Nav() {',
+        '  return (',
+        '    <div>',
+        '      <Link href="/privacy-policy">Privacy</Link>',
+        "      <a href={sitePath('/.well-known/security.txt')}>security.txt</a>",
+        '    </div>',
+        '  )',
+        '}',
+        '',
+      ].join('\n')
+    )
+
+    const result = runDrift(dir)
+
+    expect(result.output).not.toContain('wraps a next/link href')
+    expect(result.status).toBe(0)
+  })
+
   it('fails when security.txt Expires is regex-shaped but not parseable', () => {
     const dir = makeFixture({
       wellKnown: payload('2027-02-30T00:00:00.000Z'),
@@ -261,5 +481,215 @@ describe('security drift guard', () => {
     expect(result.status).not.toBe(0)
     expect(result.output).toContain('CSP "upgrade-insecure-requests" drifted')
     expect(result.output).toContain('only in _headers')
+  })
+})
+
+describe('social card guard', () => {
+  let fixtures: string[] = []
+
+  afterEach(() => {
+    for (const dir of fixtures) rmSync(dir, { recursive: true, force: true })
+    fixtures = []
+  })
+
+  function fixture(overrides: Parameters<typeof makeFixture>[0] = {}) {
+    const dir = makeFixture(overrides)
+    fixtures.push(dir)
+    return dir
+  }
+
+  it('accepts a 1200x630 card declared beside an assetPath reference', () => {
+    const { status, output } = runDrift(fixture())
+
+    expect(status).toBe(0)
+    expect(output).not.toContain('og-card.png')
+  })
+
+  it('fails when the card is missing entirely', () => {
+    const { status, output } = runDrift(fixture({ ogCard: null }))
+
+    expect(status).toBe(1)
+    expect(output).toContain('public/og-card.png is missing')
+  })
+
+  // The defect #23 filed: a square image under `summary_large_image`.
+  it('fails when the declared size is not 1200x630', () => {
+    const { status, output } = runDrift(
+      fixture({
+        siteMetadata:
+          "const socialCard = { url: assetPath('/og-card.png'), width: 512, height: 512 }\n",
+      })
+    )
+
+    expect(status).toBe(1)
+    expect(output).toMatch(/1200x630 but .*declares 512x512/)
+  })
+
+  // A URL written without assetPath() drops the GitHub Pages base path -- the
+  // same composition bug that took every navigation link down in #17.
+  it('fails when the card is referenced without assetPath()', () => {
+    const { status, output } = runDrift(
+      fixture({
+        siteMetadata: "const socialCard = { url: '/og-card.png', width: 1200, height: 630 }\n",
+      })
+    )
+
+    expect(status).toBe(1)
+    expect(output).toContain("does not reference assetPath('/og-card.png')")
+  })
+
+  it('fails when the dimensions are not declared at all', () => {
+    const { status, output } = runDrift(
+      fixture({ siteMetadata: "const socialCard = { url: assetPath('/og-card.png') }\n" })
+    )
+
+    expect(status).toBe(1)
+    expect(output).toContain('does not declare the social card width and height')
+  })
+
+  // The other half of the size guard: the PNG itself is the wrong size, and
+  // the declaration agrees with it, so the two never disagree.
+  it('fails when the card is a consistent but wrong size', () => {
+    const dir = makeFixture(
+      {
+        siteMetadata:
+          "const socialCard = { url: assetPath('/og-card.png'), width: 600, height: 315 }\n",
+      },
+      cardResizedTo(600, 315)
+    )
+    fixtures.push(dir)
+    const { status, output } = runDrift(dir)
+
+    expect(status).toBe(1)
+    expect(output).toContain('public/og-card.png is 600x315')
+    expect(output).toContain('1200x630')
+    // Precisely because the declaration matches, the mismatch error must NOT
+    // be what caught it -- otherwise this passes without the check it targets.
+    expect(output).not.toContain('declares 600x315')
+  })
+})
+
+// Fonts are self-hosted (#163): next/font/google fetches from Google during
+// `next build`, and a Google Fonts URL makes every page view depend on Google.
+describe('self-hosted fonts drift guard', () => {
+  let fixtures: string[] = []
+
+  afterEach(() => {
+    for (const fixture of fixtures) rmSync(fixture, { recursive: true, force: true })
+    fixtures = []
+  })
+
+  function fixtureWith(relPath: string, body: string) {
+    const dir = makeFixture()
+    fixtures.push(dir)
+    writeFileSync(join(dir, relPath), body)
+    return dir
+  }
+
+  it('accepts next/font/local, and the reason written in a comment', () => {
+    const { status, output } = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        [
+          '// Not next/font/google: that fetches from fonts.googleapis.com at build time.',
+          "import localFont from 'next/font/local'",
+          "export const lato = localFont({ src: '../fonts/lato/lato.woff2', variable: '--font-lato' })",
+          '',
+        ].join('\n')
+      )
+    )
+
+    expect(output).not.toContain('Fonts must be self-hosted')
+    expect(status).toBe(0)
+  })
+
+  it('fails when src/ imports next/font/google', () => {
+    const { status, output } = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "import { Lato } from 'next/font/google'\nexport const lato = Lato({ weight: '400' })\n"
+      )
+    )
+
+    expect(status).toBe(1)
+    expect(output).toContain('src/lib/fonts.ts:1 imports next/font/google')
+  })
+
+  it('fails when CSS pulls a stylesheet from a Google Fonts host', () => {
+    const { status, output } = runDrift(
+      fixtureWith(
+        'src/app/globals.css',
+        "@import url('https://fonts.googleapis.com/css2?family=Lato&display=swap');\n"
+      )
+    )
+
+    expect(status).toBe(1)
+    expect(output).toContain('src/app/globals.css:1 references a Google Fonts host')
+  })
+
+  it('fails on a protocol-relative Google Fonts URL, which is not a comment', () => {
+    const css = runDrift(
+      fixtureWith(
+        'src/app/globals.css',
+        '@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); }\n'
+      )
+    )
+    expect(css.status).toBe(1)
+    expect(css.output).toContain('src/app/globals.css:1 references a Google Fonts host')
+
+    const tsx = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "export const href = '//fonts.googleapis.com/css2?family=Lato'\n"
+      )
+    )
+    expect(tsx.status).toBe(1)
+    expect(tsx.output).toContain('src/lib/fonts.ts:1 references a Google Fonts host')
+  })
+
+  it.each([
+    ['@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); } // self-host this', 1],
+    ['@font-face { src: url(https://fonts.gstatic.com/s/lato/v24/x.woff2); }', 1],
+    ['@font-face {\n  src: url(\n    //fonts.gstatic.com/s/lato/v24/x.woff2\n  );\n}', 3],
+  ])('fails on an unquoted Google Fonts url() in SCSS: %s', (scss, line) => {
+    const { status, output } = runDrift(fixtureWith('src/app/fonts.scss', `${scss}\n`))
+    expect(status).toBe(1)
+    expect(output).toContain(`src/app/fonts.scss:${line} references a Google Fonts host`)
+  })
+
+  it('does not read a /* inside a string as a block comment', () => {
+    const { status, output } = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "const s = '/*'\nexport const f = import('next/font/google')\n"
+      )
+    )
+    expect(status).toBe(1)
+    expect(output).toContain('src/lib/fonts.ts:2 imports next/font/google')
+  })
+
+  it('still ignores a Google Fonts host named in an SCSS // comment', () => {
+    const { status, output } = runDrift(
+      fixtureWith('src/app/fonts.scss', '$x: 1; // was fonts.googleapis.com\n')
+    )
+    expect(output).not.toContain('Fonts must be self-hosted')
+    expect(status).toBe(0)
+  })
+
+  it('treats // as a comment only outside a string, even straight after code', () => {
+    const commented = runDrift(
+      fixtureWith('src/lib/fonts.ts', 'export const x = 1// was fonts.googleapis.com\n')
+    )
+    expect(commented.output).not.toContain('Fonts must be self-hosted')
+    expect(commented.status).toBe(0)
+
+    const masked = runDrift(
+      fixtureWith(
+        'src/lib/fonts.ts',
+        "const cdn = '//cdn.example'; export const f = import('next/font/google')\n"
+      )
+    )
+    expect(masked.status).toBe(1)
+    expect(masked.output).toContain('src/lib/fonts.ts:1 imports next/font/google')
   })
 })

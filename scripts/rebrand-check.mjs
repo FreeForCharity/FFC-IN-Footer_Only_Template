@@ -19,7 +19,7 @@
  * the CWD a developer invokes it from.
  *
  * Ported from FFC-IN-FFC_Single_Page_Template scripts/rebrand-check.mjs and
- * adapted to the footer-only template (GTM ID lives in the GTM component, the
+ * adapted to the footer-only template (GTM ID lives in src/lib/analytics.config.ts, the
  * only sample content is the team data, contact email default differs).
  */
 import { readdir, readFile } from 'node:fs/promises'
@@ -108,11 +108,11 @@ async function checkSiteConfig() {
   }
 }
 
-// --- Analytics (src/components/google-tag-manager/index.tsx) ------------------
+// --- Analytics (src/lib/analytics.config.ts) ---------------------------------
 // The GTM container ID is FFC's REAL container — leaving it sends the fork's
 // analytics to Free For Charity. Flag it loudly.
 async function checkAnalyticsConfig() {
-  const rel = 'src/components/google-tag-manager/index.tsx'
+  const rel = 'src/lib/analytics.config.ts'
   const cfg = await readText(rel)
   if (cfg === null) return
   if (cfg.includes('GTM-TQ5H8HPR')) {

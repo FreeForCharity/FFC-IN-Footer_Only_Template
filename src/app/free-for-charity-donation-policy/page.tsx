@@ -1,19 +1,18 @@
 import React from 'react'
 import type { Metadata } from 'next'
-import { siteUrl } from '@/lib/site.config'
+import { pageMetadata } from '@/lib/pageMetadata'
 
-export const metadata: Metadata = {
-  title: 'Free For Charity Donation Policy | Free For Charity',
+export const metadata: Metadata = pageMetadata({
+  title: 'Free For Charity Donation Policy',
   description: 'Free For Charity Donation Policy - Learn about our donation policies',
-  // Own canonical: without it Next inherits the layout's, which points at the home page.
-  alternates: { canonical: siteUrl('/free-for-charity-donation-policy') },
-}
+  path: '/free-for-charity-donation-policy',
+})
 
 const index = () => {
   return (
     <main id="main-content" className="pt-[140px]">
       <div className="py-[21px] w-[90%] md:w-[80%] mx-auto max-w-[1080px]">
-        <div id="aria-font">
+        <div className="aria-font">
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Free For Charity Donation Policy
           </h1>
@@ -267,7 +266,10 @@ const index = () => {
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             For any questions or further information about our donation policy, please contact us at{' '}
-            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#2ea3f2] break-words">
+            <a
+              href="mailto:clarkemoyer@freeforcharity.org"
+              className="text-[#0062cc] underline break-words"
+            >
               clarkemoyer@freeforcharity.org
             </a>{' '}
             520-222-8104

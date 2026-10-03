@@ -48,3 +48,26 @@ describe('siteMetadata module', () => {
     expect(typeof siteMetadata.manifest).toBe('string')
   })
 })
+
+describe('social card', () => {
+  // The card used to be the 512x512 app icon under a `summary_large_image`
+  // twitter:card, a combination no platform renders as intended. These
+  // assertions are what keep it from drifting back.
+  const image = (
+    siteMetadata.openGraph?.images as { url: string; width: number; height: number }[]
+  )[0]
+
+  it('is 1200x630', () => {
+    expect(image.width).toBe(1200)
+    expect(image.height).toBe(630)
+  })
+
+  it('is the generated card, not the square app icon', () => {
+    expect(image.url).toMatch(/\/og-card\.png$/)
+    expect(image.url).not.toContain('web-app-manifest')
+  })
+
+  it('is the same image on the twitter card', () => {
+    expect((siteMetadata.twitter?.images as string[])[0]).toBe(image.url)
+  })
+})

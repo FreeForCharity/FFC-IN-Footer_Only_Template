@@ -2,12 +2,33 @@
 
 import Script from 'next/script'
 
+import { GTM_ID } from '@/lib/analytics.config'
 import { scriptString } from '@/lib/script-string'
 
-// Google Tag Manager ID
-const GTM_ID = 'GTM-TQ5H8HPR'
+// The container id lives in `src/lib/analytics.config.ts`, NOT here.
+//
+// This module is `'use client'`. A server component that imports a non-component
+// export from a client module gets a client-reference proxy rather than the
+// value, so `GTM_ID.trim()` threw during static export while every unit test
+// passed. Keeping the constant in a plain module means both sides read the same
+// string. Deliberately not re-exported from here, so that trap cannot come back.
 
-export default function GoogleTagManager() {
+/**
+ * The component takes an optional `gtmId` that defaults to GTM_ID above.
+ * The prop exists so the test suite can exercise BOTH branches — configured and
+ * unconfigured — on any fork. Without it a charity awaiting its container can
+ * only ever test the null branch, so the markup this component emits once a
+ * container IS provisioned would ship unverified. Production code passes
+ * nothing and gets the module constant.
+ */
+type GoogleTagManagerProps = { gtmId?: string }
+
+export default function GoogleTagManager({ gtmId = GTM_ID }: GoogleTagManagerProps = {}) {
+  // Trim first: a whitespace-only id is unconfigured, not configured. Without
+  // this it passes the truthiness check and the snippet requests
+  // `gtm.js?id=%20%20`, which fails in the browser exactly like an empty id.
+  const id = gtmId.trim()
+  if (!id) return null
   return (
     <>
       {/* Google Tag Manager Script - loaded with lazyOnload for better performance */}
@@ -20,7 +41,7 @@ export default function GoogleTagManager() {
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
             j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer',${scriptString(GTM_ID)});
+            })(window,document,'script','dataLayer',${scriptString(id)});
           `,
         }}
       />
@@ -50,4 +71,9 @@ export default function GoogleTagManager() {
  * declares 'use client' on line 1. One implementation now lives in
  * src/lib/script-string.ts, so an escaping fix cannot land in one loader and
  * miss the other.
+ *
+ * KEPT THROUGH THE MERGE WITH `main`, which still carried the component: main
+ * moved the container id into analytics.config and added the `gtmId` prop,
+ * both of which are kept here. The deletion is not reverted, because the
+ * reason for it is unchanged and `tests/` asserts the iframe's absence.
  */
