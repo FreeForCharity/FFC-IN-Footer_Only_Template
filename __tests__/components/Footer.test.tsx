@@ -17,8 +17,17 @@ expect.extend(toHaveNoViolations)
 // a fork: a pending field is empty and shows a placeholder instead (covered by
 // 'pending footer fields' below, which varies the config itself).
 const itUnlessPending = (field: PendingField) => (isPending(field) ? it.skip : it)
-const hasSeal = Boolean(siteConfig.guidestar.profileUrl.trim())
+// The footer renders the seal only when the profile URL AND the seal URL are
+// both set (src/components/footer/index.tsx:64), so the gate must read both.
+// Reading profileUrl alone made `hasSeal` true for the normal provisioned
+// shape -- a charity whose profile links are derived from its EIN but which has
+// no Candid seal id of its own -- so these tests ran against a footer with no
+// seal and failed in every fork (FFC-Cloudflare-Automation#1512).
+const hasSeal = Boolean(
+  siteConfig.guidestar.profileUrl.trim() && siteConfig.guidestar.sealUrl.trim()
+)
 const hasDirectLink = Boolean(siteConfig.guidestar.directProfileUrl.trim())
+const itWithSeal = hasSeal ? it : it.skip
 const itWithGuidestar = hasSeal && hasDirectLink ? it : it.skip
 
 describe('Footer component', () => {
@@ -66,6 +75,15 @@ describe('Footer component', () => {
       'href',
       siteConfig.guidestar.directProfileUrl
     )
+  })
+
+  // Guard for the gate above: `hasSeal` has to mean "the footer renders a
+  // seal". This runs on every site, so a gate that disagrees with the
+  // component fails here instead of inside the tests it is meant to skip.
+  it('gates the seal tests on what the footer actually renders', () => {
+    render(<Footer />)
+    const sealRendered = screen.queryByRole('img', { name: 'Candid Seal of Transparency' }) !== null
+    expect(sealRendered).toBe(hasSeal)
   })
 
   itUnlessPending('email')('should have email contact link', () => {
@@ -362,7 +380,7 @@ describe('Footer component', () => {
     expect(hubLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  itWithGuidestar('should have the Candid seal image with alt text', () => {
+  itWithSeal('should have the Candid seal image with alt text', () => {
     render(<Footer />)
     expect(screen.getByAltText('Candid Seal of Transparency')).toBeInTheDocument()
   })
