@@ -28,7 +28,7 @@ const hasSeal = Boolean(
 )
 const hasDirectLink = Boolean(siteConfig.guidestar.directProfileUrl.trim())
 const itWithSeal = hasSeal ? it : it.skip
-const itWithGuidestar = hasSeal && hasDirectLink ? it : it.skip
+const itWithDirectLink = hasDirectLink ? it : it.skip
 
 describe('Footer component', () => {
   it('should render the footer', () => {
@@ -64,13 +64,21 @@ describe('Footer component', () => {
     expect(screen.getByText(new RegExp(currentYear.toString()))).toBeInTheDocument()
   })
 
-  itWithGuidestar('should have Candid profile links and the live seal', () => {
+  itWithSeal('should have the Candid seal link and the live seal image', () => {
     render(<Footer />)
     const sealLink = screen.getByLabelText(`${siteConfig.name} Candid Seal of Transparency`)
     expect(sealLink).toHaveAttribute('href', siteConfig.guidestar.profileUrl)
     expect(
       within(sealLink).getByRole('img', { name: 'Candid Seal of Transparency' })
     ).toHaveAttribute('src', siteConfig.guidestar.sealUrl)
+  })
+
+  // Separate case, separate gate: the footer renders the direct link on
+  // `directProfileUrl` alone (src/components/footer/index.tsx:86), independent
+  // of the seal. Asserting it inside the seal's case dropped it on exactly the
+  // provisioned shape -- seal absent, direct link present.
+  itWithDirectLink('should have the direct Candid profile link', () => {
+    render(<Footer />)
     expect(screen.getByText('Direct Candid Profile Link').closest('a')).toHaveAttribute(
       'href',
       siteConfig.guidestar.directProfileUrl
