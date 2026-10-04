@@ -85,13 +85,46 @@ function shippedFooter(): string {
   return readFileSync(join(process.cwd(), 'src/components/footer/index.tsx'), 'utf8')
 }
 
-/** The shipped siteConfig, renamed as provisioning renames it. */
+/**
+ * The first QUOTED `name:` value in a siteConfig source, or null.
+ *
+ * Mirrors siteNameFromConfig() in scripts/check-drift.mjs, which is the reader
+ * the gate under test uses: the type declaration's `name: string` is unquoted
+ * so it never matches, and a whole quoted string is read (escapes included) so
+ * a name containing the other quote character is not cut short.
+ */
+function siteNameOf(source: string): string | null {
+  const m = source.match(/\bname:\s*(?:'((?:\\.|[^'\\\n])*)'|"((?:\\.|[^"\\\n])*)")/)
+  if (!m) return null
+  return (m[1] ?? m[2]).replace(/\\(.)/g, '$1')
+}
+
+/**
+ * The shipped siteConfig with siteConfig.name set to `REBRANDED`, whatever it
+ * is now, so the gate under test is active and reports a name this file chose.
+ *
+ * Substituting the literal `name: 'Free For Charity',` is NOT equivalent, and
+ * the difference appears only on a site that has already been provisioned.
+ * There siteConfig.name is already the charity's, so the first literal match is
+ * `supportedBy.name` -- the permanent attribution, which keeps the template
+ * org's name forever -- and the substitution renames that instead, leaving the
+ * site name untouched. mutate()'s anchor assertion does not catch it: the
+ * anchor IS present, just not where the caller means it. That case is reached
+ * in practice rather than hypothetically, because the hub's 748 provisioning
+ * matrix runs `pnpm test` against each provisioned site.
+ */
 function shippedConfigRebranded(): string {
-  return mutate(
-    readFileSync(join(process.cwd(), 'src/lib/site.config.ts'), 'utf8'),
-    "name: 'Free For Charity',",
-    `name: '${REBRANDED}',`
+  const source = readFileSync(join(process.cwd(), 'src/lib/site.config.ts'), 'utf8')
+  const current = siteNameOf(source)
+  expect(current).not.toBeNull()
+  const renamed = source.replace(
+    /\bname:\s*(?:'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*")/,
+    `name: '${REBRANDED}'`
   )
+  // Asserted on the PARSED name, not on "the text changed": a substitution that
+  // landed on the wrong `name:` also changes the text.
+  expect(siteNameOf(renamed)).toEqual(REBRANDED)
+  return renamed
 }
 
 /**
