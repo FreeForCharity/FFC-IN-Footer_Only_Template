@@ -837,3 +837,16 @@ FFC_Single_Page_Template/
 **Test Suite Status**: ✅ 26 unit tests passing (4 test suites), 5 E2E passing, 1 E2E skipped  
 **Integration Status**: ✅ Complete  
 **Last Tested**: December 2025
+
+## Coverage enforced in CI
+
+CI runs `pnpm run test:coverage` and retains the `unit-coverage` artifact for seven days, including on a failed coverage run. Jest fails when any global floor in `jest.config.js` is missed.
+
+| Metric     | Minimum |
+| ---------- | ------- |
+| Branches   | 80%     |
+| Functions  | 90%     |
+| Lines      | 90%     |
+| Statements | 90%     |
+
+The floors leave margin below the measured suite. Add behavioral tests for new code instead of lowering the floors to land a change.
