@@ -70,7 +70,7 @@ const Footer: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {/* Candid's live seal widget: shows the current year's level, as on freeforcharity.org */}
+                {/* Candid's live seal widget: shows the current year's level, never a stale image */}
                 <img
                   src={siteConfig.guidestar.sealUrl}
                   alt="Candid Seal of Transparency"

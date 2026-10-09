@@ -17,9 +17,26 @@ expect.extend(toHaveNoViolations)
 // a fork: a pending field is empty and shows a placeholder instead (covered by
 // 'pending footer fields' below, which varies the config itself).
 const itUnlessPending = (field: PendingField) => (isPending(field) ? it.skip : it)
-const hasSeal = Boolean(siteConfig.guidestar.profileUrl.trim())
+// These two preconditions MIRROR the component's own render conditions in
+// src/components/footer/index.tsx: the seal needs both the profile URL and the
+// site's own sealUrl, while the direct-link button needs only its own URL. They
+// are separate transparency claims, so they get separate gates — a single gate
+// over both fields runs a seal case on a config that has no seal.
+//
+// Keeping them in step with the component is not cosmetic. #172 added sealUrl
+// to the component's condition and not to this gate, which left the gate
+// satisfied by a config the component renders no seal for: a provisioned
+// charity site gets a derived profileUrl and an intentionally EMPTY sealUrl
+// (never another organization's seal), so both cases below ran and both failed
+// on a correct site. The template's own config sets all three, so the template
+// stayed green and the breakage appeared only downstream, in
+// FreeForCharity/FFC-Cloudflare-Automation's 748 provisioning matrix.
+const hasSeal = Boolean(
+  siteConfig.guidestar.profileUrl.trim() && siteConfig.guidestar.sealUrl.trim()
+)
 const hasDirectLink = Boolean(siteConfig.guidestar.directProfileUrl.trim())
-const itWithGuidestar = hasSeal && hasDirectLink ? it : it.skip
+const itWithSeal = hasSeal ? it : it.skip
+const itWithDirectLink = hasDirectLink ? it : it.skip
 
 describe('Footer component', () => {
   it('should render the footer', () => {
@@ -55,17 +72,31 @@ describe('Footer component', () => {
     expect(screen.getByText(new RegExp(currentYear.toString()))).toBeInTheDocument()
   })
 
-  itWithGuidestar('should have Candid profile links and the live seal', () => {
+  itWithSeal('should link the shipped Candid seal to the shipped profile', () => {
     render(<Footer />)
     const sealLink = screen.getByLabelText(`${siteConfig.name} Candid Seal of Transparency`)
     expect(sealLink).toHaveAttribute('href', siteConfig.guidestar.profileUrl)
     expect(
       within(sealLink).getByRole('img', { name: 'Candid Seal of Transparency' })
     ).toHaveAttribute('src', siteConfig.guidestar.sealUrl)
+  })
+
+  itWithDirectLink('should have the shipped direct Candid profile link', () => {
+    render(<Footer />)
     expect(screen.getByText('Direct Candid Profile Link').closest('a')).toHaveAttribute(
       'href',
       siteConfig.guidestar.directProfileUrl
     )
+  })
+
+  // Unconditional on purpose: this is what holds `hasSeal` to the component.
+  // Both cases above skip themselves when the shipped config has no seal, so a
+  // gate that drifts from the component again goes quiet rather than red —
+  // which is how #172 shipped. This case cannot skip, so a gate that disagrees
+  // with the component fails it whichever way the disagreement runs.
+  it('renders the seal exactly when the shipped config configures one', () => {
+    render(<Footer />)
+    expect(Boolean(screen.queryByAltText('Candid Seal of Transparency'))).toBe(hasSeal)
   })
 
   itUnlessPending('email')('should have email contact link', () => {
@@ -362,7 +393,7 @@ describe('Footer component', () => {
     expect(hubLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  itWithGuidestar('should have the Candid seal image with alt text', () => {
+  itWithSeal('should have the Candid seal image with alt text', () => {
     render(<Footer />)
     expect(screen.getByAltText('Candid Seal of Transparency')).toBeInTheDocument()
   })
