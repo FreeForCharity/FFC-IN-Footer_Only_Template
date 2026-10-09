@@ -555,9 +555,10 @@ export default function CookiePolicy() {
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             This site reads the Global Privacy Control (GPC) signal and treats it as an opt-out of
             advertising data sharing. The check runs before any Google tag loads, so a browser
-            sending GPC never has advertising cookies set. We do share advertising data with Google
-            to measure our Google Ad Grants search ads, which California law may treat as
-            &ldquo;sharing&rdquo; for cross-context behavioral advertising, so there is a real
+            sending GPC has no new advertising cookie set, and any left on your device by an earlier
+            visit are deleted when the page&apos;s consent code runs. We do share advertising data
+            with Google to measure our Google Ad Grants search ads, which California law may treat
+            as &ldquo;sharing&rdquo; for cross-context behavioral advertising, so there is a real
             opt-out to exercise — GPC exercises it automatically, and so does the{' '}
             <strong>Do Not Sell or Share My Personal Information</strong> link in the footer. Do Not
             Track (DNT) is a separate, deprecated signal with no agreed meaning, and we do not act

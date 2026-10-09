@@ -85,13 +85,69 @@ describe('CONSENT_MODE_BOOTSTRAP', () => {
   it('scopes the denial to the EEA, the UK and Switzerland', () => {
     const scoped = defaultCallBlocks(CONSENT_MODE_BOOTSTRAP).find((b) => b.includes("'region'"))!
 
-    // Spot-check one EU member, the UK and Switzerland. Switzerland is the
-    // one most easily dropped: it is neither EU nor EEA, and Google's EU User
-    // Consent Policy covers it anyway.
-    expect(scoped).toContain('"DE"')
-    expect(scoped).toContain('"GB"')
-    expect(scoped).toContain('"CH"')
-    expect(EU_CONSENT_REGIONS).toHaveLength(32)
+    // The expected 32 are written out here INDEPENDENTLY rather than derived
+    // from EU_CONSENT_REGIONS: a test that builds its expectation from the
+    // value under test asserts only that the value equals itself.
+    //
+    // EU27, then the three non-EU EEA states, then the UK and Switzerland.
+    // Switzerland is the one most easily dropped — neither EU nor EEA, yet
+    // squarely inside Google's EU User Consent Policy.
+    const expected = [
+      // EU27
+      'AT',
+      'BE',
+      'BG',
+      'HR',
+      'CY',
+      'CZ',
+      'DK',
+      'EE',
+      'FI',
+      'FR',
+      'DE',
+      'GR',
+      'HU',
+      'IE',
+      'IT',
+      'LV',
+      'LT',
+      'LU',
+      'MT',
+      'NL',
+      'PL',
+      'PT',
+      'RO',
+      'SK',
+      'SI',
+      'ES',
+      'SE',
+      // EEA, non-EU
+      'IS',
+      'LI',
+      'NO',
+      // Google's EU User Consent Policy extends to both of these
+      'GB',
+      'CH',
+    ]
+
+    // Exact membership, order-insensitive. A LENGTH check plus spot checks —
+    // which is what this used to be — passes a tree where one code has been
+    // duplicated and another dropped: still 32 entries, still contains DE, GB
+    // and CH, while the dropped country's visitors silently lose the
+    // denied-by-default treatment. Sorting both sides is what closes that.
+    expect([...EU_CONSENT_REGIONS].sort()).toEqual([...expected].sort())
+
+    // Distinctness, asserted separately. `toEqual` on sorted arrays already
+    // rejects a duplicate (it would displace some other code and the arrays
+    // would differ), but this states the requirement in its own right so a
+    // later edit to the comparison cannot drop it silently.
+    expect(new Set(EU_CONSENT_REGIONS).size).toBe(EU_CONSENT_REGIONS.length)
+
+    // …and the codes must actually reach the emitted bootstrap, not merely
+    // exist in the constant. Every one of them, not a sample.
+    for (const code of expected) {
+      expect(scoped).toContain(`"${code}"`)
+    }
   })
 
   it('denies every measurement signal inside the scoped region', () => {

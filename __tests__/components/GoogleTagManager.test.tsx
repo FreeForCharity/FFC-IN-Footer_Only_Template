@@ -31,6 +31,35 @@ import { GTM_ID } from '../../src/lib/analytics.config'
 // `npm run check:rebrand` exists to catch.
 const TEST_GTM_ID = 'GTM-TEST000'
 
+/**
+ * Pull the inline script body out of whatever the loader returned.
+ *
+ * The emitted string is what matters for escaping, and reading it through
+ * `JSON.stringify` of the whole element would re-escape every backslash —
+ * so an assertion written against that form is really an assertion about
+ * JSON's own escaping, one indirection away from the thing under test.
+ * Walking to `dangerouslySetInnerHTML.__html` yields the bytes the browser
+ * would actually parse.
+ */
+function inlineScriptBody(node: unknown): string {
+  let found: string | null = null
+  const visit = (n: unknown): void => {
+    if (found !== null || n === null || typeof n !== 'object') return
+    const el = n as { props?: Record<string, unknown> }
+    const html = (el.props?.dangerouslySetInnerHTML as { __html?: string } | undefined)?.__html
+    if (typeof html === 'string') {
+      found = html
+      return
+    }
+    const children = el.props?.children
+    if (Array.isArray(children)) children.forEach(visit)
+    else if (children) visit(children)
+  }
+  visit(node)
+  if (found === null) throw new Error('no inline script body found on the rendered loader')
+  return found
+}
+
 describe('Google Tag Manager noscript fallback', () => {
   it('no longer exports a noscript component', () => {
     expect('GoogleTagManagerNoScript' in gtm).toBe(false)
@@ -86,6 +115,49 @@ describe('GoogleTagManager with no container configured', () => {
     expect(markup).toContain(TEST_GTM_ID)
     expect(markup).not.toContain('%20')
     expect(markup).not.toContain(`  ${TEST_GTM_ID}`)
+  })
+})
+
+/**
+ * The escaping is implemented in `src/lib/script-string.ts` and tested there
+ * against `</script>`. These cases cover THIS CALLER, because the helper
+ * being correct is not the same property as the loader using it: reverting
+ * the interpolation to a bare `${id}` leaves every script-string test green
+ * while a malformed configured container id can terminate the inline script.
+ *
+ * The id is operator-supplied (analytics.config.ts, or NEXT_PUBLIC_GTM_ID at
+ * build time), so this is a mis-provisioning and supply-chain concern rather
+ * than a visitor-reachable one — which is why it is worth a cheap test and
+ * not worth a runtime validator.
+ */
+describe('GoogleTagManager inline snippet escaping', () => {
+  const HOSTILE_ID = 'GTM-A</script><script>alert(1)</script>'
+
+  it('never emits a raw </script> for a hostile container id', () => {
+    const body = inlineScriptBody(gtm.default({ gtmId: HOSTILE_ID }))
+
+    // The literal sequence that would close the inline script early. Case
+    // folded, because `</SCRIPT>` closes a script element just as well.
+    expect(body.toLowerCase()).not.toContain('</script')
+
+    // Positive control: the id really did reach the snippet, escaped. Without
+    // this the assertion above would also hold for an empty body.
+    expect(body).toContain('\\u003c/script')
+    expect(body).toContain('GTM-A')
+  })
+
+  it('keeps a quote-bearing id inside one JS string literal', () => {
+    // A bare `'${id}'` would let this break out of the literal and append
+    // arbitrary code to the call.
+    const body = inlineScriptBody(gtm.default({ gtmId: 'GTM-B"+alert(1)+"' }))
+    expect(body).toContain('\\"+alert(1)+\\"')
+    expect(body).not.toContain('"+alert(1)+"')
+  })
+
+  it('still emits an ordinary id unescaped (so the checks above are not vacuous)', () => {
+    const body = inlineScriptBody(gtm.default({ gtmId: TEST_GTM_ID }))
+    expect(body).toContain(`"${TEST_GTM_ID}"`)
+    expect(body).not.toContain('\\u003c')
   })
 })
 

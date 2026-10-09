@@ -475,13 +475,19 @@ export default function PrivacyPolicy() {
             there until you accept.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>When the opt-out takes effect.</strong> For Google&apos;s tags it is immediate:
-            the signal is read before any of them load, so a browser sending Global Privacy Control
-            never has advertising cookies set at all. The Meta Pixel does not understand that
-            signal, so we stop it by hand — opting out deletes the cookies it has already set and
-            prevents it loading on any later page. We are being precise rather than reassuring here:
-            a Pixel that is already running in the page you are on cannot be unloaded until you
-            navigate, and we would rather say so than imply otherwise.
+            <strong>When the opt-out takes effect.</strong> For the Google tags that honour Consent
+            Mode it is immediate: the signal is read before any of them load, so no new advertising
+            cookie is set. Two honest limits on that. If you visited before and accepted
+            advertising, cookies from that visit are still on your device when the page opens — we
+            delete them as soon as the page&apos;s consent code runs, which is a moment after the
+            signal is read rather than before it. And our tag manager can in principle carry a tag
+            that ignores Consent Mode altogether; that is a configuration we control and do not use,
+            not a promise the mechanism itself enforces. The Meta Pixel is the known example of a
+            tag that does not understand the signal, so we stop it by hand — opting out deletes the
+            cookies it has already set and prevents it loading on any later page. We are being
+            precise rather than reassuring here: a Pixel that is already running in the page you are
+            on cannot be unloaded until you navigate, and we would rather say so than imply
+            otherwise.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             One more limit, for the same reason. We record your choice in your browser&apos;s own
@@ -509,15 +515,16 @@ export default function PrivacyPolicy() {
             <strong>Opt-out preference signals (Global Privacy Control / Do Not Track).</strong>{' '}
             This site reads the Global Privacy Control (GPC) signal and treats it as an opt-out of
             advertising data sharing. The check runs before any Google tag loads, so a browser
-            sending GPC never has advertising cookies set in the first place — there is nothing to
-            undo afterwards. Because GPC is a statutory signal, this site does not override it: if
-            your browser sends it, the opt-out stands even if you also press Accept. Do Not Track
-            (DNT) is a separate, deprecated signal with no agreed meaning, and we do not act on it.
-            GPC opts you out of sale and sharing, not of basic analytics: outside the EEA, the UK
-            and Switzerland analytics cookies are set automatically, and any visitor, anywhere, can
-            turn them off at any time via the Cookie Preferences link in the footer — we delete the
-            cookies we set when you do. Session recording (Microsoft Clarity) and marketing (Meta
-            Pixel) scripts never load unless you explicitly opt in.
+            sending GPC has no new advertising cookie set; any left over from an earlier visit are
+            deleted when the page&apos;s consent code runs. Because GPC is a statutory signal, this
+            site does not override it: if your browser sends it, the opt-out stands even if you also
+            press Accept. Do Not Track (DNT) is a separate, deprecated signal with no agreed
+            meaning, and we do not act on it. GPC opts you out of sale and sharing, not of basic
+            analytics: outside the EEA, the UK and Switzerland analytics cookies are set
+            automatically, and any visitor, anywhere, can turn them off at any time via the Cookie
+            Preferences link in the footer — we delete the cookies we set when you do. Session
+            recording (Microsoft Clarity) and marketing (Meta Pixel) scripts never load unless you
+            explicitly opt in.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights.</strong> Submit a request to{' '}
