@@ -417,7 +417,7 @@ Beyond branch protection, this repository uses:
 
 3. **Automated Testing**
    - Jest unit tests and Playwright end-to-end tests run in `ci.yml` on every PR and on `main`
-   - The deploy workflow runs a post-build smoke check before publishing
+   - After publishing, the deploy workflow runs a smoke check (`scripts/smoke-check.mjs`) against the live Pages URL
 
 4. **Static Site Security**
    - No server-side code reduces attack surface
