@@ -21,8 +21,8 @@
  * handling and a `canonicalPath()` helper for the `trailingSlash` policy
  * (neither is part of the shared shape).
  *
- * After editing, run `npm run check:drift` to verify nothing here drifts
- * away from FFC best practices, and `npm run check:rebrand` for a checklist
+ * After editing, run `pnpm run check:drift` to verify nothing here drifts
+ * away from FFC best practices, and `pnpm run check:rebrand` for a checklist
  * of template defaults you still need to replace.
  */
 

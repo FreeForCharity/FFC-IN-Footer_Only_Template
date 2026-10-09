@@ -44,13 +44,13 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ### Components
 
-| Component              | Purpose                                                              |
-| ---------------------- | -------------------------------------------------------------------- |
-| **Footer**             | Contact info, social media, policy links, GuideStar badge, copyright |
-| **Header**             | Responsive navigation with mobile menu and search                    |
-| **Cookie Consent**     | GDPR-compliant banner with Accept All / Decline All / Customize      |
-| **Google Tag Manager** | Analytics integration with consent-aware tracking                    |
-| **Team Section**       | Data-driven team member display                                      |
+| Component              | Purpose                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| **Footer**             | Contact info, social media, policy links, GuideStar badge, copyright          |
+| **Header**             | Responsive navigation with mobile menu and search                             |
+| **Cookie Consent**     | GDPR-compliant banner with Accept All / Decline All / Customize               |
+| **Google Tag Manager** | Analytics integration with consent-aware tracking                             |
+| **Team Section**       | Data-driven team member display                                               |
 | **TeamMemberCard**     | Individual team member card with initials, name, role, optional LinkedIn link |
 
 ### Policy Pages (7 Routes)

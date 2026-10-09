@@ -1,5 +1,7 @@
 # GitHub Merge Queue Verification Report
 
+> **Historical snapshot.** This document was inherited from the FFC Single Page template (`FFC-IN-FFC_Single_Page_Template`) and reflects that repository as of December 7, 2024. Components, files, and integrations it names may not exist in this repository (`FFC-IN-Footer_Only_Template`).
+
 **Date:** December 7, 2024  
 **PR Analyzed:** #83 - "Update README documentation"  
 **Commit:** 038851c79adc2a42ac7fe1616a35862b475de729

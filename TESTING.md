@@ -256,15 +256,15 @@ pnpm test -t "should not have accessibility violations"
 
 Specs run by `pnpm run test:e2e` (see `testMatch` in `playwright.config.ts`):
 
-| Spec                                | Covers                                               |
-| ----------------------------------- | ---------------------------------------------------- |
-| `tests/footer-only.spec.ts`         | Footer-only template layout and footer content       |
-| `tests/social-links.spec.ts`        | Footer social media links                            |
-| `tests/copyright.spec.ts`           | Footer copyright notice                              |
-| `tests/cookie-consent.spec.ts`      | Cookie consent banner                                |
-| `tests/google-tag-manager.spec.ts`  | Google Tag Manager integration                       |
-| `tests/security-metadata.spec.ts`   | Security metadata artifacts (e.g. `security.txt`)    |
-| `tests/policy-pages.spec.ts`        | Policy pages                                         |
+| Spec                               | Covers                                            |
+| ---------------------------------- | ------------------------------------------------- |
+| `tests/footer-only.spec.ts`        | Footer-only template layout and footer content    |
+| `tests/social-links.spec.ts`       | Footer social media links                         |
+| `tests/copyright.spec.ts`          | Footer copyright notice                           |
+| `tests/cookie-consent.spec.ts`     | Cookie consent banner                             |
+| `tests/google-tag-manager.spec.ts` | Google Tag Manager integration                    |
+| `tests/security-metadata.spec.ts`  | Security metadata artifacts (e.g. `security.txt`) |
+| `tests/policy-pages.spec.ts`       | Policy pages                                      |
 
 `tests/smoke.spec.ts` holds the post-deploy smoke tests; it runs via `pnpm run test:smoke` (`playwright.smoke.config.ts`), not `pnpm run test:e2e`.
 
