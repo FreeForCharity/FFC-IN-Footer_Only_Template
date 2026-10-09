@@ -508,7 +508,7 @@ The Lighthouse CI is integrated into the deployment pipeline with the following 
    - E2E tests run with Playwright
 
 2. **Deploy Workflow** (deploy.yml)
-   - Runs only on pushes to main branch
+   - Runs via `workflow_run` after the CI workflow succeeds on main, or manually via `workflow_dispatch`
    - Builds site for GitHub Pages
    - Deploys to GitHub Pages
 
@@ -522,7 +522,7 @@ The Lighthouse CI is integrated into the deployment pipeline with the following 
 
 ### Why This Order?
 
-- **After deployment**: Ensures Lighthouse audits the actual deployed site
+- **After deployment**: Re-audits each change that reached production (Lighthouse audits the local `./out` build via `staticDistDir`, not the live URL)
 - **On PRs**: Provides performance feedback before merging changes
 - **Independent build**: Lighthouse uses its own build to ensure consistency
 

@@ -8,9 +8,7 @@ This guide helps you test the Free For Charity web application, including conten
 
 ```bash
 # Verify JSON content files
-ls -la src/data/faqs/
 ls -la src/data/team/
-ls -la src/data/testimonials/
 ```
 
 ### 2. Test Development Server
@@ -135,7 +133,7 @@ __tests__/
 
 - assetPath (asset path helper for GitHub Pages)
 
-**Coverage Threshold**: 5% (initial baseline, will be increased over time)
+**Coverage Threshold**: 10% global (branches, functions, lines, statements; set in `jest.config.js`)
 
 ### Writing Unit Tests
 
@@ -250,73 +248,25 @@ pnpm test -t "should not have accessibility violations"
 
 ### Test Framework
 
-**Test Framework**: Playwright v1.56.0  
+**Test Framework**: Playwright (`@playwright/test`; version in `package.json`)  
 **Browser**: Chromium (uses system browser to avoid network restrictions)  
-**Test Files**: 2 test suites, 6 test cases (5 active, 1 skipped)
+**Test Files**: the specs listed in `testMatch` in `playwright.config.ts` (run `pnpm run test:e2e`)
 
 ### Test Files and Coverage
 
-#### 1. Logo Visibility Tests (`tests/logo.spec.ts`)
+Specs run by `pnpm run test:e2e` (see `testMatch` in `playwright.config.ts`):
 
-Tests that verify the Free For Charity logo displays correctly across the site.
+| Spec                                | Covers                                               |
+| ----------------------------------- | ---------------------------------------------------- |
+| `tests/footer-only.spec.ts`         | Footer-only template layout and footer content       |
+| `tests/social-links.spec.ts`        | Footer social media links                            |
+| `tests/copyright.spec.ts`           | Footer copyright notice                              |
+| `tests/cookie-consent.spec.ts`      | Cookie consent banner                                |
+| `tests/google-tag-manager.spec.ts`  | Google Tag Manager integration                       |
+| `tests/security-metadata.spec.ts`   | Security metadata artifacts (e.g. `security.txt`)    |
+| `tests/policy-pages.spec.ts`        | Policy pages                                         |
 
-**Test Cases:**
-
-1. **`should display logo in top left corner (NavBar)`**
-   - **Purpose**: Verifies logo appears in navigation header
-   - **Checks**:
-     - Logo element is visible on page
-     - Image src ends with `/web-app-manifest-512x512.png`
-     - Alt text equals "Free For Charity logo"
-   - **Selector**: `header a[aria-label="Free For Charity home"] img[alt="Free For Charity logo"]`
-
-2. **`should display logo in hero section`**
-   - **Purpose**: Verifies logo appears in the main hero/landing section
-   - **Checks**:
-     - Logo element is visible on page
-     - Image src ends with `/web-app-manifest-512x512.png`
-     - Alt text equals "Free For Charity mark"
-   - **Selector**: `section#home img[alt="Free For Charity mark"]`
-
-3. **`both logos should be present on the same page`**
-   - **Purpose**: Verifies both logos exist simultaneously and are consistent
-   - **Checks**:
-     - NavBar logo is visible
-     - Hero logo is visible
-     - Both logos use identical image source paths
-     - Image path pattern matches expected format
-
-#### 2. GitHub Pages Deployment Tests (`tests/github-pages.spec.ts`)
-
-Tests that verify image loading works correctly for both custom domain and GitHub Pages deployments.
-
-**Test Cases:**
-
-4. **`images should load correctly with proper paths`**
-   - **Purpose**: Validates image paths work in both deployment scenarios
-   - **Checks**:
-     - NavBar logo is visible (image loaded successfully)
-     - Hero logo is visible (image loaded successfully)
-     - Both image src attributes end with `/web-app-manifest-512x512.png`
-     - Both logos use identical path
-   - **Deployment Compatibility**:
-     - Custom domain: `/web-app-manifest-512x512.png`
-   - GitHub Pages: `/FFC_Single_Page_Template/web-app-manifest-512x512.png`
-
-5. **`images should return 200 status code`**
-   - **Purpose**: Verifies images load successfully via HTTP
-   - **Checks**:
-     - Captures HTTP responses for logo image
-     - At least one image request is made
-     - All image requests return status code 200 OK
-   - **Method**: Monitors network responses using Playwright's response listener
-
-6. **`images have natural dimensions indicating successful load`** ⏭️ **SKIPPED**
-   - **Purpose**: Verifies image has loaded by checking natural dimensions
-   - **Status**: Temporarily disabled
-   - **Reason**: naturalWidth/naturalHeight return 0 in CI despite image being visible
-   - **Expected Behavior**: Should verify 512x512 pixel dimensions
-   - **Notes**: Works locally, fails in GitHub Actions. Needs investigation.
+`tests/smoke.spec.ts` holds the post-deploy smoke tests; it runs via `pnpm run test:smoke` (`playwright.smoke.config.ts`), not `pnpm run test:e2e`.
 
 ### Running Tests
 
@@ -330,9 +280,11 @@ pnpm run build
 pnpm exec playwright install chromium
 
 # Run tests in different modes
-pnpm test              # Headless mode (default)
-pnpm run test:headed   # With browser visible
-pnpm run test:ui       # Interactive Playwright UI
+pnpm run test:e2e          # Headless mode (default)
+pnpm run test:e2e:headed   # With browser visible
+pnpm run test:e2e:ui       # Interactive Playwright UI
+
+# Note: `pnpm test` runs Jest unit tests, not Playwright
 ```
 
 #### CI/CD Environment
@@ -376,14 +328,10 @@ Tests run automatically in GitHub Actions with the following workflows:
 **1. CI Workflow** (`ci.yml`)
 
 - Triggers: Pull requests and pushes to main
-- Steps:
-  1. Install dependencies
-  2. Check code formatting (Prettier)
-  3. Run linting (ESLint)
-  4. Run unit tests (Jest)
-  5. Install Playwright browsers
-  6. Build site
-  7. Run E2E tests (Playwright)
+- Jobs:
+  1. **Build + Unit**: install dependencies, check formatting (Prettier), lint (ESLint), run unit tests (Jest), build site, upload `./out` as an artifact
+  2. **E2E (shard N/4)**: download the build artifact, install Playwright (Chromium), run E2E tests (Playwright) across 4 shards
+  3. **Link Check (soft fail)**: build site and run `pnpm run check-links`
 - If any test fails, the build is marked as failed
 - Runs before deployment
 
@@ -411,11 +359,11 @@ Tests run automatically in GitHub Actions with the following workflows:
   6. Post results comment on PR (if applicable)
 - Runs independently after deployment
 - Provides performance metrics without blocking deployment
-- Warning thresholds (not hard failures):
-  - Performance: ≥60%
-  - Accessibility: ≥80%
-  - Best Practices: ≥80%
-  - SEO: ≥90%
+- Warning thresholds (not hard failures; set in `lighthouserc.json`):
+  - Performance: ≥55%
+  - Accessibility: ≥90%
+  - Best Practices: ≥65%
+  - SEO: ≥95%
 
 ### Result Reporting
 
@@ -435,7 +383,7 @@ Tests run automatically in GitHub Actions with the following workflows:
 
 - **Rules**: Next.js core-web-vitals + TypeScript
 - **Ignored Paths**: node_modules, .next, out, build, test-results, playwright-report
-- **Integration**: Runs automatically during `pnpm run build`
+- **Integration**: Runs as a separate CI step (`pnpm run lint`), not during `pnpm run build`
 
 **Current Warnings**:
 
@@ -596,18 +544,14 @@ GitHub Dependabot provides automated dependency management and security updates 
 
 **Status**: ✅ Enabled
 
-**Location**: `.github/workflows/codeql.yml`
+**Location**: GitHub code scanning **default setup** (no workflow file in this repository; checks appear as "Analyze (javascript-typescript)" and "Analyze (actions)")
 
 **Scans**:
 
 - JavaScript/TypeScript code
 - GitHub Actions workflows
 
-**Schedule**:
-
-- On push to main branch
-- On pull requests to main
-- Weekly on Mondays at 11:17 PM
+**Schedule**: Managed by GitHub's default setup (pushes and pull requests to the default branch, plus a weekly scan)
 
 **View Results**:
 
@@ -630,21 +574,15 @@ pnpm audit
 
 ### Visual Elements
 
-- [ ] Logo displays in top left corner (NavBar)
-- [ ] Logo displays in hero section
-- [ ] Both logos are the same image
+- [ ] Logo displays in the header (`public/Images/logo.webp`)
 
 ### Homepage Content
 
 - [ ] Team members display correctly (5 members)
-- [ ] Testimonials display correctly (3 unique testimonials)
-- [ ] FAQs display correctly (all questions visible)
 
 ### JSON Data Integration
 
 - [ ] Team data imported from JSON files
-- [ ] Testimonial data imported from JSON files
-- [ ] FAQ data imported from JSON files (2 from JSON, rest inline)
 
 ## Expected Behavior
 
@@ -655,18 +593,6 @@ pnpm audit
 3. Tyler Carlotto - Secretary
 4. Brennan Darling - Treasurer
 5. Rebecca Cook - Member at Large
-
-### Testimonials (from JSON)
-
-1. Professional online presence testimonial
-2. Free domain and email testimonial
-3. Core mission focus testimonial
-
-### FAQs (2 from JSON, rest inline)
-
-1. What is the organization aiming to accomplish? (JSON)
-2. Are you really a Charity? (JSON)
-3. Additional FAQs (inline in faqs.ts)
 
 ## Common Issues
 
@@ -698,35 +624,27 @@ pnpm audit
 ## File Structure Reference
 
 ```
-FFC_Single_Page_Template/
-├── tests/                          # Test suite
-│   ├── logo.spec.ts               # Logo visibility tests (3 tests)
-│   ├── github-pages.spec.ts       # Deployment compatibility tests (3 tests)
+FFC-IN-Footer_Only_Template/
+├── tests/                          # Playwright E2E specs (see table above)
+│   ├── test.config.ts             # Per-organization test content
 │   └── README.md                  # Test documentation
+├── __tests__/                      # Jest unit tests
 ├── playwright.config.ts            # Playwright configuration
+├── playwright.smoke.config.ts      # Post-deploy smoke test configuration
 ├── .github/workflows/
 │   ├── ci.yml                     # CI pipeline with linting, testing
 │   ├── deploy.yml                 # Deployment pipeline to GitHub Pages
-│   ├── codeql.yml                 # Security scanning
-│   └── lighthouse.yml             # Performance monitoring
+│   ├── lighthouse.yml             # Performance monitoring
+│   └── ...                        # Other workflows (CodeQL uses GitHub default setup)
 ├── public/                         # Static assets
 ├── src/data/
-│   ├── faqs/
-│   │   ├── what-is-the-organization-aiming-to-accomplish.json
-│   │   └── are-you-really-a-charity.json
 │   ├── team/
 │   │   ├── clarke-moyer.json
 │   │   ├── chris-rae.json
 │   │   ├── tyler-carlotto.json
 │   │   ├── brennan-darling.json
 │   │   └── rebecca-cook.json
-│   ├── testimonials/
-│   │   ├── testimonial-1.json
-│   │   ├── testimonial-2.json
-│   │   └── testimonial-3.json
-│   ├── faqs.ts                    # Imports FAQ JSON files
-│   ├── team.ts                    # Imports team JSON files
-│   └── testimonials.ts            # Imports testimonial JSON files
+│   └── team.ts                    # Imports team JSON files
 ├── TESTING.md                     # This file
 └── README.md                      # Project overview with testing summary
 ```
@@ -810,9 +728,9 @@ FFC_Single_Page_Template/
     - Include preview URL in PR comment
 
 13. **Caching Optimization**
-    - Cache npm dependencies between runs
-    - Cache Playwright browsers
-    - Cache Next.js build cache
+    - ✅ pnpm store cached via `actions/setup-node` (`cache: 'pnpm'`)
+    - ✅ Playwright browsers cached in CI
+    - Cache Next.js build cache (done in `deploy.yml`)
 
 14. **Parallel Test Execution**
     - Split test suite into parallel jobs
@@ -834,6 +752,6 @@ FFC_Single_Page_Template/
 
 ---
 
-**Test Suite Status**: ✅ 26 unit tests passing (4 test suites), 5 E2E passing, 1 E2E skipped  
+**Test Suite**: Jest unit tests in `__tests__/` (`pnpm test`) and Playwright E2E specs in `tests/` (`pnpm run test:e2e`)  
 **Integration Status**: ✅ Complete  
 **Last Tested**: December 2025

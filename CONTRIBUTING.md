@@ -170,8 +170,7 @@ This approach helps you:
 
 Start by exploring the live Free For Charity website:
 
-- **Production Site:** [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
-- **GitHub Pages:** [https://freeforcharity.github.io/FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC_Single_Page_Template/)
+- **Live Site (GitHub Pages):** [https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/](https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/)
 
 #### Step 2: Comprehensive Evaluation
 
@@ -272,7 +271,7 @@ After creating your review issue:
 
 You can create a new reviewer onboarding issue directly using this link:
 
-[**Create Reviewer Onboarding Issue**](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
+[**Create Reviewer Onboarding Issue**](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
 
 ### Tips for a Great Review
 
@@ -333,9 +332,9 @@ Starting your contribution journey with a fresh review:
 
 ### Ready to Review?
 
-1. Visit [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
+1. Visit [https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/](https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/)
 2. Explore thoroughly and take notes
-3. [Create your review issue](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
+3. [Create your review issue](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
 4. Report individual issues you discover
 5. Engage with the team on your findings
 
@@ -348,7 +347,7 @@ Starting your contribution journey with a fresh review:
 ### Prerequisites
 
 - **Node.js**: Version 24.x (validated with v24.18.0)
-- **npm**: Package manager (comes with Node.js)
+- **pnpm**: Package manager (via Corepack; version pinned in `package.json` `packageManager`)
 - **Git**: Version control
 - **Code Editor**: We recommend VS Code with the following extensions:
   - ESLint
@@ -362,14 +361,14 @@ Starting your contribution journey with a fresh review:
 2. **Clone your fork**:
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/FFC_Single_Page_Template.git
-   cd FFC_Single_Page_Template
+   git clone https://github.com/YOUR_USERNAME/FFC-IN-Footer_Only_Template.git
+   cd FFC-IN-Footer_Only_Template
    ```
 
 3. **Add upstream remote**:
 
    ```bash
-   git remote add upstream https://github.com/FreeForCharity/FFC_Single_Page_Template.git
+   git remote add upstream https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template.git
    ```
 
 4. **Install dependencies**:
@@ -563,8 +562,8 @@ describe('ComponentName', () => {
 
 ### Test Coverage Goals
 
-- **Current**: 26 unit tests passing (4 test suites)
-- **Minimum**: 5% overall coverage (current threshold)
+- **Current**: Jest unit tests in `__tests__/`; run `pnpm test` (or `pnpm run test:coverage`)
+- **Minimum**: 10% global coverage (threshold in `jest.config.js`)
 - **Target**: 15-20% coverage for initial implementation
 - **Long-term goal**: 50%+ coverage
 
@@ -754,7 +753,7 @@ docs: update contributing guidelines
 
 ### GitHub Issues
 
-- Report bugs and request features through [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
+- Report bugs and request features through [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/issues)
 - Search existing issues before creating a new one
 - Provide clear, detailed information
 - Use issue templates when available

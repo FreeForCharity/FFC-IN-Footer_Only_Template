@@ -186,6 +186,8 @@ GitHub Actions enforces the following on every PR:
 3. **Jest** -- `pnpm test` (all unit tests must pass)
 4. **Build** -- `pnpm run build` (static export must succeed)
 5. **Playwright** -- `pnpm run test:e2e` (E2E tests must pass)
-6. **CodeQL** -- Static analysis and security scanning (separate workflow)
+6. **CodeQL** -- Static analysis and security scanning (GitHub code scanning default setup)
+7. **FFC Drift Check** -- `pnpm run check:drift` (`drift-check.yml`)
+8. **Phantom Revert Guard** -- reports stale-branch risk when `main` has moved while the PR was open (`phantom-revert-guard.yml`)
 
 PRs cannot merge until all checks pass.

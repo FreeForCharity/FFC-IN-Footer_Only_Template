@@ -158,6 +158,7 @@ Our issue templates:
 - **bug_report.md** - For reporting bugs
 - **feature_request.md** - For suggesting features
 - **documentation.md** - For documentation issues
+- **rebrand-template.md** - For rebranding the template for a new nonprofit
 - **reviewer-onboarding.md** - For new reviewer onboarding
 - **config.yml** - Configuration with support links
 
@@ -252,7 +253,7 @@ GitHub displays files in this order:
 
 To verify all community health files are properly recognized:
 
-1. Visit the repository on GitHub: https://github.com/FreeForCharity/FFC_Single_Page_Template
+1. Visit the repository on GitHub: https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template
 2. Check for navigation tabs (mobile) or sidebar links (desktop)
 3. Look for the "Sponsor" button (indicates FUNDING.yml is recognized)
 4. Create a new issue to see issue templates
@@ -265,7 +266,7 @@ GitHub provides a community standards checklist at:
 `https://github.com/[owner]/[repo]/community`
 
 For this repository:  
-https://github.com/FreeForCharity/FFC_Single_Page_Template/community
+https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/community
 
 This checklist shows which files are present and recognized.
 
@@ -310,7 +311,7 @@ Follow these conventions:
 For questions about community health files or documentation:
 
 - **Email**: clarkemoyer@freeforcharity.org
-- **Create an issue**: [Documentation issue](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues/new?template=documentation.md)
+- **Create an issue**: [Documentation issue](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/issues/new?template=documentation.md)
 
 ---
 

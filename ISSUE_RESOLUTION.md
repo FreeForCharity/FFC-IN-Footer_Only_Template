@@ -141,7 +141,7 @@ pnpm install
 **Symptoms**:
 
 ```
-Error: Cannot find module '@/components/Header'
+Error: Cannot find module '@/components/header'
 ```
 
 **Solutions**:
@@ -150,16 +150,16 @@ Error: Cannot find module '@/components/Header'
 
    ```tsx
    // Correct
-   import Header from '@/components/Header'
+   import Header from '@/components/header'
 
    // Wrong
-   import Header from '@/components/header' // Case sensitivity!
+   import Header from '@/components/Header' // Case sensitivity!
    ```
 
 2. **Verify the file exists**:
 
    ```bash
-   ls -la src/components/Header
+   ls -la src/components/header
    ```
 
 3. **Check tsconfig.json paths**:
@@ -205,8 +205,8 @@ Error: Cannot find module '@/components/Header'
 3. **Check NEXT_PUBLIC_BASE_PATH**:
 
    ```bash
-   # For GitHub Pages
-   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template pnpm run build
+   # For GitHub Pages (deploy.yml computes this as /<repo-name> automatically)
+   NEXT_PUBLIC_BASE_PATH=/FFC-IN-Footer_Only_Template pnpm run build
 
    # For custom domain
    pnpm run build
@@ -414,15 +414,16 @@ pnpm run test:e2e
    // next.config.ts should have:
    output: 'export'
 
-   // Build should use:
-   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template
+   // Build should use (computed by deploy.yml from GITHUB_REPOSITORY;
+   // empty when public/CNAME exists):
+   NEXT_PUBLIC_BASE_PATH=/<repo-name>
    ```
 
 3. **Check CNAME file** (if using custom domain):
    ```bash
    # Should be in public/CNAME
    cat public/CNAME
-   # Should contain: ffcworkingsite1.org
+   # Should contain your custom domain (the template ships without a CNAME)
    ```
 
 ### Issue: Images Load Locally but Not in Production
@@ -596,7 +597,7 @@ touch src/components/MyComponent/index.tsx
 pnpm test __tests__/components/Header.test.tsx
 
 # E2E test
-pnpm run test:e2e tests/logo.spec.ts
+pnpm run test:e2e tests/footer-only.spec.ts
 ```
 
 ### How do I update dependencies?
@@ -673,7 +674,7 @@ See [LIGHTHOUSE.md](./LIGHTHOUSE.md) for detailed guidance. Quick tips:
 
 ### Where do I report bugs?
 
-1. **Check existing issues** first: [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
+1. **Check existing issues** first: [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/issues)
 2. **Open a new issue** with:
    - Clear description
    - Steps to reproduce

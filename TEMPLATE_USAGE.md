@@ -50,8 +50,8 @@ Use this checklist to track your progress when setting up a new repository from 
 Quick checklist of content areas to update:
 
 - [ ] Update organization name and EIN in all files
-- [ ] Update social media links in footer (`src/components/footer/index.tsx`)
-- [ ] Update contact information in footer
+- [ ] Update social media links in `src/lib/site.config.ts` (read by the footer)
+- [ ] Update contact information in `src/lib/site.config.ts` (read by the footer)
 - [ ] Update team member data in `src/data/team/`
 - [ ] Replace logo files in `/public` directory
 - [ ] Customize color scheme and branding in `src/app/globals.css`
@@ -139,11 +139,9 @@ These settings must be configured for your repository to function properly with 
 
 **Required for deployment to work:**
 
-1. **Source**: Select **"Deploy from a branch"**
-2. **Branch**: Select **`gh-pages`** branch and **`/ (root)`** folder
-   - The deploy workflow automatically creates and manages the `gh-pages` branch
-   - Do NOT use the `main` branch directly for Pages
-3. **Custom domain** (optional):
+1. **Source**: Select **"GitHub Actions"**
+   - The deploy workflow publishes with `actions/deploy-pages`; no `gh-pages` branch is used
+2. **Custom domain** (optional):
    - Enter your custom domain (e.g., `www.yournonprofit.org`)
    - Wait for DNS check to complete
    - Enable **Enforce HTTPS** after DNS is configured
@@ -195,7 +193,7 @@ Value: YOUR-ORG.github.io
 
 **Why these permissions are needed:**
 
-- **Read and write permissions**: Allows deploy workflow to push to `gh-pages` branch
+- **Read and write permissions**: Default token scope for workflows that do not declare their own `permissions:` (the deploy workflow declares `pages: write` and `id-token: write` itself and publishes via `actions/deploy-pages`)
 - **Create and approve PRs**: Allows Dependabot to create PRs and workflows to post comments
 - Without these permissions, deployments will fail and Dependabot won't function
 
@@ -217,7 +215,7 @@ The deploy workflow creates a `github-pages` environment automatically. You can 
 
 ### Workflows Overview
 
-This template includes four GitHub Actions workflows:
+This template includes these GitHub Actions workflows (in `.github/workflows/`): `ci.yml`, `deploy.yml`, `drift-check.yml`, `lighthouse.yml`, `oss-scanner-image.yml`, `phantom-revert-guard.yml`, `post-deploy-smoke.yml`, `scorecard.yml`, `security-audit.yml`, and `security-txt-expiry.yml`. CodeQL runs separately via GitHub code scanning default setup. The main ones:
 
 1. **CI - Build and Test** (`.github/workflows/ci.yml`)
    - Runs on: All pull requests and pushes to main
@@ -227,10 +225,10 @@ This template includes four GitHub Actions workflows:
 2. **Deploy to GitHub Pages** (`.github/workflows/deploy.yml`)
    - Runs on: After CI workflow succeeds on main branch
    - Purpose: Deploys built site to GitHub Pages
-   - What it does: Builds site with basePath, deploys to `gh-pages` branch
+   - What it does: Builds site with a computed basePath, deploys via `actions/deploy-pages`
 
-3. **CodeQL Security Scanning** (`.github/workflows/codeql.yml`)
-   - Runs on: Push to main, PRs to main, weekly schedule
+3. **CodeQL Security Scanning** (GitHub code scanning default setup; no workflow file)
+   - Runs on: Configured by GitHub's default setup (checks "Analyze (javascript-typescript)" and "Analyze (actions)")
    - Purpose: Scans code for security vulnerabilities
    - What it does: Analyzes JavaScript/TypeScript and GitHub Actions
 
@@ -272,31 +270,18 @@ To enable Lighthouse CI GitHub integration features:
 
 **Note**: With the current filesystem storage configuration in `lighthouserc.json`, Lighthouse CI still runs and stores results locally without this secret. The `LHCI_GITHUB_APP_TOKEN` is only required to enable GitHub integration features such as status checks, annotations, and PR comments for Lighthouse reports.
 
-### Customizing basePath for Your Repository
+### basePath for Your Repository
 
-The deploy workflow sets `NEXT_PUBLIC_BASE_PATH` for GitHub Pages routing:
+No manual edit is needed. `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml` compute `NEXT_PUBLIC_BASE_PATH` at build time:
 
 ```yaml
 env:
-  NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template
+  NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 ```
 
-**This needs to be updated** in `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml`:
+The value is `/<repo-name>` (derived from `GITHUB_REPOSITORY`), or empty when `public/CNAME` exists.
 
-**Option A: Using AI/Copilot (Recommended)**
-
-- Ask Copilot: "Update `NEXT_PUBLIC_BASE_PATH` in both `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml` from `/FFC_Single_Page_Template` to `/YOUR-REPO-NAME`"
-- Copilot will automatically find and replace the values in both files
-
-**Option B: Manual Update**
-
-1. Open `.github/workflows/deploy.yml`
-2. Search for `NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template`
-3. Replace with your repository name, for example: `NEXT_PUBLIC_BASE_PATH: /YOUR-REPO-NAME`
-4. Repeat steps 1–3 for `.github/workflows/lighthouse.yml`
-5. Commit the changes
-
-**If using a custom domain**: You can ask Copilot to remove the `NEXT_PUBLIC_BASE_PATH` line from both workflow files, as custom domains don't need a basePath.
+**If using a custom domain**: Add a `public/CNAME` file containing your domain; the workflows then build with an empty basePath.
 
 ---
 
@@ -630,14 +615,13 @@ grep -r "46-2471893" . --exclude-dir=node_modules --exclude-dir=.git
 grep -r "ffcworkingsite1.org" . --exclude-dir=node_modules --exclude-dir=.git
 ```
 
-**Social media links**: Update in `src/components/footer/index.tsx`
+**Social media links**: Update in `src/lib/site.config.ts`
 
 ### 2. Update Contact Information
 
 Files to update:
 
-- `src/components/footer/index.tsx` - Footer contact info
-- `src/components/contact-us/` - Contact section
+- `src/lib/site.config.ts` - Footer contact info (email, phone, addresses)
 - `SECURITY.md` - Security contact
 - `CODE_OF_CONDUCT.md` - Conduct reporting contact
 - `SUPPORT.md` - Support contact
@@ -646,7 +630,7 @@ Files to update:
 
 **Logo files** (in `/public` directory):
 
-- Replace `logo.svg` with your logo
+- Replace logo/image files under `public/Svgs/` and `public/Images/` with your own
 - Update `favicon.ico` with your favicon
 - Update Open Graph images in `/public` if present
 
@@ -660,14 +644,6 @@ Files to update:
 
 - Add/remove team member files (`name`, `role`, optional `linkedinUrl`)
 - No photos needed — cards render an initials monogram automatically
-
-**FAQs**: Edit `src/data/faqs/`
-
-- Update questions and answers for your organization
-
-**Testimonials**: Edit `src/data/testimonials/`
-
-- Replace with your organization's testimonials
 
 ### 5. Customize Documentation
 
@@ -709,10 +685,10 @@ Review and customize:
 
 **Solution**:
 
-1. Verify Settings → Pages source is set to `gh-pages` branch
+1. Verify Settings → Pages source is set to **GitHub Actions**
 2. Wait 2-5 minutes for deployment to propagate
 3. Check Actions tab to ensure deploy workflow succeeded
-4. Verify `NEXT_PUBLIC_BASE_PATH` in deploy.yml matches your repository name
+4. Check the deploy run's "Determine base path" step: it should print `/<your-repo-name>` (or an empty basePath if `public/CNAME` exists)
 
 **Problem**: Images don't load on GitHub Pages
 
@@ -816,8 +792,8 @@ After completing the setup:
 **Getting Help**:
 
 - Review existing documentation in the repository
-- Check the [GitHub Discussions](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions) for Q&A
-- Open an [Issue](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues) for bugs or questions
+- Check the [GitHub Discussions](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/discussions) for Q&A
+- Open an [Issue](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/issues) for bugs or questions
 - Read [SUPPORT.md](./SUPPORT.md) for support resources
 
 ---
@@ -908,7 +884,6 @@ After completing the "Rebrand Template To A New Brand" issue with all required i
 - Contact email updates: Multiple files with contact information
 - Social media links: Footer and other components
 - CODEOWNERS updates: GitHub usernames
-- Workflow basePath updates: `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml`
 
 **Example Copilot Instructions:**
 
@@ -918,18 +893,15 @@ Based on the information in issue #[number], update all instances of:
 - "46-2471893" to "[New EIN]"
 - "ffcworkingsite1.org" to "[new-domain.org]"
 - Update CODEOWNERS with @[username1], @[username2]
-- Update NEXT_PUBLIC_BASE_PATH in both workflow files to /[new-repo-name]
-- Update all social media links in footer components
+- Update all social media links in src/lib/site.config.ts
 ```
 
 **Tasks That Require Manual File Uploads:**
 
 These cannot be automated by AI and require manual work:
 
-- Logo files (`/public/logo.svg`, `/public/favicon.ico`) - Must upload new files
+- Logo and icon files (images under `/public`, `/public/favicon.ico`) - Must upload new files
 - Team member data (`src/data/team/*.json`) - Can be updated by Copilot with provided information (no photos — cards use initials monograms)
-- FAQs (`src/data/faqs/*.json`) - Can be updated by Copilot with provided Q&A content
-- Testimonials (`src/data/testimonials/*.json`) - Can be updated by Copilot with provided testimonial text
 
 **Optimal Workflow:**
 
@@ -961,4 +933,4 @@ These cannot be automated by AI and require manual work:
 
 **Last Updated**: 2026-07-19  
 **Template Version**: 0.3.0  
-**Compatible with**: Next.js 16.2.10, Node.js >=24.0.0
+**Compatible with**: Next.js (version in `package.json`), Node.js >=24.0.0

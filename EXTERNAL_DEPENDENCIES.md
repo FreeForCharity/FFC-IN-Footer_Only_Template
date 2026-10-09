@@ -65,6 +65,7 @@ These are services we directly integrate into our application code.
 
 #### 5. SociableKit Facebook Events Widget
 
+- **Status:** Not used in this template
 - **Purpose:** Display Facebook events via third-party widget
 - **Implementation:** SociableKit iframe widget embedded in the site
 - **Domain:** `widgets.sociablekit.com`
@@ -73,7 +74,6 @@ These are services we directly integrate into our application code.
 - **User Control:** Requires explicit user consent via cookie banner before loading
 - **Privacy Policy:** https://www.sociablekit.com/privacy-policy/
 - **Opt-out:** See SociableKit privacy policy for data subject rights
-- **Status:** Documented - Implementation complete
 
 **Technical Details:**
 
@@ -85,6 +85,7 @@ These are services we directly integrate into our application code.
 
 #### 6. Microsoft Forms
 
+- **Status:** Not used in this template (present in FFC-IN-FFC_Single_Page_Template); this template's privacy policy text still describes it
 - **Purpose:** Charity application form
 - **Form URL:** `https://forms.office.com/r/vePxGq6JqG`
 - **Implementation:** Embedded via iframe in `src/components/ui/ApplicationFormButton.tsx`
@@ -99,10 +100,10 @@ These are services we directly integrate into our application code.
 
 #### 7. Zeffy
 
+- **Status:** Not used in this template (present in FFC-IN-FFC_Single_Page_Template); this template's cookie policy text still describes it
 - **Purpose:** Zero-fee donation processing platform
 - **Implementation:** Embedded widget
 - **Domain:** `www.zeffy.com`
-- **Preconnect:** Configured in `src/app/layout.tsx`
 - **Data Collected:** Donation transaction data
 - **Privacy Policy:** https://www.zeffy.com/privacy
 
@@ -111,9 +112,8 @@ These are services we directly integrate into our application code.
 #### 8. GuideStar (Candid)
 
 - **Purpose:** Display charity transparency seal
-- **Implementation:** Widget embedded in footer
+- **Implementation:** Seal image in the footer (URL set in `src/lib/site.config.ts` `guidestar.sealUrl`)
 - **Domain:** `widgets.guidestar.org`
-- **Preconnect:** Configured in `src/app/layout.tsx`
 - **Data Collected:** Minimal (widget display only)
 - **Privacy Policy:** https://www.guidestar.org/privacy
 
@@ -121,6 +121,7 @@ These are services we directly integrate into our application code.
 
 #### 9. Idealist.org
 
+- **Status:** Not used in this template (present in FFC-IN-FFC_Single_Page_Template)
 - **Purpose:** Volunteer opportunity listings
 - **Implementation:** Link to external profile
 - **URL:** `https://www.idealist.org/en/nonprofit/356bfc8e2ae64f83beea4a4e677e99d7-free-for-charity-state-college#opportunities`
@@ -147,7 +148,7 @@ These are third-party services loaded by our direct integrations. We do not dire
 
 Third-party services we use may load additional services. While we cannot exhaustively list all transitive dependencies, major ones include:
 
-- **Google Services:** Analytics, Fonts, APIs
+- **Google Services:** Analytics, APIs (fonts are self-hosted via `next/font/local`, not loaded from Google)
 - **Meta/Facebook:** Various tracking and analytics services
 - **Microsoft Services:** Forms backend, authentication, cloud services
 - **Content Delivery Networks (CDNs):** For serving third-party scripts and assets
@@ -158,10 +159,12 @@ These dependencies are used during development and build processes but are not i
 
 ### Build Tools
 
-- **Next.js** (v16.0.7) - React framework
-- **TypeScript** (v5) - Type safety
-- **Tailwind CSS** (v4.1.12) - Styling framework
-- **PostCSS** (v8.5.6) - CSS processing
+- **Next.js** - React framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling framework
+- **PostCSS** - CSS processing
+
+Versions: see `package.json` (resolved versions in `pnpm-lock.yaml`).
 
 ### Testing & Quality
 
@@ -233,7 +236,7 @@ Users have the right to:
 - Opt-out of analytics and marketing
 - Withdraw consent at any time
 
-Contact: privacy@freeforcharity.org or 520-222-8104
+Contact: clarkemoyer@freeforcharity.org (the privacy policy uses `siteConfig.contactEmail`) or 520-222-8104
 
 ## Performance Optimization
 
@@ -244,9 +247,7 @@ To improve performance, we preconnect to frequently used domains:
 ```typescript
 // src/app/layout.tsx
 <link rel="preconnect" href="https://www.googletagmanager.com" />
-<link rel="preconnect" href="https://ffcsites.org" />
-<link rel="preconnect" href="https://www.zeffy.com" />
-<link rel="preconnect" href="https://widgets.guidestar.org" />
+<link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 ```
 
 ### Lazy Loading
@@ -294,7 +295,7 @@ For questions about our external dependencies or privacy practices:
 
 - **Email:** clarkemoyer@freeforcharity.org
 - **Phone:** 520-222-8104
-- **Privacy Contact:** privacy@freeforcharity.org
+- **Privacy Contact:** clarkemoyer@freeforcharity.org (`siteConfig.contactEmail`)
 
 ## Related Documentation
 

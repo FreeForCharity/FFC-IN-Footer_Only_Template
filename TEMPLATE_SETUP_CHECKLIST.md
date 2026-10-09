@@ -29,8 +29,7 @@ Quick reference checklist for setting up a new repository from the FFC Footer-On
 
 ### GitHub Pages (Settings -> Pages)
 
-- [ ] Source: Deploy from a branch
-- [ ] Branch: Select `gh-pages` and `/ (root)`
+- [ ] Source: GitHub Actions (`deploy.yml` publishes via `actions/deploy-pages`)
 - [ ] Custom domain (if applicable): Enter domain name
 - [ ] Wait for DNS check to complete
 - [ ] Enable "Enforce HTTPS" (after DNS configured)
@@ -46,7 +45,7 @@ Quick reference checklist for setting up a new repository from the FFC Footer-On
 - [ ] Enable Dependency graph
 - [ ] Enable Dependabot alerts
 - [ ] Enable Dependabot security updates
-- [ ] Enable Code scanning (CodeQL) - auto-configured by workflow
+- [ ] Enable Code scanning (CodeQL) - use **default setup** under Settings -> Code security (there is no CodeQL workflow file)
 - [ ] Enable Secret scanning (if available)
 
 ---
@@ -59,7 +58,8 @@ Create ruleset named "Protect Main":
 - [ ] Restrict deletions
 - [ ] Require pull request before merging
 - [ ] Require status checks to pass:
-  - [ ] Test and Build (CI workflow)
+  - [ ] Build + Unit (CI workflow)
+  - [ ] E2E (shard 1/4) through E2E (shard 4/4) (CI workflow)
   - [ ] Analyze (javascript-typescript)
   - [ ] Analyze (actions)
 - [ ] Require branches to be up to date
@@ -70,11 +70,10 @@ Create ruleset named "Protect Main":
 
 ## Update Repository Configuration Files
 
-### Update basePath in Workflows
+### basePath in Workflows
 
-- [ ] Edit `.github/workflows/deploy.yml` - change `/FFC_Single_Page_Template` to `/YOUR-REPO-NAME`
-- [ ] Edit `.github/workflows/lighthouse.yml` - change `/FFC_Single_Page_Template` to `/YOUR-REPO-NAME`
-- [ ] OR remove `NEXT_PUBLIC_BASE_PATH` if using custom domain
+- [ ] No edit needed: `deploy.yml` and `lighthouse.yml` compute `NEXT_PUBLIC_BASE_PATH` as `/<repo-name>` from `GITHUB_REPOSITORY`
+- [ ] If using a custom domain, add `public/CNAME` (the workflows then build with an empty basePath)
 
 ### Update CODEOWNERS
 
@@ -101,14 +100,14 @@ Create ruleset named "Protect Main":
 
 ### Contact Information
 
-- [ ] Update `src/components/footer/index.tsx` - Footer contact details
+- [ ] Update `src/lib/site.config.ts` - Footer contact details
 - [ ] Update `SECURITY.md` - Security contact
 - [ ] Update `CODE_OF_CONDUCT.md` - Conduct reporting contact
 - [ ] Update `SUPPORT.md` - Support resources
 
 ### Branding Assets
 
-- [ ] Replace `/public/logo.svg` with your logo
+- [ ] Replace logo/image files under `/public` (e.g. `public/Svgs/`, `public/Images/`)
 - [ ] Replace `/public/favicon.ico` with your favicon
 - [ ] Update Open Graph images (if present)
 - [ ] Update color scheme in `src/app/globals.css`
@@ -164,5 +163,5 @@ Create ruleset named "Protect Main":
 ## Need Help?
 
 - **Complete Guide**: [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md)
-- **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-Footer-Only-Template/issues)
+- **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/issues)
 - **Documentation**: Review all `.md` files in repository root

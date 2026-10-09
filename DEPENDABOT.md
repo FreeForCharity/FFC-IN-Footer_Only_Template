@@ -1,6 +1,6 @@
 # Dependabot Configuration Guide
 
-This document provides comprehensive information about GitHub Dependabot configuration and usage for the FFC Single Page Template project.
+This document provides comprehensive information about GitHub Dependabot configuration and usage for the FFC Footer-Only Template project.
 
 ## Overview
 
@@ -81,6 +81,10 @@ updates:
     labels:
       - 'dependencies'
       - 'npm'
+    ignore:
+      - dependency-name: 'eslint'
+        update-types:
+          - 'version-update:semver-major'
     groups:
       production-dependencies:
         dependency-type: 'production'
@@ -103,6 +107,20 @@ updates:
     labels:
       - 'dependencies'
       - 'github-actions'
+
+  # Docker ecosystem (OSS Scanner base image, .oss-scanner/Dockerfile)
+  - package-ecosystem: 'docker'
+    directory: '/.oss-scanner'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: 'ci'
+      include: 'scope'
+    labels:
+      - 'dependencies'
 ```
 
 ### Configuration Options Explained
@@ -415,7 +433,7 @@ groups:
 
 **Fix**:
 
-- Validate YAML: `npx js-yaml .github/dependabot.yml`
+- Validate YAML: `pnpm dlx js-yaml .github/dependabot.yml`
 - Enable in settings if disabled
 - Check for network/permission issues
 
