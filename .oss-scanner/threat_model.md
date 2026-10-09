@@ -70,10 +70,10 @@ Ranked by how much we care:
   `.github/workflows/`.
 - **Less:** fonts, images, Tailwind styling, the Lighthouse configuration.
 - **Out of scope:** third-party code we load by design (Google Tag Manager,
-  GA4, Clarity, Meta Pixel). Report a CSP that lets *other* origins run script,
+  GA4, Clarity, Meta Pixel). Report a CSP that lets _other_ origins run script,
   not the fact that GTM can run script. GitHub Pages hosting behavior (no
   custom response headers) is a known platform limit, documented in
-  `public/_headers`. `node_modules/` is in scope only where *our* configuration
+  `public/_headers`. `node_modules/` is in scope only where _our_ configuration
   makes a known-vulnerable path reachable.
 
 ## How to exercise it
