@@ -37,7 +37,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -51,10 +51,19 @@ jobs:
       - name: Run linting
         run: pnpm run lint
 
-      - name: Run unit tests
-        run: pnpm test
+      - name: Run unit tests with coverage
+        id: coverage
+        run: pnpm run test:coverage
         env:
           CI: true
+
+      - name: Upload unit coverage
+        if: ${{ always() && steps.coverage.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-coverage
+          path: coverage/
+          retention-days: 7
 
       - name: Build Next.js site
         run: pnpm run build
@@ -91,7 +100,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -142,7 +151,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'pnpm'
