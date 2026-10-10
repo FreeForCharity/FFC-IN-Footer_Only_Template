@@ -73,7 +73,7 @@ pnpm run lint -- --fix
 pnpm run build
 
 # Or use tsc directly
-npx tsc --noEmit
+pnpm exec tsc --noEmit
 ```
 
 **Best Practices**:
@@ -105,9 +105,8 @@ pnpm run test:watch
 
 **Coverage Requirements**:
 
-- **Current Minimum**: 5% (initial baseline)
-- **Target**: 15-20% for Phase 2
-- **Long-term Goal**: 50%+
+- **Enforced minimum**: branches 80%, functions/lines/statements 90% global (`coverageThreshold` in `jest.config.js`; CI runs `pnpm run test:coverage` in the Build + Unit job)
+- **Goal**: keep coverage at or above that floor as new code lands
 
 ### Playwright
 
@@ -132,7 +131,7 @@ pnpm run test:e2e:ui
 
 **Purpose**: Security vulnerability scanning
 
-**Configuration**: `.github/workflows/codeql.yml`
+**Configuration**: GitHub code scanning default setup (no workflow file in this repository)
 
 **Automatic Scanning**:
 

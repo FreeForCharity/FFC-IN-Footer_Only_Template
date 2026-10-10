@@ -9,7 +9,7 @@ Get up and running with the FFC Footer-Only Template in 5 minutes.
 ## Prerequisites
 
 - **Node.js 24.x** - [Download here](https://nodejs.org/)
-- **npm** (comes with Node.js)
+- **pnpm** (via Corepack; version pinned in `package.json` `packageManager`)
 - **Git** - [Download here](https://git-scm.com/)
 
 ## 5-Minute Setup
@@ -17,8 +17,8 @@ Get up and running with the FFC Footer-Only Template in 5 minutes.
 ### 1. Clone the Repository (30 seconds)
 
 ```bash
-git clone https://github.com/FreeForCharity/FFC-IN-Footer-Only-Template.git
-cd FFC-IN-Footer-Only-Template
+git clone https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template.git
+cd FFC-IN-Footer_Only_Template
 ```
 
 ### 2. Install Dependencies (17 seconds)
@@ -140,7 +140,7 @@ git push origin feature/your-feature-name
 ## Project Structure (Quick Reference)
 
 ```
-FFC-IN-Footer-Only-Template/
+FFC-IN-Footer_Only_Template/
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx              # Root layout with metadata
@@ -198,15 +198,11 @@ No environment variables are required for local development. The site works out 
 ```bash
 # .env.local (create if needed)
 
-# Optional: Set to 'production' to enable search engine indexing
-NEXT_PUBLIC_SITE_ENV=development
-
 # Optional: Override base path for deployment testing
 NEXT_PUBLIC_BASE_PATH=
-
-# Optional: Google Tag Manager ID
-NEXT_PUBLIC_GTM_ID=
 ```
+
+The Google Tag Manager ID is not an environment variable; it is set in `src/lib/analytics.config.ts`.
 
 ---
 
@@ -220,14 +216,15 @@ Edit a team member JSON file in `src/data/team/`:
 {
   "name": "Jane Doe",
   "role": "Executive Director",
-  "bio": "Leading our mission to help nonprofits.",
-  "image": "/team/jane-doe.jpg"
+  "linkedinUrl": "https://www.linkedin.com/in/jane-doe/"
 }
 ```
 
+`name` and `role` are required; `linkedinUrl` is optional (see `src/data/team.ts`).
+
 ### 2. Update Footer Content
 
-Edit `src/components/footer/index.tsx` to update contact information, social media links, or branding.
+Edit `src/lib/site.config.ts` to update contact information and social media links; the footer in `src/components/footer/index.tsx` reads from it.
 
 ### 3. Write a Test
 
@@ -258,7 +255,7 @@ pnpm test MyComponent
 ### Port Already in Use
 
 ```bash
-npx kill-port 3000
+pnpm dlx kill-port 3000
 # Or use a different port
 PORT=3001 pnpm run dev
 ```

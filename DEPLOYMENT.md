@@ -19,12 +19,12 @@ This document explains how the Free For Charity website is deployed to GitHub Pa
 
 The Free For Charity website is a static Next.js application deployed to GitHub Pages. The site is accessible at:
 
-- **GitHub Pages URL**: https://freeforcharity.github.io/FFC_Single_Page_Template/
-- **Custom Domain**: https://ffcworkingsite1.org
+- **Live Site (GitHub Pages)**: https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/
+- **Custom Domain**: none by default; the template ships no `public/CNAME` (add one to serve from a custom domain — see [Custom Domain Setup](#custom-domain-setup))
 
 ### Technology Stack
 
-- **Framework**: Next.js 16.2.10 with static export
+- **Framework**: Next.js with static export (version in `package.json`)
 - **Hosting**: GitHub Pages
 - **CI/CD**: GitHub Actions
 - **Node.js**: Version >=24.0.0
@@ -38,12 +38,43 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 The application uses Next.js static export mode configured in `next.config.ts`:
 
 ```typescript
+import type { NextConfig } from 'next'
+
 const nextConfig: NextConfig = {
   output: 'export',
+  // Ensures static export writes privacy-policy/index.html instead of privacy-policy.html
+  // so the local preview server (`serve -s out`) resolves paths correctly.
+  trailingSlash: true,
+  // Images configuration
   images: {
+    // This allows all images, local or external, to load without optimization
     unoptimized: true,
+    // Use remotePatterns instead of deprecated domains
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ffcworkingsite1.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'staging.freeforcharity.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'freeforcharity.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.vecteezy.com',
+      },
+    ],
   },
+  // Optional: base path and asset prefix if using a subdirectory deployment
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
 }
+
+export default nextConfig
 ```
 
 This generates a static site in the `./out` directory that can be served by any static file server, including GitHub Pages.
@@ -52,10 +83,10 @@ This generates a static site in the `./out` directory that can be served by any 
 
 The site uses the `assetPath()` helper function (located in `src/lib/assetPath.ts`) to handle assets correctly for both:
 
-1. **GitHub Pages subpath deployment**: `/FFC_Single_Page_Template/`
+1. **GitHub Pages subpath deployment**: `/<repo-name>/` (e.g. `/FFC-IN-Footer_Only_Template/`)
 2. **Custom domain deployment**: Root path `/`
 
-The helper uses the `NEXT_PUBLIC_BASE_PATH` environment variable to determine the correct asset path.
+The helper uses the `NEXT_PUBLIC_BASE_PATH` environment variable to determine the correct asset path. `deploy.yml` computes it at build time: `/<repo-name>` from `GITHUB_REPOSITORY`, or empty when `public/CNAME` exists.
 
 ---
 
@@ -79,17 +110,18 @@ The deployment workflow runs automatically when:
 
 #### CI Workflow Steps (`.github/workflows/ci.yml`)
 
-Runs on all pull requests and pushes to main:
+Runs on all pull requests and pushes to main, as three jobs:
 
-1. **Checkout code**: Retrieves the latest code from the repository
-2. **Setup Node.js**: Installs Node.js 24.x
-3. **Install dependencies**: Runs `pnpm install --frozen-lockfile` for a clean installation
-4. **Check formatting**: Runs Prettier format check
-5. **Run linting**: Executes ESLint to catch code issues
-6. **Run unit tests**: Executes Jest tests to verify code quality
-7. **Install Playwright**: Sets up E2E testing environment
-8. **Build site**: Runs `next build` without `NEXT_PUBLIC_BASE_PATH` (E2E tests need a base-path-free build)
-9. **Run E2E tests**: Validates the built site with Playwright tests
+1. **Build + Unit** (`build-and-unit`):
+   1. **Checkout code**, **Setup pnpm**, **Setup Node.js** (24.x)
+   2. **Install dependencies**: Runs `pnpm install --frozen-lockfile` for a clean installation
+   3. **Check formatting**: Runs Prettier format check
+   4. **Run linting**: Executes ESLint to catch code issues
+   5. **Run unit tests**: Executes Jest tests to verify code quality
+   6. **Build site**: Runs `next build` without `NEXT_PUBLIC_BASE_PATH` (E2E tests need a base-path-free build)
+   7. **Upload build output**: Saves `./out` as an artifact for the E2E job
+2. **E2E (shard N/4)** (`e2e`): Downloads the build artifact, installs Playwright (Chromium), and runs the Playwright suite split across 4 shards
+3. **Link Check (soft fail)** (`link-check`): Builds the site and runs `pnpm run check-links`
 
 #### Deploy Workflow Steps (`.github/workflows/deploy.yml`)
 
@@ -112,10 +144,12 @@ The actual steps performed by the deploy workflow are:
 
 ```yaml
 env:
-  NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template
+  # Computed by the "Determine base path" step: /<repo-name> from
+  # GITHUB_REPOSITORY, or empty when public/CNAME exists.
+  NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 ```
 
-This ensures images and assets work correctly at the GitHub Pages subpath.
+This ensures images and assets work correctly at the GitHub Pages subpath. No manual edit is needed after forking.
 
 ### Viewing Deployment Status
 
@@ -141,8 +175,8 @@ While automated deployment is recommended, you can also deploy manually if neede
 1. **Clone the repository** (if not already done):
 
    ```bash
-   git clone https://github.com/FreeForCharity/FFC_Single_Page_Template.git
-   cd FFC_Single_Page_Template
+   git clone https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template.git
+   cd FFC-IN-Footer_Only_Template
    ```
 
 2. **Install dependencies**:
@@ -162,7 +196,7 @@ While automated deployment is recommended, you can also deploy manually if neede
 4. **Build the site** with the correct base path:
 
    ```bash
-   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template pnpm run build
+   NEXT_PUBLIC_BASE_PATH=/FFC-IN-Footer_Only_Template pnpm run build
    ```
 
 5. **Verify the build**:
@@ -196,9 +230,7 @@ The site will be built without a base path, making all assets available at the r
 ### GitHub Pages Configuration
 
 1. **Go to repository Settings** → **Pages**
-2. **Source**: Select "Deploy from a branch"
-3. **Branch**: Select `gh-pages` or the branch created by the workflow
-4. **Folder**: Select `/ (root)`
+2. **Source**: Select "GitHub Actions" (`deploy.yml` publishes with `actions/deploy-pages`; there is no `gh-pages` branch)
 
 ### Custom Domain Setup
 
@@ -218,8 +250,7 @@ If using a custom domain:
 3. **Enable HTTPS** in GitHub Pages settings (automatic with custom domain)
 
 4. **Update environment variables** if needed:
-   - Remove or leave empty `NEXT_PUBLIC_BASE_PATH` for custom domains
-   - GitHub Actions should detect custom domain and adjust automatically
+   - `deploy.yml` detects `public/CNAME` and builds with an empty `NEXT_PUBLIC_BASE_PATH` automatically
 
 ### DNS Propagation
 
@@ -252,8 +283,10 @@ Environment variables are set in the workflow file:
 - name: Build with Next.js
   run: pnpm run build
   env:
-    NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template
+    NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 ```
+
+The value is computed by the preceding "Determine base path" step (`/<repo-name>`, or empty when `public/CNAME` exists).
 
 ### Local Development
 
@@ -369,16 +402,16 @@ To view detailed deployment logs:
 To test the built site locally before deploying:
 
 ```bash
-# Build with GitHub Pages configuration
-NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template pnpm run build
+# Build without a base path (as CI does for E2E tests)
+pnpm run build
 
-# Serve the built site
+# Serve ./out at the root
 pnpm run preview
 
-# Open http://localhost:3000/FFC_Single_Page_Template in your browser
+# Open http://localhost:3000/ in your browser
 ```
 
-This simulates how the site will behave on GitHub Pages.
+`pnpm run preview` serves `./out` at the root, so it previews a base-path-free build. A build made with `NEXT_PUBLIC_BASE_PATH=/FFC-IN-Footer_Only_Template` expects to be served under that subpath and will not resolve its assets at `http://localhost:3000/`.
 
 ---
 
@@ -463,4 +496,4 @@ Before merging to main (which triggers deployment):
 
 ---
 
-**Questions?** Open an issue or contact the maintainers at hello@freeforcharity.org
+**Questions?** Open an issue or contact the maintainers at clarkemoyer@freeforcharity.org

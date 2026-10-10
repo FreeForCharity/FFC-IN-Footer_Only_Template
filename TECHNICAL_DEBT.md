@@ -1,12 +1,14 @@
 # Technical Debt
 
+> **Historical snapshot.** This document was inherited from the FFC Single Page template (`FFC-IN-FFC_Single_Page_Template`) and reflects that repository as of December 2025. Components, files, and integrations it names may not exist in this repository (`FFC-IN-Footer_Only_Template`).
+
 **Document Purpose:** This document tracks backend and React application technical debt - code quality issues, security vulnerabilities, component fixes, and internal application improvements that are hidden from users but important for maintainability.
 
 **Scope:** This document covers technical items that affect the **internal workings** of the React application, not user-facing features. For UI/UX enhancements and user-visible improvements, see [SITE_IMPROVEMENTS.md](./SITE_IMPROVEMENTS.md).
 
 **Last Updated:** December 2025  
 **Status:** Active Tracking  
-**Repository:** FreeForCharity/FFC_Single_Page_Template
+**Repository:** FreeForCharity/FFC-IN-FFC_Single_Page_Template
 
 ---
 
@@ -223,7 +225,7 @@ pnpm install
 - **Scope:** GitHub Actions workflow dependencies
 - **Strategy:** Grouped updates for easier review
 
-**Current Dependabot PRs:** Check [Pull Requests tab](https://github.com/FreeForCharity/FFC_Single_Page_Template/pulls)
+**Current Dependabot PRs:** Check [Pull Requests tab](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/pulls)
 
 ### Pending Dependency Updates
 

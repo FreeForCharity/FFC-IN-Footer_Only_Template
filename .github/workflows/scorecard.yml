@@ -2,7 +2,8 @@ name: OpenSSF Scorecard
 
 # Runs the OpenSSF Scorecard on a weekly cadence and on pushes to main.
 # Results are uploaded to GitHub code scanning (Security tab) so that
-# regressions in supply-chain posture are visible alongside CodeQL findings.
+# regressions in supply-chain posture are visible alongside CodeQL findings,
+# and published to the OpenSSF Scorecard API for the public badge.
 #
 # Docs: https://github.com/ossf/scorecard-action
 
@@ -25,6 +26,10 @@ jobs:
     permissions:
       contents: read
       security-events: write
+      # publish_results: OIDC token proves to the OpenSSF API that this
+      # workflow, on this repo's default branch, produced the results.
+      id-token: write
+      actions: read
 
     steps:
       - name: Checkout
@@ -37,7 +42,10 @@ jobs:
         with:
           results_file: scorecard-results.sarif
           results_format: sarif
-          publish_results: false
+          # Publish to the public OpenSSF API so the README badge and
+          # https://scorecard.dev/viewer/?uri=github.com/FreeForCharity/FFC-IN-Footer_Only_Template
+          # show a live score (FreeForCharity/FFC-Cloudflare-Automation#1582).
+          publish_results: true
 
       - name: Upload artifact
         if: always()

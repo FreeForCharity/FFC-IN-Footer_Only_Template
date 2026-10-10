@@ -1,5 +1,9 @@
 # FFC Footer-Only Template
 
+[![CI - Build and Test](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/actions/workflows/ci.yml/badge.svg)](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/FreeForCharity/FFC-IN-Footer_Only_Template/badge)](https://scorecard.dev/viewer/?uri=github.com/FreeForCharity/FFC-IN-Footer_Only_Template)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
+
 A focused Next.js template that gives nonprofit websites a professional footer, legal policy pages, cookie compliance, analytics tracking, and team display -- all the backend formality a charity site needs.
 
 ## Why This Template Exists
@@ -40,14 +44,14 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ### Components
 
-| Component              | Purpose                                                              |
-| ---------------------- | -------------------------------------------------------------------- |
-| **Footer**             | Contact info, social media, policy links, GuideStar badge, copyright |
-| **Header**             | Responsive navigation with mobile menu and search                    |
-| **Cookie Consent**     | GDPR-compliant banner with Accept All / Decline All / Customize      |
-| **Google Tag Manager** | Analytics integration with consent-aware tracking                    |
-| **Team Section**       | Data-driven team member display                                      |
-| **TeamMemberCard**     | Individual team member card with photo, role, bio                    |
+| Component              | Purpose                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| **Footer**             | Contact info, social media, policy links, GuideStar badge, copyright          |
+| **Header**             | Responsive navigation with mobile menu and search                             |
+| **Cookie Consent**     | GDPR-compliant banner with Accept All / Decline All / Customize               |
+| **Google Tag Manager** | Analytics integration with consent-aware tracking                             |
+| **Team Section**       | Data-driven team member display                                               |
+| **TeamMemberCard**     | Individual team member card with initials, name, role, optional LinkedIn link |
 
 ### Policy Pages (7 Routes)
 
@@ -152,7 +156,7 @@ pnpm run test:e2e
 
 ### Testing
 
-- **Unit tests**: Jest + React Testing Library (126 tests across 12 suites)
+- **Unit tests**: Jest + React Testing Library (suites in `__tests__/`; run `pnpm test`)
 - **Accessibility**: jest-axe for WCAG compliance checks
 - **E2E tests**: Playwright for footer links, cookie consent, copyright, social links, GTM, and policy pages
 - **CI**: All tests run automatically on every PR via GitHub Actions
@@ -161,7 +165,7 @@ See [TESTING.md](./TESTING.md) for the full testing guide.
 
 ## Deployment
 
-- **Live Site**: [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
+- **Live Site**: [https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/](https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/)
 - **GitHub Pages**: Automated via GitHub Actions on push to `main`
 - **Static export**: `output: 'export'` in `next.config.ts`
 
@@ -179,7 +183,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 - **Footer quick links**: Edit the labels/anchors inline in `src/components/footer/index.tsx` to match your site's sections (keep the `Supported Charity Login` entry)
 - **Team members**: Edit JSON files in `src/data/team/`
 - **Policy content**: Update policy page content in `src/app/*/page.tsx`
-- **Analytics**: Set your GTM ID in `src/components/google-tag-manager/index.tsx`
+- **Analytics**: Set your GTM ID in `src/lib/analytics.config.ts`
 - **Branding**: Replace logos in `public/` and update color scheme in `globals.css`
 - **Verify completeness**: Run `pnpm run check:rebrand` for a checklist of FFC template defaults you still need to replace (the permanent "Supported by Free For Charity" attribution is excluded — it stays)
 

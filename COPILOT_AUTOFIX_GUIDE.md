@@ -79,17 +79,17 @@ CI - Build and Test-refs/pull/87/merge exists
    - Status: ✅ Working correctly
    - Current behavior: Cancels in-progress runs when new commits pushed
 
-2. **CodeQL Advanced** (`.github/workflows/codeql.yml`)
-   - Runs: Security scanning for JavaScript/TypeScript
-   - Status: ✅ Working correctly
-
-3. **Deploy to GitHub Pages** (`.github/workflows/deploy.yml`)
+2. **Deploy to GitHub Pages** (`.github/workflows/deploy.yml`)
    - Runs: Builds and deploys to GitHub Pages
    - Status: ✅ Working correctly
 
-4. **Lighthouse CI** (`.github/workflows/lighthouse.yml`)
+3. **Lighthouse CI** (`.github/workflows/lighthouse.yml`)
    - Runs: Performance audits after deployment
    - Status: ✅ Working correctly
+
+4. **Other workflows**: `drift-check.yml`, `oss-scanner-image.yml`, `phantom-revert-guard.yml`, `post-deploy-smoke.yml`, `scorecard.yml`, `security-audit.yml`, `security-txt-expiry.yml`
+
+CodeQL is not a workflow file here: it runs via GitHub code scanning **default setup** (checks "Analyze (javascript-typescript)" and "Analyze (actions)").
 
 ### Current Project Health
 

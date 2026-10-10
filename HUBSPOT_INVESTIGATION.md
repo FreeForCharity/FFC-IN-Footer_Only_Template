@@ -1,5 +1,7 @@
 # HubSpot Third-Party Cookie Investigation Report
 
+> **Historical snapshot.** This document was inherited from the FFC Single Page template (`FFC-IN-FFC_Single_Page_Template`) and reflects that repository as of December 7, 2025. Components, files, and integrations it names may not exist in this repository (`FFC-IN-Footer_Only_Template`).
+
 **Investigation Date:** December 7, 2025  
 **Issue Reference:** Page speed report identified third-party cookies from HubSpot (https://app.hubspot.com/feedback-web-fetcher)
 

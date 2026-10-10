@@ -1,8 +1,8 @@
-# Gemini Instructions: FFC_Single_Page_Template
+# Gemini Instructions: FFC Footer-Only Template
 
-Hey Gemini! Welcome to FFC_Single_Page_Template.
+Hey Gemini! Welcome to the FFC Footer-Only Template (`FFC-IN-Footer_Only_Template`).
 
-**Project:** FFC_Single_Page_Template -- a Free For Charity nonprofit website
+**Project:** FFC Footer-Only Template (`FFC-IN-Footer_Only_Template`) -- a Free For Charity nonprofit website template
 
 Free For Charity provides free, professionally built websites for 501(c)(3) nonprofit organizations. This repo is one of ~25 charity sites in the FFC family.
 
@@ -110,7 +110,7 @@ Most text content lives in `src/data/` as `.ts` modules or `.json` files in subd
 
 ## Asset Path Helper
 
-The site deploys to `https://freeforcharity.github.io/FFC_Single_Page_Template/` (and your custom domain if configured). The `assetPath()` function from `src/lib/assetPath.ts` handles this automatically.
+The site deploys to `https://ffcworkingsite1.org/FFC-IN-Footer_Only_Template/` (base path `/FFC-IN-Footer_Only_Template`, computed in `deploy.yml`; empty when a custom domain is set via `public/CNAME`). The `assetPath()` function from `src/lib/assetPath.ts` handles this automatically.
 
 ```tsx
 // Always use assetPath() for images and static assets

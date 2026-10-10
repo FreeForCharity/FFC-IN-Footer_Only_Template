@@ -65,7 +65,7 @@ Check your available tools at the start of each session. If an MCP server is ava
 
 ## Custom Agents
 
-Check `.claude/agents/` for custom agent definitions. Common agents include:
+Check `.claude/agents/` (if present) for custom agent definitions. Common agents include:
 
 | Agent         | Purpose                               |
 | ------------- | ------------------------------------- |
