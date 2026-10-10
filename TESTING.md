@@ -755,3 +755,16 @@ FFC-IN-Footer_Only_Template/
 **Test Suite**: Jest unit tests in `__tests__/` (`pnpm test`) and Playwright E2E specs in `tests/` (`pnpm run test:e2e`)  
 **Integration Status**: ✅ Complete  
 **Last Tested**: December 2025
+
+## Coverage enforced in CI
+
+CI runs `pnpm run test:coverage` and retains the `unit-coverage` artifact for seven days, including on a failed coverage run. Jest fails when any global floor in `jest.config.js` is missed.
+
+| Metric     | Minimum |
+| ---------- | ------- |
+| Branches   | 80%     |
+| Functions  | 90%     |
+| Lines      | 90%     |
+| Statements | 90%     |
+
+The floors leave margin below the measured suite. Add behavioral tests for new code instead of lowering the floors to land a change.
