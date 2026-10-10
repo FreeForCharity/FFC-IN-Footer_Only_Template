@@ -21,7 +21,7 @@
 // the visitor has opted out of sale/sharing; it leaves ad_personalization
 // and personalization_storage denied unless AD_PERSONALIZATION is on.
 // security_storage is granted in both. functionality_storage is granted by
-// default â€” a site that cannot remember a consent choice cannot honour one â€”
+// default — a site that cannot remember a consent choice cannot honour one —
 // and thereafter follows the visitor's own functional toggle through
 // updateGoogleConsent, so it is not something that "stays" granted.
 //
@@ -34,9 +34,9 @@
 // What this means at runtime. The Google tags LOAD on every visit; what
 // changes by region is permission to use storage:
 //
-//   - Outside EEA/UK/CH â†’ granted immediately. Full cookie-based
+//   - Outside EEA/UK/CH → granted immediately. Full cookie-based
 //                         measurement with no banner interaction needed.
-//   - Inside EEA/UK/CH  â†’ denied until the visitor accepts. GA4 still sends
+//   - Inside EEA/UK/CH  → denied until the visitor accepts. GA4 still sends
 //                         COOKIELESS pings, so pageviews are modeled in
 //                         aggregate rather than lost, and no identifier is
 //                         set or read. Accepting flips storage to granted
@@ -74,8 +74,8 @@
  * localStorage key holding the visitor's "Do Not Sell or Share" choice.
  *
  * Read SYNCHRONOUSLY by the bootstrap, so a returning visitor who opted out
- * has advertising denied at `consent default` time â€” before any tag
- * evaluates consent â€” rather than a beat later via `consent update`.
+ * has advertising denied at `consent default` time — before any tag
+ * evaluates consent — rather than a beat later via `consent update`.
  *
  * Deliberately SEPARATE from the cookie-banner preferences. This is a
  * statutory right under California, Colorado and Connecticut law, and it
@@ -114,7 +114,7 @@ type SaleShareOptOutWindow = Window & { __ffcSaleShareOptOut?: boolean }
  *
  * Consent Mode only governs GOOGLE tags. The Meta Pixel does not speak it, so
  * denying `ad_storage` does nothing to a Pixel that is already running or to
- * the cookies it has already set â€” and the footer control would be claiming
+ * the cookies it has already set — and the footer control would be claiming
  * "advertising sharing is off" while Meta kept receiving PageView data.
  *
  * This event is how the opt-out reaches the non-Google tags. The cookie-consent
@@ -203,13 +203,13 @@ export const CONSENT_WAIT_FOR_UPDATE_MS = 500
  * `consent default` calls, in Google's documented shape: the region-scoped
  * denial, then the unscoped default. Google resolves the most specific
  * matching region, so EEA/UK/CH visitors get denied-by-default and everyone
- * else gets the unscoped one. Their ORDER does not matter to Google â€”
- * specificity decides â€” but the region-scoped call is written first because
+ * else gets the unscoped one. Their ORDER does not matter to Google —
+ * specificity decides — but the region-scoped call is written first because
  * that is the one whose loss would be silent.
  *
  * The GPC / stored-opt-out read is wrapped in try/catch because an
  * unguarded `localStorage` read THROWS in some privacy modes, and a throw
- * here would abort the whole inline script â€” leaving NO consent defaults at
+ * here would abort the whole inline script — leaving NO consent defaults at
  * all, which fails open. The catch makes a storage failure cost the
  * opt-out's persistence, not the entire consent state.
  *
@@ -219,7 +219,7 @@ export const CONSENT_WAIT_FOR_UPDATE_MS = 500
  *
  * `url_passthrough` keeps click ids (gclid/wbraid) flowing through
  * navigation when cookies are denied, and `ads_data_redaction` strips ad
- * identifiers from tag requests while `ad_storage` is denied â€” both are
+ * identifiers from tag requests while `ad_storage` is denied — both are
  * no-ops once consent is granted, so they cost nothing outside the EEA.
  *
  * Declared as a function declaration so `gtag` lands on `window` and every
@@ -295,7 +295,7 @@ export function isConfigured(id: string | undefined | null): boolean {
  * This runs on every banner interaction AND on page load when a stored
  * choice exists. For an EEA/UK/CH visitor it is what lifts the regional
  * default from denied to granted; for everyone else it mostly re-affirms
- * the granted default, and only matters when they actively DECLINE â€” at
+ * the granted default, and only matters when they actively DECLINE — at
  * which point storage flips to denied and GA4 falls back to cookieless
  * pings rather than disappearing entirely.
  *
@@ -313,7 +313,7 @@ export function updateGoogleConsent(
   // instead of this function re-deriving it from storage.
   //
   // That re-read was a real hole. `setSaleShareOptOut(true, prefs)` wrote the
-  // flag, and if the write threw â€” a private window â€” delegated here, where
+  // flag, and if the write threw — a private window — delegated here, where
   // `hasSaleShareOptOut()` read storage, threw, and its catch reported false.
   // A `prefs.marketing === true` then GRANTED advertising, silently discarding
   // the opt-out argument that was the whole point of the call.
@@ -395,7 +395,7 @@ export function subscribeSaleShareOptOut(listener: () => void): () => void {
 }
 
 /**
- * Whether this visitor has exercised a statutory opt-out of sale/sharing â€”
+ * Whether this visitor has exercised a statutory opt-out of sale/sharing —
  * by sending a universal opt-out signal (GPC), by using this site's own
  * control, or because the site is child-directed and can never share.
  *
@@ -452,7 +452,7 @@ export function hasSaleShareOptOut(): boolean {
  *
  * Clearing removes only this site's stored flag. A browser sending GPC stays
  * opted out, because the site may not override a signal the law requires it
- * to honour â€” so `hasSaleShareOptOut()` can still report true after a call
+ * to honour — so `hasSaleShareOptOut()` can still report true after a call
  * with `false`. That is correct, not a bug, and the UI should reflect it
  * rather than showing the control as "off".
  */
@@ -545,7 +545,7 @@ export function setSaleShareOptOut(optOut: boolean, prefs?: ConsentPreferences):
   //
   // With no preferences passed there is no record of what the visitor chose
   // in the banner, so granting here would loosen advertising consent on no
-  // evidence at all â€” including for an EEA/UK/CH visitor who never accepted
+  // evidence at all — including for an EEA/UK/CH visitor who never accepted
   // anything. An earlier revision did exactly that: clearing the flag pushed
   // ad_storage and ad_user_data to 'granted' unconditionally, overriding the
   // banner's marketing toggle. Today's only caller passes optOut=true, but
@@ -562,7 +562,7 @@ export function setSaleShareOptOut(optOut: boolean, prefs?: ConsentPreferences):
   //
   // An earlier revision gated this on `hasSaleShareOptOut()`. That helper
   // reads localStorage, and in a private window the read THROWS and its catch
-  // reports false â€” so the deny was skipped and clicking "Do Not Sell or
+  // reports false — so the deny was skipped and clicking "Do Not Sell or
   // Share" did nothing at all, in exactly the browsers whose users are most
   // likely to click it. The storage write above is allowed to fail silently;
   // the live denial is not, because it is the part that actually stops the
