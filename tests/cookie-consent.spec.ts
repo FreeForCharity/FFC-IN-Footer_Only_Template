@@ -334,7 +334,9 @@ test('an advertising opt-out reaches another open tab without navigation', async
   page,
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.getByRole('button', { name: 'Accept All', exact: true }).click()
+  await page
+    .getByRole('button', { name: testConfig.cookieConsent.buttons.acceptAll, exact: true })
+    .click()
   const other = await context.newPage()
   await other.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(other.getByTestId('sale-share-opt-out')).toBeVisible()
