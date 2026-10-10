@@ -6,7 +6,7 @@ import {
   updateGoogleConsent,
   isConfigured,
   hasSaleShareOptOut,
-  SALE_SHARE_OPT_OUT_EVENT,
+  subscribeSaleShareOptOut,
 } from '@/lib/consent-mode'
 import { scriptString } from '@/lib/script-string'
 
@@ -78,7 +78,7 @@ export default function CookieConsent() {
   const modalRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
-  // Loads GA4 directly whenever a REAL measurement id is configured — on
+  // Loads GA4 directly whenever a REAL measurement id is configured â€” on
   // every pageview, regardless of the analytics toggle. Google Consent Mode
   // (bootstrapped in the root layout) gates what the tag may STORE, not
   // whether it loads.
@@ -172,7 +172,7 @@ export default function CookieConsent() {
     // A cookie can only be deleted by a request whose domain attribute
     // MATCHES the one it was set with. GA4 scopes `_ga` to the
     // registrable domain with a leading dot (e.g. `.example.org`) so it
-    // is readable across subdomains — so on `www.example.org`, expiring
+    // is readable across subdomains â€” so on `www.example.org`, expiring
     // it with only `domain=www.example.org` silently does nothing and
     // the visitor keeps the identifier they just asked us to drop.
     //
@@ -181,7 +181,7 @@ export default function CookieConsent() {
     // without a leading dot. On a subdomain-hosted deployment (e.g.
     // charity.pages.example.org) a tag may have scoped its cookie to any
     // ancestor domain, so walk the labels rather than guessing one apex.
-    // Some suffixes will be public suffixes (e.g. co.uk) — attempting to
+    // Some suffixes will be public suffixes (e.g. co.uk) â€” attempting to
     // expire on those is a harmless no-op, because browsers reject
     // cookie writes with a public-suffix Domain attribute.
     const hostname = window.location.hostname
@@ -278,7 +278,7 @@ export default function CookieConsent() {
         typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : ''
       document.cookie = `cookie-consent=${encodeURIComponent(cookieValue)}; path=/; max-age=31536000; SameSite=Lax${secureFlag}`
 
-      // Delete each non-granted category's cookies on EVERY apply — not only
+      // Delete each non-granted category's cookies on EVERY apply â€” not only
       // on withdrawal of a stored grant. Storage IS granted outside the
       // EEA/UK/CH before any choice is made, so cookies can already exist the
       // first time a visitor declines; and a restore from storage carries no
@@ -291,7 +291,7 @@ export default function CookieConsent() {
       // stored choice is accept-everything has both categories granted, so
       // without it this branch never runs and the Pixel keeps its cookies.
       // The clause was first added inside the helper alone, where it was
-      // unreachable for exactly that visitor — a mutation run found it inert.
+      // unreachable for exactly that visitor â€” a mutation run found it inert.
       // The opt-out, read once for the value this apply publishes.
       //
       // It is NOT the only read: deleteTrackingCookies and the Meta loader
@@ -315,7 +315,7 @@ export default function CookieConsent() {
       // matters when they actively DECLINE, at which point it pins storage
       // denied with cookieless pings only.
       //
-      // This comment has been wrong in both directions — it claimed the
+      // This comment has been wrong in both directions â€” it claimed the
       // denial applied only to EEA/UK/CH under a global model, then that
       // "there is no permissive default left for anyone" under a regional
       // one. There is: the unscoped default.
@@ -415,7 +415,7 @@ export default function CookieConsent() {
       }
 
       // No (valid) stored choice: show the banner, and still load the
-      // Google tags — they run under the denied-by-default Consent Mode
+      // Google tags â€” they run under the denied-by-default Consent Mode
       // state, which is cookieless everywhere, for everyone. Loading them
       // is not the same as measuring with cookies: the tags send cookieless
       // pings, so an undecided visit is counted in aggregate and stores
@@ -430,13 +430,13 @@ export default function CookieConsent() {
       // the visitor is, and both cases now exist at once. Outside the
       // EEA/UK/CH the unscoped default GRANTS analytics, so a stored DENIAL
       // must land first or the opening hit goes out with cookies for someone
-      // who said no — a privacy failure. Inside those regions the default
+      // who said no â€” a privacy failure. Inside those regions the default
       // DENIES, so a stored GRANT must land first or that hit goes out
-      // cookieless — a measurement loss. This comment has described each of
+      // cookieless â€” a measurement loss. This comment has described each of
       // those as "the" risk in turn, under a global-grant and then a
       // global-deny model; naming only one was what made it wrong both times.
       // Either way the fix is the same order. Only the undecided branches may
-      // load GA without a preceding update — there is no stored choice to
+      // load GA without a preceding update â€” there is no stored choice to
       // apply. Never load GA before this restore has run.
       const handleMissingChoice = () => {
         if (showBannerIfMissing) setShowBanner(true)
@@ -503,10 +503,10 @@ export default function CookieConsent() {
 
     // Check if user has already made a choice with error handling. This
     // single ordered path also loads the Google tags on every pageview:
-    // stored choice → consent update first, then GA; no stored choice →
+    // stored choice â†’ consent update first, then GA; no stored choice â†’
     // banner + GA under whichever regional default applies. Do NOT load GA
     // before this runs. Which stored choice is at risk depends on the
-    // visitor's region — a denial outside the EEA/UK/CH, a grant inside it —
+    // visitor's region â€” a denial outside the EEA/UK/CH, a grant inside it â€”
     // and the full reasoning is on the restore path above rather than
     // duplicated here, because keeping two copies in sync is what let this
     // comment go stale twice. BOTH consent defaults carry wait_for_update,
@@ -543,12 +543,12 @@ export default function CookieConsent() {
         window.dataLayer.push({ marketing_consent: 'denied' })
       }
     }
-    window.addEventListener(SALE_SHARE_OPT_OUT_EVENT, onSaleShareOptOut)
+    const unsubscribe = subscribeSaleShareOptOut(onSaleShareOptOut)
 
     // Cleanup function to remove the window method
     return () => {
       delete window.openCookiePreferences
-      window.removeEventListener(SALE_SHARE_OPT_OUT_EVENT, onSaleShareOptOut)
+      unsubscribe()
     }
   }, [loadPreferencesFromLocalStorage, expireAdvertisingCookies])
 
