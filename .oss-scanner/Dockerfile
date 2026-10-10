@@ -37,8 +37,8 @@ RUN pnpm exec playwright install --with-deps chromium
 # Build the static export exactly as CI does. out/ is the artifact that ships.
 RUN pnpm run build
 
-# Cheap checks that prove the image works; reported, never fatal.
-RUN pnpm test || echo "WARNING: unit tests reported failures"
+# Unit test failures must fail image preparation rather than be hidden.
+RUN pnpm test
 
 # Where things are, for the audit agent (also described in threat_model.md):
 #   src/            the Next.js app (App Router, static export)
