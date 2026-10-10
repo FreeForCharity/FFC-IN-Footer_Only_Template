@@ -67,14 +67,29 @@ test.describe('Google Tag Manager Integration', () => {
     expect(scriptContent).toContain('dataLayer')
   })
 
-  test('should have GTM noscript fallback in body', async ({ page }) => {
-    skipWithoutContainer()
+  test('must NOT ship a GTM noscript fallback', async ({ page }) => {
     await page.goto('/')
 
-    // The noscript iframe is rendered server-side (not lazy-loaded)
+    // Inverted deliberately. This test used to assert the iframe was present.
+    //
+    // The <noscript> iframe is the one tracking path consent cannot reach:
+    // with JavaScript disabled the consent bootstrap never runs, the banner
+    // never renders, and the footer's "Do Not Sell or Share" control does not
+    // exist — but the iframe would still request the GTM container, carrying
+    // no consent signal, with no way for a GPC-sending visitor to stop it.
+    //
+    // Asserted by ABSENCE because re-adding it is a one-line edit that any
+    // presence-only suite would wave through, and the privacy policy's claim
+    // that the consent check runs before any Google tag loads would silently
+    // become false again.
+    //
+    // And deliberately NOT behind `skipWithoutContainer()`, which `main`'s
+    // presence version carried: the iframe must be absent whether or not a
+    // container is provisioned, so skipping on an unconfigured fork would
+    // retire the check on exactly the sites most likely to be re-provisioned
+    // from the template.
     const pageContent = await page.content()
-    expect(pageContent).toContain('googletagmanager.com/ns.html')
-    expect(pageContent).toContain('noscript')
+    expect(pageContent).not.toContain('googletagmanager.com/ns.html')
   })
 
   test('should push events to dataLayer', async ({ page }) => {
@@ -148,10 +163,32 @@ test.describe('Google Tag Manager Integration', () => {
     })
 
     expect(order.hasBootstrap).toBe(true)
-    // Region-scoped denial for the EEA/UK/CH plus the unscoped grant.
+    // TWO defaults: a region-scoped denial for the EEA/UK/CH, then an unscoped
+    // default for everyone else. Google resolves the most specific matching
+    // region, so order does not decide the outcome -- specificity does.
+    //
+    // This assertion has now inverted twice, which is worth stating plainly:
+    // it first required the region array, then required its ABSENCE under the
+    // global model, and now requires it again. The thing worth asserting was
+    // never the presence or absence of a key but WHICH visitors a denial
+    // reaches, so it is checked from both sides below.
     expect(order.bootstrapContent).toContain("'region'")
     expect(order.bootstrapContent).toContain('"GB"')
     expect(order.bootstrapContent).toContain('"CH"')
+    expect(order.bootstrapContent).toContain("'analytics_storage': 'denied'")
+    expect(order.bootstrapContent).toContain("'analytics_storage': 'granted'")
+    // The GPC / stored-opt-out read has to reach the page: a bootstrap that
+    // lost it would still satisfy every assertion above.
+    expect(order.bootstrapContent).toContain('globalPrivacyControl')
+    // And personalised advertising stays off by default. Ad Grants is
+    // search-only, so granting it would buy nothing and carry the most legal
+    // weight of any signal here.
+    expect(order.bootstrapContent).toContain("'ad_personalization': 'denied'")
+    // functionality_storage and security_storage stay granted: neither carries
+    // measurement, and a site that cannot remember a consent choice cannot
+    // honour one.
+    expect(order.bootstrapContent).toContain("'functionality_storage': 'granted'")
+    expect(order.bootstrapContent).toContain("'security_storage': 'granted'")
     // The consent defaults must land in the dataLayer before GTM's own
     // gtm.start entry — i.e. before any Google tag begins executing.
     expect(order.consentDefaultIdx).toBeGreaterThanOrEqual(0)

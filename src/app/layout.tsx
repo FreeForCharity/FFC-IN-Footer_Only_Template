@@ -1,7 +1,7 @@
 import './globals.css'
 import Footer from './../components/footer'
 import CookieConsent from './../components/cookie-consent'
-import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/google-tag-manager'
+import GoogleTagManager from './../components/google-tag-manager'
 import { siteConfig } from '@/lib/site.config'
 import {
   openSans,
@@ -62,9 +62,17 @@ export default function RootLayout({
 
         {/*
           Google Consent Mode v2 defaults. MUST come before <GoogleTagManager />
-          (and any other Google tag) so the regional defaults are in place
-          before the first tag executes: denied-by-default in the EEA/UK/CH,
-          granted-by-default everywhere else. See src/lib/consent-mode.ts.
+          (and any other Google tag) so the defaults are in place before the
+          first tag executes.
+
+          TWO defaults, not one. A region-scoped call denies everything for the
+          32 EEA/UK/CH codes, and an unscoped call grants analytics and the Ad
+          Grants advertising signals everywhere else; Google resolves the most
+          specific match, so order does not matter. This comment used to say
+          "denied for every visitor, worldwide, with no region carve-out",
+          which described the model this branch deliberately reversed -- and a
+          maintainer reading it beside the real bootstrap would reach for the
+          code rather than the comment. See src/lib/consent-mode.ts.
         */}
         <script
           id="consent-mode-default"
@@ -86,7 +94,11 @@ export default function RootLayout({
         ].join(' ')}
         suppressHydrationWarning={true}
       >
-        <GoogleTagManagerNoScript />
+        {/* The GTM <noscript> iframe used to render here and is deliberately
+            gone. With JavaScript off the consent bootstrap never runs, the
+            banner never renders and the footer opt-out does not exist, so that
+            iframe was the one Google request no visitor could refuse. Its
+            absence is asserted in tests/ so re-adding it fails CI. */}
         <a href="#main-content" className="skip-to-content">
           Skip to main content
         </a>

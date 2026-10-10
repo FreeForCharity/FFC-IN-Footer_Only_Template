@@ -328,3 +328,42 @@ test.describe('Cookie Consent Accessibility', () => {
     await expect(banner).toHaveAttribute('aria-label', 'Cookie consent notice')
   })
 })
+
+test('an advertising opt-out reaches another open tab without navigation', async ({
+  context,
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'Accept All', exact: true }).click()
+  const other = await context.newPage()
+  await other.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(other.getByTestId('sale-share-opt-out')).toBeVisible()
+  await context.addCookies([{ name: '_fbp', value: 'previous-ad-cookie', url: other.url() }])
+  await page.getByTestId('sale-share-opt-out').click()
+  await expect(other.getByTestId('sale-share-opted-out')).toBeVisible()
+  await expect
+    .poll(() =>
+      other.evaluate(() => {
+        const entries = window.dataLayer.map((entry) =>
+          Array.from(entry as unknown as ArrayLike<unknown>)
+        )
+        return entries.some(
+          (entry) =>
+            entry[0] === 'consent' &&
+            entry[1] === 'update' &&
+            (entry[2] as Record<string, string>)?.ad_storage === 'denied' &&
+            (entry[2] as Record<string, string>)?.ad_user_data === 'denied'
+        )
+      })
+    )
+    .toBe(true)
+  await expect
+    .poll(() =>
+      other.evaluate(() =>
+        window.dataLayer.some((entry) => entry.marketing_consent === 'denied' && !entry.event)
+      )
+    )
+    .toBe(true)
+  expect((await context.cookies()).some((cookie) => cookie.name === '_fbp')).toBe(false)
+  await other.close()
+})
