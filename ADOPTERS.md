@@ -19,7 +19,7 @@ If you're using this template, we'd love to hear from you! Add your organization
 1. Fork this repository
 2. Add your entry to the list below
 3. Submit a pull request
-4. Alternatively, [open an issue](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues/new) with your information
+4. Alternatively, [open an issue](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/issues/new) with your information
 
 ## Template
 
@@ -40,7 +40,7 @@ If you're using this template, we'd love to hear from you! Add your organization
 ### [Free For Charity](https://ffcworkingsite1.org)
 
 - **Type**: 501(c)(3) Nonprofit Organization
-- **Location**: Tucson, Arizona, USA
+- **Location**: Raleigh, North Carolina and State College, Pennsylvania, USA
 - **EIN**: 46-2471893
 - **Use Case**: Primary website to promote Free For Charity's mission of connecting students, professionals, and businesses with nonprofits to reduce operating costs
 - **Deployment**: GitHub Pages with custom domain
@@ -72,7 +72,7 @@ Listing your organization here is entirely voluntary. You may:
 
 If you have questions about adopter listings:
 
-- Open a [GitHub Discussion](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions)
+- Open a [GitHub Discussion](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template/discussions)
 - Email: clarkemoyer@freeforcharity.org
 
 ## Success Stories
