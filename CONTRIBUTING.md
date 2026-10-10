@@ -563,9 +563,7 @@ describe('ComponentName', () => {
 ### Test Coverage Goals
 
 - **Current**: Jest unit tests in `__tests__/`; run `pnpm test` (or `pnpm run test:coverage`)
-- **Minimum**: 10% global coverage (threshold in `jest.config.js`)
-- **Target**: 15-20% coverage for initial implementation
-- **Long-term goal**: 50%+ coverage
+- **Enforced minimum**: branches 80%, functions/lines/statements 90% global (`coverageThreshold` in `jest.config.js`, checked in CI by `pnpm run test:coverage`)
 
 ---
 

@@ -133,7 +133,7 @@ __tests__/
 
 - assetPath (asset path helper for GitHub Pages)
 
-**Coverage Threshold**: 10% global (branches, functions, lines, statements; set in `jest.config.js`)
+**Coverage Threshold**: branches 80%, functions/lines/statements 90% global (set in `jest.config.js`; enforced in CI by `pnpm run test:coverage`)
 
 ### Writing Unit Tests
 
