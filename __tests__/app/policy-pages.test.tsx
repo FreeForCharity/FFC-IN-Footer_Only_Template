@@ -198,13 +198,25 @@ describe('Policy page rendering', () => {
   it('Donation Policy has a contact email link', () => {
     const { container } = render(<DonationPolicyPage />)
     // A pending email is empty: the placeholder shows, and no empty mailto: link.
+    // The email appears twice: in the Refunds section and in Contact Us.
     if (isPending('email')) {
-      expect(screen.getByText(PENDING_TEXT).closest('a')).toBeNull()
+      for (const note of screen.getAllByText(PENDING_TEXT)) expect(note.closest('a')).toBeNull()
       expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
       return
     }
-    const emailLink = screen.getByText(siteConfig.contactEmail)
-    expect(emailLink.closest('a')).toHaveAttribute('href', `mailto:${siteConfig.contactEmail}`)
+    const emailLinks = screen.getAllByText(siteConfig.contactEmail)
+    expect(emailLinks.length).toBeGreaterThan(0)
+    for (const link of emailLinks) {
+      expect(link.closest('a')).toHaveAttribute('href', `mailto:${siteConfig.contactEmail}`)
+    }
+  })
+
+  it('Donation Policy leaves refunds to the charity’s discretion, with no fixed review window', () => {
+    const { container } = render(<DonationPolicyPage />)
+    const text = container.textContent ?? ''
+    expect(text).toContain('Donations are generally non-refundable.')
+    expect(text).toContain(`may be granted at the discretion of ${siteConfig.name}`)
+    expect(text).not.toMatch(/within 30 days/)
   })
 
   it('Security Acknowledgements renders heading', () => {
