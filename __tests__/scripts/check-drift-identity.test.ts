@@ -70,6 +70,16 @@ function identityFindings(dir: string): string[] {
     .filter((line) => line.includes('still references'))
 }
 
+/** Warnings about the retired second donation policy, one string per line. */
+function retiredPolicyWarnings(dir: string): string[] {
+  const result = spawnSync('node', ['scripts/check-drift.mjs'], { cwd: dir, encoding: 'utf8' })
+  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`
+  return output
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.includes('the retired'))
+}
+
 /** The shipped header component, so cases test the real thing. */
 function shippedHeader(): string {
   return readFileSync(join(process.cwd(), 'src/components/header/index.tsx'), 'utf8')
@@ -289,7 +299,10 @@ describe('check-drift FFC identity scan', () => {
     expect(findings.join('\n')).toContain(expected)
   })
 
-  it('allows the footer platform credit and the FFC donation-policy label', () => {
+  // The retired FFC donation-policy label is TRANSITIONAL: tolerated (and
+  // warned about, see below) so an existing site keeps a green CI until the
+  // fleet rollout removes it.
+  it('allows the footer platform credit and the retired FFC donation-policy label', () => {
     const dir = make(configSource(REBRANDED), {
       'src/components/footer/index.tsx': [
         'export const a = (',
@@ -316,18 +329,42 @@ describe('check-drift FFC identity scan', () => {
     expect(findings[0]).toContain('src/components/footer/index.tsx')
   })
 
-  it("exempts FFC's own donation-policy page but not the charity's", () => {
+  it("tolerates the retired FFC donation-policy page during rollout, but not the charity's", () => {
     const ffcPolicy = 'export default function P() { return <p>Free For Charity</p> }\n'
-    const exempt = make(configSource(REBRANDED), {
+    const legacy = make(configSource(REBRANDED), {
       'src/app/free-for-charity-donation-policy/page.tsx': ffcPolicy,
     })
-    expect(identityFindings(exempt)).toEqual([])
+    expect(identityFindings(legacy)).toEqual([])
+    // ...and says so, as a warning rather than an error.
+    expect(retiredPolicyWarnings(legacy).join('\n')).toContain(
+      'src/app/free-for-charity-donation-policy/page.tsx is the retired'
+    )
 
-    // Same body, the charity's own route: exempted by exact path only.
+    // Same body, the charity's own route: tolerated by exact path only.
     const ownRoute = make(configSource(REBRANDED), {
       'src/app/donation-policy/page.tsx': ffcPolicy,
     })
     expect(identityFindings(ownRoute)).toHaveLength(1)
+  })
+
+  it('warns about every link to the retired page, on the template too', () => {
+    const dir = make(configSource('Free For Charity'), {
+      'src/components/footer/index.tsx': [
+        "export const links = [{ href: '/donation-policy' },",
+        "  { href: '/free-for-charity-donation-policy' }]",
+        '',
+      ].join('\n'),
+    })
+    expect(retiredPolicyWarnings(dir)).toEqual([
+      expect.stringContaining('src/components/footer/index.tsx:2 links the retired'),
+    ])
+  })
+
+  it('is silent on a site that links only its own /donation-policy', () => {
+    const dir = make(configSource(REBRANDED), {
+      'src/components/footer/index.tsx': "export const href = '/donation-policy'\n",
+    })
+    expect(retiredPolicyWarnings(dir)).toEqual([])
   })
 
   it('allows the supportedBy attribution but nothing else in site.config.ts', () => {

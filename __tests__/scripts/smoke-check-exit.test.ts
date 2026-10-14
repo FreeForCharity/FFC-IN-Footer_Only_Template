@@ -92,7 +92,6 @@ const ROUTES: Record<string, { type: string; body: string }> = {
   '/cookie-policy': { type: 'text/html', body: policyPage('Cookie Policy') },
   '/terms-of-service': { type: 'text/html', body: policyPage('Terms of Service') },
   '/donation-policy': { type: 'text/html', body: policyPage('Donation Policy') },
-  '/free-for-charity-donation-policy': { type: 'text/html', body: policyPage('Donation Policy') },
   '/security-acknowledgements': {
     type: 'text/html',
     body: policyPage('Security Acknowledgements'),

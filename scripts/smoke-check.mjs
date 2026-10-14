@@ -254,13 +254,14 @@ async function smoke() {
     )
   }
 
-  // 2. Footer policy routes.
+  // 2. Footer policy routes: the six pages of the FFC footer standard, with ONE
+  // donation policy (the retired /free-for-charity-donation-policy is not
+  // required, so a site that still serves it during the rollout passes too).
   const policyRoutes = [
     ['/privacy-policy', /Privacy Policy/i],
     ['/cookie-policy', /Cookie Policy/i],
     ['/terms-of-service', /Terms of Service/i],
     ['/donation-policy', /Donation Policy/i],
-    ['/free-for-charity-donation-policy', /Donation Policy/i],
     ['/security-acknowledgements', /Security Acknowledgements/i],
     ['/vulnerability-disclosure-policy', /Vulnerability Disclosure Policy/i],
   ]

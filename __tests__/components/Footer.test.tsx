@@ -218,12 +218,10 @@ describe('Footer component', () => {
 
   it('should have policy links with correct hrefs', () => {
     render(<Footer />)
+    // FFC footer standard: six policy pages, each branded to this site, with
+    // ONE donation policy (the separate FFC donation policy was retired).
     const policyLinks = [
-      // FFC's own donation policy: label hardcoded to FFC on purpose, since it
-      // describes FFC's policy and not this charity's.
-      { text: 'Free For Charity Donation Policy', href: '/free-for-charity-donation-policy' },
-      // The charity's own donation policy: fixed label, no name interpolation.
-      { text: 'Donation Policy', href: '/donation-policy' },
+      { text: `${siteConfig.name} Donation Policy`, href: '/donation-policy' },
       { text: `${siteConfig.name} Privacy Policy`, href: '/privacy-policy' },
       { text: `${siteConfig.name} Cookie Policy`, href: '/cookie-policy' },
       { text: `${siteConfig.name} Terms of Service`, href: '/terms-of-service' },
@@ -238,6 +236,14 @@ describe('Footer component', () => {
       const link = screen.getByText(text).closest('a')
       expect(link).toHaveAttribute('href', href)
     }
+  })
+
+  it('no longer links a separate Free For Charity donation policy', () => {
+    const { container } = render(<Footer />)
+    // On the template itself the site's own label reads "Free For Charity
+    // Donation Policy", so assert on the link target, not the text.
+    expect(container.querySelector('a[href*="free-for-charity-donation-policy"]')).toBeNull()
+    expect(container.querySelectorAll('a[href^="/donation-policy"]')).toHaveLength(1)
   })
 
   // The template shipped quick links pointing at homepage anchors (/#mission,

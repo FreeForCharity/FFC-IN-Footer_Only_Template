@@ -5,7 +5,6 @@ import { canonicalPath, siteConfig, siteUrl, trailingSlash } from '../../src/lib
 import { siteMetadata } from '../../src/lib/siteMetadata'
 import { metadata as cookiePolicyMetadata } from '../../src/app/cookie-policy/page'
 import { metadata as donationPolicyMetadata } from '../../src/app/donation-policy/page'
-import { metadata as ffcDonationPolicyMetadata } from '../../src/app/free-for-charity-donation-policy/page'
 import { metadata as privacyPolicyMetadata } from '../../src/app/privacy-policy/page'
 import { metadata as securityAcknowledgementsMetadata } from '../../src/app/security-acknowledgements/page'
 import { metadata as termsOfServiceMetadata } from '../../src/app/terms-of-service/page'
@@ -22,7 +21,6 @@ const metadataByRoute: Record<string, Metadata> = {
   '/cookie-policy': cookiePolicyMetadata,
   '/terms-of-service': termsOfServiceMetadata,
   '/donation-policy': donationPolicyMetadata,
-  '/free-for-charity-donation-policy': ffcDonationPolicyMetadata,
   '/vulnerability-disclosure-policy': vulnerabilityDisclosureMetadata,
   '/security-acknowledgements': securityAcknowledgementsMetadata,
 }
@@ -190,11 +188,10 @@ describe('page titles compose with the layout template without repeating the sit
 
       // The page must not already carry the suffix the template appends.
       // Deliberately NOT "the site name appears exactly once in the composed
-      // title": a page name may legitimately contain the org name — the FFC
-      // donation policy page is called "Free For Charity Donation Policy", and
-      // on FFC's own deployment siteConfig.name is "Free For Charity", so the
-      // correct title carries it twice. What is always wrong is the page
-      // repeating the trailing "| <site name>" the layout adds.
+      // title": a page name may legitimately contain the org name (a page
+      // titled after its organization, on that organization's own
+      // deployment, correctly carries it twice). What is always wrong is the
+      // page repeating the trailing "| <site name>" the layout adds.
       const suffix = `| ${siteConfig.name}`
       expect(pageTitle.trimEnd().endsWith(suffix)).toBe(false)
 
