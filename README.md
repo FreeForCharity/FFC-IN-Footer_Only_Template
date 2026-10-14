@@ -10,7 +10,7 @@ A focused Next.js template that gives nonprofit websites a professional footer, 
 
 Many nonprofits already have a website design but lack the legal, compliance, and infrastructure pieces that a professional web presence requires. This template provides exactly those pieces so charities can adopt them without building from scratch:
 
-- **Legal compliance** -- 7 policy pages (privacy, cookies, terms, donation, vulnerability disclosure, security acknowledgements)
+- **Legal compliance** -- 6 policy pages (privacy, cookies, terms, the charity's one donation policy, vulnerability disclosure, security acknowledgements)
 - **Cookie consent** -- GDPR-compliant banner with granular opt-in/opt-out controls
 - **Analytics infrastructure** -- Google Tag Manager integration with consent-aware data layer events
 - **Professional footer** -- Contact info, social media links, policy links, GuideStar badge, Google Maps, branding
@@ -22,7 +22,7 @@ Many nonprofits already have a website design but lack the legal, compliance, an
 
 This template is for charities that **already have a designed website** and need the validation and formality of the FFC standard added to it. In the gated [FFC charity onboarding journey](https://freeforcharity.org/charity-onboarding-journey/), every site -- whether built from scratch or already designed -- must be validated live on its **free GitHub Pages address** (no custom domain); after validation, FFC registers a new free .org domain -- or transfers the domain the charity already owns -- into Cloudflare and points it at the validated site, which in turn unlocks email setup.
 
-Adopting this footer and compliance layer (footer, 7 policy pages, GDPR cookie consent, GTM analytics, team section, SEO) is what makes an already-designed site pass that FFC validation gate.
+Adopting this footer and compliance layer (footer, 6 policy pages, GDPR cookie consent, GTM analytics, team section, SEO) is what makes an already-designed site pass that FFC validation gate.
 
 - **Already have a designed website?** Start here -- this template layers the FFC standard onto your existing design.
 - **No website yet?** Use the sibling [FFC Single Page Template](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template) instead, where an FFC volunteer builds a complete single-page site from your content.
@@ -53,17 +53,16 @@ Visit [http://localhost:3000](http://localhost:3000)
 | **Team Section**       | Data-driven team member display                                               |
 | **TeamMemberCard**     | Individual team member card with initials, name, role, optional LinkedIn link |
 
-### Policy Pages (7 Routes)
+### Policy Pages (6 Routes)
 
-| Route                               | Content                               |
-| ----------------------------------- | ------------------------------------- |
-| `/privacy-policy`                   | Privacy Policy                        |
-| `/cookie-policy`                    | Cookie Policy                         |
-| `/terms-of-service`                 | Terms of Service                      |
-| `/donation-policy`                  | Donation Policy                       |
-| `/free-for-charity-donation-policy` | Organization-specific Donation Policy |
-| `/vulnerability-disclosure-policy`  | Vulnerability Disclosure Policy       |
-| `/security-acknowledgements`        | Security Acknowledgements             |
+| Route                              | Content                               |
+| ---------------------------------- | ------------------------------------- |
+| `/privacy-policy`                  | Privacy Policy                        |
+| `/cookie-policy`                   | Cookie Policy                         |
+| `/terms-of-service`                | Terms of Service                      |
+| `/donation-policy`                 | Donation Policy (the site's only one) |
+| `/vulnerability-disclosure-policy` | Vulnerability Disclosure Policy       |
+| `/security-acknowledgements`       | Security Acknowledgements             |
 
 ### SEO & Infrastructure
 
@@ -95,7 +94,6 @@ src/
     home-page/                            # Homepage wrapper
     cookie-policy/page.tsx                # Cookie Policy
     donation-policy/page.tsx              # Donation Policy
-    free-for-charity-donation-policy/     # FFC Donation Policy
     privacy-policy/page.tsx               # Privacy Policy
     security-acknowledgements/page.tsx    # Security Acknowledgements
     terms-of-service/page.tsx             # Terms of Service

@@ -67,7 +67,9 @@ describe('Policy page rendering', () => {
 
   it('Donation Policy renders heading and EIN', () => {
     render(<DonationPolicyPage />)
-    expect(screen.getByText('Donation Policy')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      `${siteConfig.name} Donation Policy`
+    )
     // A pending EIN is empty, and an empty RegExp would match every element.
     if (!isPending('ein')) expect(screen.getByText(new RegExp(siteConfig.ein))).toBeInTheDocument()
   })
@@ -151,21 +153,70 @@ describe('Policy page rendering', () => {
 
   it('Donation Policy contains expected sections', () => {
     render(<DonationPolicyPage />)
-    expect(screen.getByText('Tax Deductibility')).toBeInTheDocument()
-    expect(screen.getByText('Use of Donations')).toBeInTheDocument()
-    expect(screen.getByText('Refund Policy')).toBeInTheDocument()
+    // The one donation policy must cover deductibility, receipts and refunds,
+    // plus the gift-acceptance terms folded in from the retired FFC policy.
+    for (const heading of [
+      'Tax Deductibility',
+      'Use of Donations',
+      'Gifts We Accept',
+      'Receipts and Acknowledgment',
+      'Refunds',
+      'Donor Recognition',
+      'Donor Privacy',
+      'Contact Us',
+    ]) {
+      expect(screen.getByRole('heading', { level: 2, name: heading })).toBeInTheDocument()
+    }
+  })
+
+  it('Donation Policy promises a tax receipt only with a tax status', () => {
+    const original = siteConfig.taxStatusLabel
+    try {
+      siteConfig.taxStatusLabel = ''
+      const { container, unmount } = render(<DonationPolicyPage />)
+      expect(container.textContent).not.toMatch(/for tax purposes/)
+      unmount()
+      siteConfig.taxStatusLabel = 'a US 501c3 Non Profit'
+      const { container: recognized } = render(<DonationPolicyPage />)
+      expect(recognized.textContent).toMatch(/receipt for tax purposes/)
+    } finally {
+      siteConfig.taxStatusLabel = original
+    }
+  })
+
+  it("Donation Policy publishes this organization's public city and state", () => {
+    const original = siteConfig.addresses
+    try {
+      siteConfig.addresses = [{ label: 'Main Address', lines: ['Springfield, IL'], mapUrl: '' }]
+      const { container } = render(<DonationPolicyPage />)
+      expect(container.textContent).toContain('Main Address: Springfield, IL')
+    } finally {
+      siteConfig.addresses = original
+    }
   })
 
   it('Donation Policy has a contact email link', () => {
     const { container } = render(<DonationPolicyPage />)
     // A pending email is empty: the placeholder shows, and no empty mailto: link.
+    // The email appears twice: in the Refunds section and in Contact Us.
     if (isPending('email')) {
-      expect(screen.getByText(PENDING_TEXT).closest('a')).toBeNull()
+      for (const note of screen.getAllByText(PENDING_TEXT)) expect(note.closest('a')).toBeNull()
       expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
       return
     }
-    const emailLink = screen.getByText(siteConfig.contactEmail)
-    expect(emailLink.closest('a')).toHaveAttribute('href', `mailto:${siteConfig.contactEmail}`)
+    const emailLinks = screen.getAllByText(siteConfig.contactEmail)
+    expect(emailLinks.length).toBeGreaterThan(0)
+    for (const link of emailLinks) {
+      expect(link.closest('a')).toHaveAttribute('href', `mailto:${siteConfig.contactEmail}`)
+    }
+  })
+
+  it('Donation Policy leaves refunds to the charity’s discretion, with no fixed review window', () => {
+    const { container } = render(<DonationPolicyPage />)
+    const text = container.textContent ?? ''
+    expect(text).toContain('Donations are generally non-refundable.')
+    expect(text).toContain(`may be granted at the discretion of ${siteConfig.name}`)
+    expect(text).not.toMatch(/within 30 days/)
   })
 
   it('Security Acknowledgements renders heading', () => {

@@ -52,11 +52,15 @@ charity's name, URL, contact email, social links, etc.
   [`src/components/footer/index.tsx`](./src/components/footer/index.tsx)
   (matching the Single Page template). Edit those labels and anchors to match
   your own site's sections; the `Supported Charity Login` entry stays.
-- **The FFC donation policy link** — the footer's
-  `Free For Charity Donation Policy` entry (`/free-for-charity-donation-policy`)
-  keeps FFC's name on purpose: that page documents FFC's own policy. The
-  adjacent `Donation Policy` entry (`/donation-policy`) is YOUR charity's
-  policy — edit that page's content instead.
+- **The donation policy** — the footer links ONE donation policy,
+  `/donation-policy`, labelled `<siteConfig.name> Donation Policy` like the
+  other five policy links. It is YOUR charity's policy, built from
+  `siteConfig` (name, tax status, EIN, mission, public email and city/state),
+  and covers deductibility, receipts and refunds; have counsel review it. There
+  is no separate "Free For Charity Donation Policy" page any more: a fork made
+  before that change should delete `src/app/free-for-charity-donation-policy/`,
+  its footer link and its sitemap entry (`pnpm run check:drift` warns until
+  they are gone).
 - **GitHub Pages base path** — chosen automatically by the deploy workflow
   based on whether `public/CNAME` exists. No manual workflow edit required.
 - **GTM container ID** — lives in

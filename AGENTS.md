@@ -77,7 +77,7 @@ src/
     page.tsx                # Home page (renders team section)
     layout.tsx              # Root layout with global metadata
     home-page/              # Homepage wrapper component
-    [policy-route]/page.tsx # 7 policy page routes
+    [policy-route]/page.tsx # 6 policy page routes
     sitemap.ts              # Dynamic sitemap generation
     robots.ts               # Robots.txt configuration
   components/

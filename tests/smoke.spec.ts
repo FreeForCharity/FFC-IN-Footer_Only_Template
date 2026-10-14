@@ -31,7 +31,6 @@ const allPages = [
   { path: 'cookie-policy', name: 'Cookie Policy' },
   { path: 'terms-of-service', name: 'Terms of Service' },
   { path: 'donation-policy', name: 'Donation Policy' },
-  { path: 'free-for-charity-donation-policy', name: 'FFC Donation Policy' },
   { path: 'security-acknowledgements', name: 'Security Acknowledgements' },
   { path: 'vulnerability-disclosure-policy', name: 'Vulnerability Disclosure Policy' },
 ]
@@ -42,10 +41,9 @@ const allPages = [
  * "/privacy-policy" and "/privacy-policy/" (local dev with trailingSlash).
  */
 const footerPolicyLinks = [
-  { name: 'Free For Charity Donation Policy', pathSuffix: '/free-for-charity-donation-policy' },
-  // The charity's own donation policy. Matched with exact names below so this
-  // does not also match "Free For Charity Donation Policy".
-  { name: 'Donation Policy', pathSuffix: '/donation-policy' },
+  // The site's ONE donation policy (the separate FFC donation policy was
+  // retired from the footer standard).
+  { name: `${testConfig.site.name} Donation Policy`, pathSuffix: '/donation-policy' },
   { name: `${testConfig.site.name} Privacy Policy`, pathSuffix: '/privacy-policy' },
   { name: `${testConfig.site.name} Cookie Policy`, pathSuffix: '/cookie-policy' },
   { name: `${testConfig.site.name} Terms of Service`, pathSuffix: '/terms-of-service' },
@@ -95,8 +93,6 @@ test.describe('Post-deploy smoke tests', () => {
     const footer = page.locator('footer')
 
     for (const { name, pathSuffix } of footerPolicyLinks) {
-      // exact: true — "Donation Policy" is a substring of "Free For Charity
-      // Donation Policy", so substring matching would hit both links.
       const link = footer.getByRole('link', { name, exact: true })
       await expect(link, `Policy link "${name}" should be visible`).toBeVisible()
 
