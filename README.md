@@ -53,7 +53,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 | **Team Section**       | Data-driven team member display                                               |
 | **TeamMemberCard**     | Individual team member card with initials, name, role, optional LinkedIn link |
 
-### Policy Pages (7 Routes)
+### Policy Pages (6 Routes)
 
 | Route                              | Content                               |
 | ---------------------------------- | ------------------------------------- |
