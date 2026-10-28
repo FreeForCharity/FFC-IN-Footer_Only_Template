@@ -1,12 +1,12 @@
 # Dependency refresh
 
 The dependency refresh pins Next.js to the patched floor ^16.4.1, which resolves
-16.4.2, and holds its lint/build tooling at 16.3.8. The skew is deliberate:
-@next/bundle-analyzer declares no next peer dependency and eslint-config-next
-carries its own rule set, so nothing in the toolchain depends on matching the
-runtime version, and leaving it out holds the security bump to two files. The
-refresh uses Node 24 in the smoke workflow and preserves the seven-day release
-cooldown.
+16.4.2, and holds its lint/build tooling at 16.3.8. The skew is deliberate: the
+only Next-tied tooling here is eslint-config-next, which bundles
+@next/eslint-plugin-next and carries its own rule set, so nothing in the
+toolchain depends on matching the runtime version, and leaving it out holds the
+security bump to two files. The refresh uses Node 24 in the smoke workflow and
+preserves the seven-day release cooldown.
 Patched transitive versions are constrained by pnpm overrides so a new resolution
 cannot reinstall vulnerable source-map-js, Sharp, YAML, URI, brace-expansion,
 HTTP middleware, or browser-download dependencies.
