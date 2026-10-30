@@ -44,10 +44,20 @@ const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'post-deploy-smoke.
 const LOCKFILE = join(process.cwd(), 'pnpm-lock.yaml')
 
 /**
- * The version in `npm install ... playwright@<version>` in the smoke job.
+ * Every `playwright@<version>` the smoke workflow mentions.
  *
- * Returns every match rather than the first, so a second install site added
+ * Returns all matches rather than the first, so a second install site added
  * later cannot drift unnoticed behind a passing assertion on the first one.
+ *
+ * This deliberately includes the version named in the step's COMMENT, not
+ * just the one in the `npm install` line -- there are two occurrences today
+ * and both must agree. The comment is where the invariant is written down
+ * ("matches the version this repo's lockfile resolves"), so a comment left
+ * behind by a bump is a false statement about the very thing this file
+ * guards, and the next reader trusts it. Prose referring to a historical
+ * version is unaffected as long as it is not written in `playwright@X` form
+ * -- the existing note about 1.57.0 failing on Ubuntu 26.04 says
+ * "Playwright 1.57.0", which this pattern does not match.
  */
 function workflowPins(): string[] {
   const source = readFileSync(WORKFLOW, 'utf8')
@@ -84,7 +94,7 @@ describe('post-deploy-smoke.yml Playwright pin', () => {
     expect(lockedVersions()).toHaveLength(1)
   })
 
-  it('pins every install site to the version the lockfile resolves', () => {
+  it('pins every mention, install line and comment alike, to the locked version', () => {
     const [locked] = lockedVersions()
 
     for (const pin of workflowPins()) {
