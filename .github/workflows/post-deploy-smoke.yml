@@ -526,12 +526,29 @@ jobs:
           mkdir -p /tmp/pw
           cd /tmp/pw
           npm init -y >/dev/null
-          # playwright@1.57.0 matches the version this repo's lockfile resolves,
+          # playwright@1.63.0 matches the version this repo's lockfile resolves,
           # so the smoke run drives the same browser automation the repo's
           # own tests do. Pinned by version rather than installed from that
           # lockfile, which costs nothing here: the tree is exact either
           # way -- playwright depends on playwright-core at the same exact
           # version, and playwright-core has no dependencies of its own.
+          #
+          # KEEP THIS IN STEP WITH pnpm-lock.yaml. The pin is a literal, so
+          # a dependency bump updates the lockfile and silently leaves this
+          # line behind -- and the drift is invisible until the OLD version
+          # stops working. That happened: the pin sat at 1.57.0 while the
+          # lockfile moved to 1.63.0, and nothing noticed until
+          # `ubuntu-latest` migrated to Ubuntu 26.04 (GitHub began the
+          # rollout 2026-10-19). Playwright 1.57.0 has no dependency recipe
+          # for that image, so `install --with-deps` below died with
+          # "Cannot install dependencies for ubuntu26.04-x64 with Playwright
+          # 1.57.0!" and this job failed on `main` every day from 2026-10-23.
+          # Measured on 2026-10-30, same runner image (`Image: ubuntu-26.04`,
+          # 26.04.1): 1.61.1 and 1.62.1 install cleanly, 1.57.0 does not.
+          #
+          # __tests__/workflows/smoke-playwright-pin.test.ts derives both
+          # values and fails on a mismatch, so the next bump is caught at
+          # review time instead of by a red `main` six days later.
           #
           # Chromium is fetched by the explicit install below, and only by
           # it. Neither playwright nor playwright-core declares an npm
@@ -539,7 +556,7 @@ jobs:
           # the registry tarballs), so this npm install downloads no browser
           # at all. The env var is therefore a no-op today; it is kept as a
           # guard in case a future release reintroduces an install script.
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund playwright@1.57.0 >/dev/null
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund playwright@1.63.0 >/dev/null
           # Install the browser binaries + OS deps for chromium.
           npx --no-install playwright install --with-deps chromium
 
