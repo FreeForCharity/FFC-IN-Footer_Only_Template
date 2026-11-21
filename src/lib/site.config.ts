@@ -411,3 +411,19 @@ export function donateHref(): string {
 export function volunteerHref(): string {
   return linkOrEmail(siteConfig.volunteerUrl, `Volunteering with ${siteConfig.name}`)
 }
+
+/**
+ * Footer "verify our 501(c)(3) status" link: the charity's own record on
+ * ProPublica's Nonprofit Explorer, which republishes the IRS exempt-organization
+ * data for that EIN. Derived from `ein`, so it always points at this charity's
+ * own record. It backs the 501(c)(3) claim, so it is returned only when the
+ * site makes that claim (`taxStatusLabel` set) and has a real 9-digit EIN;
+ * otherwise ''. The Candid seal stays separate: it shows only when the
+ * charity has its own Candid profile.
+ */
+export function irsStatusHref(): string {
+  if (!siteConfig.taxStatusLabel.trim() || isPending('ein')) return ''
+  const digits = siteConfig.ein.replace(/\D/g, '')
+  if (digits.length !== 9) return ''
+  return `https://projects.propublica.org/nonprofits/organizations/${digits}`
+}

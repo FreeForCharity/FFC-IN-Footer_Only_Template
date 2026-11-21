@@ -11,6 +11,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   PENDING_TEXT,
   donateHref,
+  irsStatusHref,
   isPending,
   mailtoHref,
   siteConfig,
@@ -109,6 +110,20 @@ const Footer: React.FC = () => {
               </span>
               {isPending('ein') && <PendingNote />}
             </p>
+            {/* The 501(c)(3) claim's evidence: this EIN's own IRS record on
+                ProPublica. Rendered only when the site makes that claim. */}
+            {irsStatusHref() && (
+              <p>
+                <a
+                  href={irsStatusHref()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-[18px] aria-font"
+                >
+                  Verify our IRS 501(c)(3) status (ProPublica)
+                </a>
+              </p>
+            )}
           </div>
         </div>
 
